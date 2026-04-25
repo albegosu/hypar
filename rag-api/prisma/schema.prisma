@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector(map: "pgvector")]
+}
+
+// Document = original uploaded file or note
+model Document {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   // Full original content
+  sourceType  String   // 'text', 'markdown', 'pdf', 'web'
+  metadata    Json?    // Flexible metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  chunks      Chunk[]
+}
+
+// Chunk = split pieces of document for embedding
+model Chunk {
+  id           String   @id @default(uuid())
+  documentId   String
+  content      String   // The actual text chunk
+  embedding    Unsupported("vector(768)")?  // nomic-embed-text (Ollama); OpenAI path uses text-embedding-3-small @ 768
+  index        Int      // Position in document
+  tokenCount   Int?     // Approximate tokens
+  
+  // For citations
+  startChar    Int?
+  endChar      Int?
+  
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  // Index for similarity search
+  @@index([documentId])
+}
+
+// Query history for analytics
+model Query {
+  id          String   @id @default(uuid())
+  queryText   String
+  responseText String?
+  sources     Json?    // Array of {chunkId, score, content}
+  latencyMs   Int?     // Response time
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+}

@@ -1,0 +1,107 @@
+services:
+  # PostgreSQL with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: pkm-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pkm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pkm_password}
+      POSTGRES_DB: ${POSTGRES_DB:-pkm_rag}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pkm} -d ${POSTGRES_DB:-pkm_rag}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pkm-network
+
+  # Ollama for local embeddings
+  ollama:
+    image: ollama/ollama:latest
+    container_name: pkm-ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Pull models on startup
+    entrypoint: >
+      sh -c "
+        ollama serve &
+        sleep 5
+        ollama pull ${OLLAMA_MODEL:-nomic-embed-text}
+        ollama pull ${OLLAMA_LLM_MODEL:-tinyllama}
+        tail -f /dev/null
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 120s
+    networks:
+      - pkm-network
+
+  # Backend API (NestJS)
+  backend:
+    build:
+      context: ./rag-api
+      dockerfile: Dockerfile
+    container_name: pkm-backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pkm}:${POSTGRES_PASSWORD:-pkm_password}@postgres:5432/${POSTGRES_DB:-pkm_rag}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-tinyllama}
+      OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
+      OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    volumes:
+      - backend_uploads:/app/uploads
+    networks:
+      - pkm-network
+    restart: unless-stopped
+
+  # Frontend (Nuxt 3)
+  frontend:
+    build:
+      context: ./rag-ui
+      dockerfile: Dockerfile
+      args:
+        NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}
+    container_name: pkm-frontend
+    environment:
+      NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: 3000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+    networks:
+      - pkm-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  ollama_data:
+  backend_uploads:
+
+networks:
+  pkm-network:
+    driver: bridge
