@@ -1,0 +1,46 @@
+# Node modules
+**/node_modules
+**/dist
+**/.output
+**/.nuxt
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+**/*.spec.ts
+**/*.test.ts
+coverage/
+
+# Misc
+*.tar.gz
+*.zip

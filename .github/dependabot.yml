@@ -1,0 +1,46 @@
+version: 2
+updates:
+  # Backend dependencies
+  - package-ecosystem: npm
+    directory: /rag-api
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    reviewers:
+      - albegosu
+    labels:
+      - dependencies
+      - backend
+    commit-message:
+      prefix: 'chore(deps)'
+      include: scope
+
+  # Frontend dependencies
+  - package-ecosystem: npm
+    directory: /rag-ui
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    reviewers:
+      - albegosu
+    labels:
+      - dependencies
+      - frontend
+    commit-message:
+      prefix: 'chore(deps)'
+      include: scope
+
+  # Docker images
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    reviewers:
+      - albegosu
+    labels:
+      - dependencies
+      - docker
