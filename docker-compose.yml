@@ -62,14 +62,13 @@ services:
       OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
       OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
     ports:
       - "${BACKEND_PORT:-3001}:3001"
     depends_on:
       postgres:
-        condition: service_healthy
-      ollama:
         condition: service_healthy
     volumes:
       - backend_uploads:/app/uploads

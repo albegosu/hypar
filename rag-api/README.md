@@ -1,159 +1,541 @@
-# PKM RAG API
+# 🔧 RAG API - Backend Service
 
-Personal Knowledge Management API with RAG (Retrieval-Augmented Generation) support.
+NestJS backend API for Personal Knowledge Management with RAG capabilities.
 
-## Stack
+---
 
-- **NestJS** - API framework
-- **PostgreSQL + pgvector** - Vector database
-- **Prisma** - Database ORM
-- **Ollama** - Local embeddings (nomic-embed-text)
-- **OpenAI** - Optional cloud embeddings
+## 🎯 Overview
 
-## Setup
+The RAG API provides a robust backend for document management, semantic search, and retrieval-augmented generation. Built with NestJS, it features multi-provider embeddings, pgvector integration, and comprehensive error handling.
 
-### 1. Install dependencies
+---
+
+## 📚 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Quick Start](#-quick-start)
+- [API Endpoints](#-api-endpoints)
+- [Architecture](#-architecture)
+- [Configuration](#-configuration)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
+
+---
+
+## ✨ Features
+
+### Core Capabilities
+- 📄 **Document Management** - Upload, process, and manage documents
+- 🔍 **Vector Search** - Semantic similarity search with pgvector
+- 🤖 **RAG Pipeline** - Retrieval-augmented generation
+- 💬 **Conversational AI** - Multi-turn dialogue with context
+- 📊 **Analytics** - Query tracking and statistics
+
+### Technical Features
+- 🎯 **Multi-provider Embeddings** - Google Gemini, OpenAI, Ollama
+- 💾 **Efficient Caching** - LRU cache for embeddings
+- ⚡ **Async Processing** - Parallel chunk processing
+- 🔒 **Type Safety** - Full TypeScript + Prisma
+- 🐳 **Docker Ready** - Production-optimized build
+
+---
+
+## 🔧 Tech Stack
+
+- **Framework**: NestJS 10.3
+- **Database**: PostgreSQL with pgvector
+- **ORM**: Prisma 7.8
+- **Embeddings**: Google Gemini / OpenAI / Ollama
+- **LLM**: Ollama Cloud / Local
+- **Language**: TypeScript 5.3
+- **Testing**: Jest
+- **Validation**: class-validator
+- **PDF Parsing**: pdf-parse
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+```bash
+Node.js 20+
+PostgreSQL 16+ with pgvector extension
+Google Gemini API key (free)
+```
+
+### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 2. Setup PostgreSQL with pgvector
+### 2. Setup Database
 
-Using Docker:
+#### Option A: Docker (Recommended)
+
 ```bash
 docker run -d \
   --name pkm-postgres \
-  -e POSTGRES_USER=user \
-  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_USER=pkm \
+  -e POSTGRES_PASSWORD=pkm_password \
   -e POSTGRES_DB=pkm_rag \
   -p 5432:5432 \
   pgvector/pgvector:pg16
 ```
 
-Or install pgvector extension locally:
+#### Option B: Local PostgreSQL
+
 ```bash
+# Install pgvector extension
 # macOS
 brew install pgvector
 
-# Then in psql:
+# Then in psql
 CREATE EXTENSION vector;
 ```
 
-### 3. Configure environment
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your database URL
 ```
 
-### 4. Setup database
+Edit `.env`:
+
+```env
+# Database
+DATABASE_URL="postgresql://pkm:pkm_password@localhost:5432/pkm_rag"
+
+# Embeddings - Get free key at: https://aistudio.google.com/app/apikey
+GOOGLE_API_KEY=your_gemini_api_key
+
+# LLM - Get free key at: https://ollama.com/settings/keys
+OLLAMA_URL=https://ollama.com
+OLLAMA_API_KEY=your_ollama_api_key
+OLLAMA_LLM_MODEL=kimi-k2.5:cloud
+
+# Optional: OpenAI (alternative to Google Gemini)
+OPENAI_API_KEY=
+
+# Embedding dimensions (must match pgvector schema)
+EMBEDDING_DIMENSIONS=768
+```
+
+### 4. Setup Database Schema
 
 ```bash
-npx prisma migrate dev --name init
 npx prisma generate
+npx prisma migrate dev --name init
 ```
 
-### 5. Setup Ollama (for local embeddings)
-
-```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull embedding model
-ollama pull nomic-embed-text
-
-# Start Ollama
-ollama serve
-```
-
-### 6. Run the API
+### 5. Run Development Server
 
 ```bash
 npm run start:dev
 ```
 
-## API Endpoints
+API will be available at: http://localhost:3001
 
-### Documents
+---
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/documents` | Create document from text |
-| POST | `/documents/upload` | Upload file (PDF, text, markdown) |
-| GET | `/documents` | List all documents |
-| GET | `/documents/:id` | Get document with chunks |
-| POST | `/documents/:id/reprocess` | Re-chunk and re-embed |
+## 📡 API Endpoints
 
-### Search
+### Health Check
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/search` | Semantic search (returns ranked chunks) |
-| POST | `/search/rag` | RAG search (returns context + sources, no LLM call) |
-| POST | `/search/converse` | Multi-turn RAG chat (LLM + sources) |
+```http
+GET /health
+```
 
-### Agent
+### Documents API
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/agent/chat` | Planner-driven chat: routes to KB search or direct reply |
+#### Create Document
+```http
+POST /documents
+Content-Type: application/json
 
-## Example Usage
+{
+  "title": "Document Title",
+  "content": "Document content...",
+  "sourceType": "text" | "markdown"
+}
+```
 
-### Create a document
+#### Upload File
+```http
+POST /documents/upload
+Content-Type: multipart/form-data
+
+file: <PDF/TXT/MD file>
+```
+
+#### List Documents
+```http
+GET /documents?page=1&limit=10
+```
+
+#### Get Document
+```http
+GET /documents/:id
+```
+
+#### Reprocess Document
+```http
+POST /documents/:id/reprocess
+```
+
+#### Delete Document
+```http
+DELETE /documents/:id
+```
+
+### Search API
+
+#### Semantic Search
+```http
+POST /search
+Content-Type: application/json
+
+{
+  "query": "What is RAG?",
+  "limit": 5
+}
+```
+
+**Response**:
+```json
+[
+  {
+    "chunkId": "uuid",
+    "content": "RAG stands for...",
+    "documentId": "uuid",
+    "documentTitle": "RAG Guide",
+    "score": 0.85,
+    "startChar": 0,
+    "endChar": 500
+  }
+]
+```
+
+#### RAG Query
+```http
+POST /search/rag
+Content-Type: application/json
+
+{
+  "query": "Explain RAG architecture",
+  "limit": 5
+}
+```
+
+**Response**:
+```json
+{
+  "context": "Retrieved context...",
+  "sources": [
+    {
+      "chunkId": "uuid",
+      "content": "...",
+      "score": 0.85
+    }
+  ]
+}
+```
+
+#### Conversational Chat
+```http
+POST /search/converse
+Content-Type: application/json
+
+{
+  "message": "Tell me more about embeddings",
+  "conversationHistory": [
+    {
+      "role": "user",
+      "content": "What is RAG?"
+    },
+    {
+      "role": "assistant",
+      "content": "RAG is..."
+    }
+  ]
+}
+```
+
+### Agent API
+
+#### Planner Chat
+```http
+POST /agent/chat
+Content-Type: application/json
+
+{
+  "message": "What did we discuss about vector databases?",
+  "sessionId": "optional-session-id"
+}
+```
+
+### Admin API
+
+#### Query Statistics
+```http
+GET /admin/stats
+```
+
+#### Recent Queries
+```http
+GET /admin/queries?limit=10
+```
+
+---
+
+## 🏗️ Architecture
+
+### Module Structure
+
+```
+src/
+├── app.module.ts           # Root module
+├── main.ts                 # Application entry
+│
+├── documents/              # Document ingestion
+│   ├── documents.module.ts
+│   ├── documents.controller.ts
+│   ├── documents.service.ts
+│   ├── chunking.service.ts      # Text splitting
+│   ├── embedding.service.ts     # Multi-provider embeddings
+│   └── dto/
+│       └── create-document.dto.ts
+│
+├── search/                 # RAG & Search
+│   ├── search.module.ts
+│   ├── search.controller.ts
+│   ├── search.service.ts        # Vector search + RAG
+│   └── dto/
+│       ├── search.dto.ts
+│       └── converse.dto.ts
+│
+├── agent/                  # Conversational AI
+│   ├── agent.module.ts
+│   ├── agent.controller.ts
+│   ├── agent.service.ts         # Planner-driven chat
+│   └── dto/
+│       └── agent-chat.dto.ts
+│
+├── admin/                  # Analytics
+│   ├── admin.module.ts
+│   ├── admin.controller.ts
+│   └── admin.service.ts
+│
+├── ollama/                 # Ollama integration
+│   └── create-ollama.ts         # Client factory
+│
+└── prisma/                 # Database
+    └── prisma.service.ts        # Prisma client
+```
+
+### Service Responsibilities
+
+#### DocumentsService
+- Orchestrates document ingestion
+- Manages document lifecycle
+- Triggers chunking and embedding
+
+#### ChunkingService
+- Splits documents into chunks
+- Strategy: 512 chars with 50 char overlap
+- Sentence-boundary aware
+
+#### EmbeddingService
+- Generates vector embeddings
+- Multi-provider support (Google/OpenAI/Ollama)
+- LRU cache for performance
+- Fallback chain
+
+#### SearchService
+- Vector similarity search
+- RAG context assembly
+- Multi-turn conversation
+- Query tracking
+
+#### AgentService
+- Intent-based routing
+- KB search when relevant
+- Direct LLM fallback
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `GOOGLE_API_KEY` | Google Gemini API key | Optional |
+| `OPENAI_API_KEY` | OpenAI API key | Optional |
+| `OLLAMA_URL` | Ollama endpoint | `http://localhost:11434` |
+| `OLLAMA_API_KEY` | Ollama Cloud API key | Optional |
+| `OLLAMA_MODEL` | Embedding model name | `nomic-embed-text` |
+| `OLLAMA_LLM_MODEL` | LLM model name | `kimi-k2.5:cloud` |
+| `EMBEDDING_DIMENSIONS` | Vector dimensions | `768` |
+| `OLLAMA_CHAT_TIMEOUT_MS` | LLM timeout | `180000` |
+| `OLLAMA_PLANNER_TIMEOUT_MS` | Planner timeout | `60000` |
+
+### Embedding Provider Priority
+
+The system automatically selects providers in this order:
+
+1. **Google Gemini** (if `GOOGLE_API_KEY` set) - Free, 10M tokens/min
+2. **OpenAI** (if `OPENAI_API_KEY` set) - Paid, reliable
+3. **Ollama** (fallback) - Local or cloud
+
+---
+
+## 🧪 Testing
+
+### Run Tests
 
 ```bash
-curl -X POST http://localhost:3001/documents \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "My Notes on RAG",
-    "content": "RAG stands for Retrieval-Augmented Generation...",
-    "sourceType": "markdown"
-  }'
+# Unit tests
+npm run test
+
+# E2E tests
+npm run test:e2e
+
+# Test coverage
+npm run test:cov
 ```
 
-### Search
+### Test Database
+
+Tests use a separate database:
+
+```env
+DATABASE_URL="postgresql://test:test@localhost:5432/test"
+```
+
+---
+
+## 🚀 Deployment
+
+### Docker
 
 ```bash
-curl -X POST http://localhost:3001/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "What is RAG?"}'
+# Build
+docker build -t rag-api .
+
+# Run
+docker run -p 3001:3001 \
+  -e DATABASE_URL=... \
+  -e GOOGLE_API_KEY=... \
+  rag-api
 ```
 
-### RAG Query
+### Production Build
 
 ```bash
-curl -X POST http://localhost:3001/search/rag \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Explain RAG architecture", "limit": 5}'
+npm run build
+npm run start:prod
 ```
 
-## Architecture
+### Environment Checklist
 
+- ✅ Set production `DATABASE_URL`
+- ✅ Add `GOOGLE_API_KEY` or `OPENAI_API_KEY`
+- ✅ Configure `OLLAMA_URL` and `OLLAMA_API_KEY`
+- ✅ Set secure `POSTGRES_PASSWORD`
+- ✅ Enable SSL for database connection
+- ✅ Configure connection pooling
+- ✅ Set up monitoring
+
+---
+
+## 📊 Performance Tips
+
+### Database Optimization
+
+```sql
+-- HNSW index for fast vector search
+CREATE INDEX idx_chunks_embedding
+ON chunks USING hnsw (embedding vector_cosine_ops);
+
+-- Adjust HNSW parameters for your dataset
+ALTER INDEX idx_chunks_embedding
+SET (m = 16, ef_construction = 64);
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────────┐
-│   Nuxt 3    │────▶│  NestJS API  │────▶│  PostgreSQL     │
-│  (Frontend) │     │              │     │  + pgvector     │
-└─────────────┘     └──────────────┘     └─────────────────┘
-                            │
-                            ▼
-                    ┌──────────────┐
-                    │   Ollama     │
-                    │  (embeddings) │
-                    └──────────────┘
+
+### Caching
+
+- Embedding cache: 256 entries (configurable)
+- Consider Redis for distributed cache
+- Cache query results for common searches
+
+### Batch Processing
+
+- Chunks processed in parallel: `Promise.all`
+- Adjust batch size based on memory
+- Consider message queue for large documents
+
+---
+
+## 🛠️ Development
+
+### Code Style
+
+```bash
+# Lint
+npm run lint
+
+# Format
+npm run format
 ```
 
-## Next Steps
+### Database Migrations
 
-- [x] Native pgvector similarity search with HNSW index
-- [x] LLM response generation (Ollama / OpenAI fallback)
-- [x] PDF parsing (`pdf-parse`)
-- [x] Nuxt 3 frontend (see `rag-ui/`)
-- [ ] Web scraping ingestion
-- [ ] Semantic "related documents" feature
-- [ ] Hybrid search (vector + BM25 full-text)
+```bash
+# Create migration
+npx prisma migrate dev --name migration_name
 
-## License
+# Apply migrations
+npx prisma migrate deploy
 
-Private - Alberto
+# Reset database (⚠️ deletes data)
+npx prisma migrate reset
+```
+
+### Prisma Studio
+
+```bash
+npx prisma studio
+```
+
+---
+
+## 📚 Learn More
+
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [Prisma Documentation](https://www.prisma.io/docs)
+- [pgvector Documentation](https://github.com/pgvector/pgvector)
+- [Technical Architecture](../docs/ARCHITECTURE.md)
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](../LICENSE)
+
+---
+
+**Built with ❤️ using NestJS and modern AI technologies**

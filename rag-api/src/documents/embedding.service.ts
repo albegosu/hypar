@@ -2,6 +2,7 @@ import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config';
 import { Ollama } from 'ollama';
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createOllama, normalizeOllamaNativeHost } from '../ollama/create-ollama';
 
 const DEFAULT_DIMENSIONS = 768;
@@ -39,7 +40,9 @@ export class EmbeddingService {
   private readonly logger = new Logger(EmbeddingService.name);
   private ollama: Ollama;
   private openai: OpenAI;
+  private googleAI?: GoogleGenerativeAI;
   private useOpenAI: boolean;
+  private useGoogleAI: boolean;
   private localOllama?: Ollama;
   private ollamaHost: string;
   private ollamaApiKey?: string;
@@ -60,14 +63,30 @@ export class EmbeddingService {
     if (!normalizedHost.includes('://ollama:11434')) {
       this.localOllama = createOllama('http://ollama:11434', undefined);
     }
+
+    // Initialize Google AI if API key is provided
+    const googleApiKey = config.get<string>('GOOGLE_API_KEY');
+    if (googleApiKey) {
+      this.googleAI = new GoogleGenerativeAI(googleApiKey);
+    }
+    this.useGoogleAI = !!googleApiKey;
+
     this.openai = new OpenAI({ apiKey: config.get('OPENAI_API_KEY') });
     this.useOpenAI = !!config.get('OPENAI_API_KEY');
 
     const rawDims = Number(config.get('EMBEDDING_DIMENSIONS'));
     this.dimensions = Number.isFinite(rawDims) && rawDims > 0 ? rawDims : DEFAULT_DIMENSIONS;
-    this.cacheKeyPrefix = this.useOpenAI
-      ? `openai:text-embedding-3-small:${this.dimensions}|`
-      : `ollama:${this.ollamaEmbeddingModel}:${this.dimensions}|`;
+
+    // Set cache key prefix based on provider priority: Google > OpenAI > Ollama
+    if (this.useGoogleAI) {
+      this.cacheKeyPrefix = `google:gemini-embedding-001:${this.dimensions}|`;
+    } else if (this.useOpenAI) {
+      this.cacheKeyPrefix = `openai:text-embedding-3-small:${this.dimensions}|`;
+    } else {
+      this.cacheKeyPrefix = `ollama:${this.ollamaEmbeddingModel}:${this.dimensions}|`;
+    }
+
+    this.logger.log(`Using embedding provider: ${this.useGoogleAI ? 'Google Gemini' : this.useOpenAI ? 'OpenAI' : 'Ollama'}`);
   }
 
   /** Length of vectors this service produces. The DB column must match. */
@@ -80,9 +99,14 @@ export class EmbeddingService {
     const cached = this.cache.get(key);
     if (cached) return cached;
 
-    const vector = this.useOpenAI
-      ? await this.generateOpenAI(text)
-      : await this.generateOllama(text);
+    let vector: number[];
+    if (this.useGoogleAI) {
+      vector = await this.generateGoogle(text);
+    } else if (this.useOpenAI) {
+      vector = await this.generateOpenAI(text);
+    } else {
+      vector = await this.generateOllama(text);
+    }
 
     this.assertDimensions(vector);
     this.cache.set(key, vector);
@@ -184,5 +208,51 @@ export class EmbeddingService {
       dimensions: this.dimensions,
     });
     return response.data[0].embedding;
+  }
+
+  private async generateGoogle(text: string): Promise<number[]> {
+    const apiKey = this.config.get<string>('GOOGLE_API_KEY');
+    if (!apiKey) {
+      throw new ServiceUnavailableException('Google API key not configured');
+    }
+
+    try {
+      // Use gemini-embedding-001 via REST API with explicit outputDimensionality
+      // The @google/generative-ai SDK is deprecated, using REST API directly is more reliable
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${apiKey}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: {
+            parts: [{ text }],
+          },
+          outputDimensionality: this.dimensions, // Specify exact dimensions (768)
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`API returned ${response.status}: ${errorBody}`);
+      }
+
+      const data = (await response.json()) as {
+        embedding?: { values?: number[] };
+      };
+
+      const embedding = data?.embedding?.values;
+      if (!Array.isArray(embedding)) {
+        throw new Error('Invalid embedding response from Google API');
+      }
+
+      return embedding;
+    } catch (error: any) {
+      const message = String(error?.message || error);
+      this.logger.error(`Google AI embedding failed: ${message}`);
+      throw new ServiceUnavailableException(
+        `Failed to generate embedding using Google Gemini: ${message}`,
+      );
+    }
   }
 }
