@@ -1,0 +1,1 @@
+import{C as e,Dt as t,Kt as n,M as r,q as i,w as a}from"./CRfXUi3G.js";import{i as o}from"./CJmfH1zY.js";var s={key:0,"font-mono":``},c=r({__name:`DisplayTimestamp`,props:{timestamp:{}},setup(r){let c=r;return(l,u)=>r.timestamp?(i(),a(`span`,s,n(t(o)(new Date(c.timestamp))),1)):e(``,!0)}});export{c as t};

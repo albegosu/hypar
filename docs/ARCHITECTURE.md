@@ -2,6 +2,8 @@
 
 This document provides a deep dive into the technical architecture of the PKM RAG system.
 
+> **Note**: This document focuses on the core RAG application. For the **RAG Learning Quest** gamified tutorial system, see [learning notes](learning/learning.md).
+
 ---
 
 ## Table of Contents

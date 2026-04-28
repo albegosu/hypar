@@ -1,0 +1,21 @@
+module.exports = {
+  familyName: 'Tirra',
+  fullName: 'Tirra',
+  postscriptName: 'Tirra-Regular',
+  category: 'sans-serif',
+  capHeight: 1393,
+  ascent: 2093,
+  descent: -713,
+  lineGap: 0,
+  unitsPerEm: 2048,
+  xHeight: 1024,
+  xWidthAvg: 914,
+  subsets: {
+    latin: {
+      xWidthAvg: 914
+    },
+    thai: {
+      xWidthAvg: 922
+    }
+  }
+};

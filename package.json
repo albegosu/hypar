@@ -1,0 +1,31 @@
+{
+  "name": "from-zero-rag-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RAG Learning Quest - Interactive tutorial system for learning RAG from scratch",
+  "scripts": {
+    "dev": "pnpm --parallel -r dev",
+    "dev:api": "pnpm --filter rag-api dev",
+    "dev:ui": "pnpm --filter rag-ui dev",
+    "dev:learning": "pnpm --filter @rag/learning dev",
+    "dev:playground": "pnpm --filter @rag/playground dev",
+    "build": "pnpm -r build",
+    "install:all": "pnpm install",
+    "clean": "pnpm -r clean && rm -rf node_modules"
+  },
+  "keywords": [
+    "rag",
+    "learning",
+    "gamification",
+    "tutorial",
+    "embeddings",
+    "vector-database",
+    "llm"
+  ],
+  "author": "Alberto González",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

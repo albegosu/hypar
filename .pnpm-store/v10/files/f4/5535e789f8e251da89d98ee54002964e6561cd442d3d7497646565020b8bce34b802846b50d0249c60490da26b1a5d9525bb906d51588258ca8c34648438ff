@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <title>Vite Inspect</title>
+  <script type="module" crossorigin src="./assets/index-DxUZivi7.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/runtime-core.esm-bundler-DrsXb1EG.js">
+  <link rel="modulepreload" crossorigin href="./assets/payload-DkARwyuW.js">
+  <link rel="modulepreload" crossorigin href="./assets/vue-router-a_c0AaOX.js">
+  <link rel="stylesheet" crossorigin href="./assets/index-rX6Om3rh.css">
+</head>
+<body class="bg-main text-main font-sans">
+  <div id="app"></div>
+  <script>
+    (function () {
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      const setting = localStorage.getItem('color-schema') || 'auto'
+      if (setting === 'dark' || (prefersDark && setting !== 'light'))
+        document.documentElement.classList.toggle('dark', true)
+    })()
+
+    ;(function () {
+      if (!location.pathname.endsWith('/'))
+        location.pathname += '/'
+    })()
+  </script>
+  <script src="/@fs//home/runner/work/vite-plugin-inspect/vite-plugin-inspect/node_modules/.pnpm/@vitejs+devtools@0.1.11_@pnpm+logger@1001.0.1_typescript@5.9.3_vite@8.0.2/node_modules/@vitejs/devtools/dist/client/inject.js" type="module"></script>
+</body>
+</html>

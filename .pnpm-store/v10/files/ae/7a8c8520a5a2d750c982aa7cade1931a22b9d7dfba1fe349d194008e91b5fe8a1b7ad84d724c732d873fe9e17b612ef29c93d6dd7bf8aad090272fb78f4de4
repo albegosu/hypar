@@ -1,0 +1,22 @@
+import { App } from 'vue';
+import { PluginOptions } from './types';
+import { default as DynamicScroller } from './components/DynamicScroller.vue';
+import { default as DynamicScrollerItem } from './components/DynamicScrollerItem.vue';
+import { default as RecycleScroller } from './components/RecycleScroller.vue';
+import { default as WindowScroller } from './components/WindowScroller.vue';
+export { useDynamicScroller } from './composables/useDynamicScroller';
+export type { UseDynamicScrollerItemBindingOptions, UseDynamicScrollerOptions, UseDynamicScrollerReturn } from './composables/useDynamicScroller';
+export { useDynamicScrollerItem } from './composables/useDynamicScrollerItem';
+export type { UseDynamicScrollerItemOptions, UseDynamicScrollerItemReturn } from './composables/useDynamicScrollerItem';
+export { useIdState } from './composables/useIdState';
+export { useRecycleScroller } from './composables/useRecycleScroller';
+export type { UseRecycleScrollerOptions, UseRecycleScrollerReturn } from './composables/useRecycleScroller';
+export { useWindowScroller } from './composables/useWindowScroller';
+export type { UseWindowScrollerOptions, UseWindowScrollerReturn } from './composables/useWindowScroller';
+export { DynamicScroller, DynamicScrollerItem, RecycleScroller, WindowScroller, };
+export type * from './types';
+declare const plugin: {
+    version: string;
+    install(app: App, options?: PluginOptions): void;
+};
+export default plugin;

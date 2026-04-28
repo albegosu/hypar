@@ -1,0 +1,15 @@
+{
+  "date": "2026-04-22T02:17:51.613Z",
+  "preset": "static",
+  "framework": {
+    "name": "nuxt",
+    "version": "4.4.2"
+  },
+  "versions": {
+    "nitro": "2.13.3"
+  },
+  "commands": {
+    "preview": "npx serve public"
+  },
+  "config": {}
+}

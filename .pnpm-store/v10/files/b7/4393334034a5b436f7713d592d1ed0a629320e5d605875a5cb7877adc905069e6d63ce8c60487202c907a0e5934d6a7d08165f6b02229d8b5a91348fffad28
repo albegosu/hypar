@@ -1,0 +1,15 @@
+import type { AssetsReady } from "./AssetsReady";
+import type { BuildEnd } from "./BuildEnd";
+import type { BuildStart } from "./BuildStart";
+import type { ChunkGraphReady } from "./ChunkGraphReady";
+import type { HookLoadCallEnd } from "./HookLoadCallEnd";
+import type { HookLoadCallStart } from "./HookLoadCallStart";
+import type { HookRenderChunkEnd } from "./HookRenderChunkEnd";
+import type { HookRenderChunkStart } from "./HookRenderChunkStart";
+import type { HookResolveIdCallEnd } from "./HookResolveIdCallEnd";
+import type { HookResolveIdCallStart } from "./HookResolveIdCallStart";
+import type { HookTransformCallEnd } from "./HookTransformCallEnd";
+import type { HookTransformCallStart } from "./HookTransformCallStart";
+import type { ModuleGraphReady } from "./ModuleGraphReady";
+import type { SessionMeta } from "./SessionMeta";
+export type Meta = HookTransformCallStart | HookTransformCallEnd | HookLoadCallStart | HookLoadCallEnd | BuildStart | BuildEnd | HookResolveIdCallStart | HookResolveIdCallEnd | ModuleGraphReady | SessionMeta | ChunkGraphReady | HookRenderChunkStart | HookRenderChunkEnd | AssetsReady;

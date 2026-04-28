@@ -1,0 +1,1 @@
+import{W as e}from"./utils-0y38f305.js";import{p as t}from"./rpc-isxadwf4.js";var n=t();t();function r(){return e(`devtools:restart-dialogs`,()=>[])}export{r as n,n as t};

@@ -1,0 +1,1 @@
+import{b as e,ot as t,vt as n,wt as r,yt as i}from"./CRfXUi3G.js";var a=0,o=i(new Map),s=e(()=>Array.from(o.values()).flat());function c(e){let i=r(e),s=()=>{};function c(e){s();let t=a++;o.set(t,e),s=()=>{o.delete(t)}}return t(i,e=>{c(e)},{immediate:!0}),n(()=>{s()}),()=>{s()}}export{c as n,s as t};

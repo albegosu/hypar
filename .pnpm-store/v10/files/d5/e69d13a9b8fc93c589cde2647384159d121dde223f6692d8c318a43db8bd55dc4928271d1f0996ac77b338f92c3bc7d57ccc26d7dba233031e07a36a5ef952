@@ -1,0 +1,1 @@
+function e(e){return e[0]===`#`||!!e.match(/^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/)}function t(t){if(e(t))return t;let n=t.replace(/\\/g,`/`).match(/.*\/node_modules\/(.*)$/)?.[1];if(n)return n.startsWith(`@`)?n.split(`/`).slice(0,2).join(`/`):n.split(`/`)[0]}export{e as n,t};

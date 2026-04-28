@@ -1,16 +1,20 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+  <nav class="fixed bottom-0 left-0 right-0 z-50 glass hairline-t pb-safe">
     <div class="max-w-2xl mx-auto px-4">
       <div class="flex justify-around py-2">
         <NuxtLink
           v-for="item in items"
           :key="item.path"
           :to="item.path"
-          class="flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-colors"
-          :class="$route.path === item.path ? 'text-primary-500' : 'text-gray-500 dark:text-gray-400'"
+          class="flex flex-col items-center gap-1 py-2 px-5 rounded-xl transition-colors duration-150"
+          :class="[
+            isActive(item.path)
+              ? 'nav-active-pill text-violet-600 dark:text-violet-300'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200',
+          ]"
         >
-          <UIcon :name="item.icon" class="w-6 h-6" />
-          <span class="text-xs">{{ item.label }}</span>
+          <UIcon :name="item.icon" class="w-5 h-5 relative" />
+          <span class="text-[11px] font-medium relative">{{ item.label }}</span>
         </NuxtLink>
       </div>
     </div>
@@ -18,9 +22,16 @@
 </template>
 
 <script setup>
+const route = useRoute()
+
 const items = [
   { path: '/', icon: 'i-heroicons-chat-bubble-left-right', label: 'Chat' },
   { path: '/documents', icon: 'i-heroicons-document-text', label: 'Docs' },
   { path: '/upload', icon: 'i-heroicons-arrow-up-tray', label: 'Upload' },
 ]
+
+function isActive(path) {
+  if (path === '/') return route.path === '/'
+  return route.path === path || route.path.startsWith(path + '/')
+}
 </script>

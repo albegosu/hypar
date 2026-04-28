@@ -1,0 +1,1 @@
+import{g as e}from"./utils-0y38f305.js";function t(){return e(`schema:input`,null)}export{t};

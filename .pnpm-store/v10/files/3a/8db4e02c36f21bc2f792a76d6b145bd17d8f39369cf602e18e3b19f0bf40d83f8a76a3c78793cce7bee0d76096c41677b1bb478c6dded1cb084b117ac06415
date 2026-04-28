@@ -1,0 +1,19 @@
+export type HookResolveIdCallEnd = {
+    action: 'HookResolveIdCallEnd';
+    resolved_id: string | null;
+    /**
+     * If the value is `true/false`, it means the plugin explicitly returned the value for this field.
+     */
+    is_external: boolean | null;
+    plugin_name: string;
+    /**
+     * The index of the plugin in the plugin list. It's unique to each plugin.
+     */
+    plugin_id: number;
+    /**
+     * - `automatic` means the resolve call is triggered by the bundler automatically.
+     * - `manual` means the resolve call is triggered manually by `this.resolve(...)`
+     */
+    trigger: 'automatic' | 'manual';
+    call_id: string;
+};

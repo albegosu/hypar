@@ -1,0 +1,20 @@
+import gfs from 'graceful-fs';
+declare const _default: {
+    copyFile: typeof gfs.copyFile.__promisify__;
+    copyFileSync: (src: gfs.PathLike, dest: gfs.PathLike, mode?: number | undefined) => void;
+    createReadStream: typeof gfs.createReadStream;
+    link: typeof gfs.link.__promisify__;
+    linkSync: (existingPath: gfs.PathLike, newPath: gfs.PathLike) => void;
+    mkdir: typeof gfs.mkdir.__promisify__;
+    mkdirSync: (path: gfs.PathLike, options?: gfs.Mode | gfs.MakeDirectoryOptions | null | undefined) => string | undefined;
+    renameSync: (oldPath: gfs.PathLike, newPath: gfs.PathLike) => void;
+    readFile: typeof gfs.readFile.__promisify__;
+    readFileSync: typeof gfs.readFileSync;
+    readdirSync: typeof gfs.readdirSync;
+    stat: typeof gfs.stat.__promisify__;
+    statSync: gfs.StatSyncFn;
+    unlinkSync: typeof gfs.unlinkSync;
+    writeFile: typeof gfs.writeFile.__promisify__;
+    writeFileSync: (file: gfs.PathOrFileDescriptor, data: string | NodeJS.ArrayBufferView, options?: gfs.WriteFileOptions | undefined) => void;
+};
+export default _default;

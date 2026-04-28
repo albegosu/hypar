@@ -1,0 +1,1 @@
+{"version":3,"file":"writeToConsole.js","sourceRoot":"","sources":["../src/writeToConsole.ts"],"names":[],"mappings":";;;;;AAEA,wCAMC;AARD,gDAAuB;AAEvB,SAAgB,cAAc;IAC5B,cAAI,CAAC,MAAM,CAAC;QACV;YACE,KAAK,EAAE,OAAO,EAAE,MAAM,EAAE,OAAO,CAAC,MAAM;SACvC;KACF,CAAC,CAAA;AACJ,CAAC"}

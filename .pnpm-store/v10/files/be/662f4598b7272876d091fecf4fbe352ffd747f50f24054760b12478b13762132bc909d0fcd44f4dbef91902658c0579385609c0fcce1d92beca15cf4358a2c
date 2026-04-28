@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite DevTools</title>
+    <meta name="description" content="Vite DevTools" />
+    <script type="module" crossorigin src="./assets/index-CLFcfYmU.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/runtime-core.esm-bundler-Dy_V7v05.js">
+    <link rel="modulepreload" crossorigin href="./assets/dist-WRCcdUEU.js">
+    <link rel="modulepreload" crossorigin href="./assets/LogItem-CPsQBNDh.js">
+    <link rel="modulepreload" crossorigin href="./assets/iconify-DHQH_Op3.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-C05Px9az.css">
+  </head>
+  <body class="font-sans">
+    <div id="app"></div>
+  </body>
+</html>

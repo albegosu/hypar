@@ -1,0 +1,21 @@
+module.exports = {
+  familyName: 'Savate',
+  fullName: 'Savate ExtraLight Italic',
+  postscriptName: 'Savate-ExtraLightItalic',
+  category: 'sans-serif',
+  capHeight: 730,
+  ascent: 1015,
+  descent: -285,
+  lineGap: 0,
+  unitsPerEm: 1000,
+  xHeight: 548,
+  xWidthAvg: 447,
+  subsets: {
+    latin: {
+      xWidthAvg: 447
+    },
+    thai: {
+      xWidthAvg: 600
+    }
+  }
+};

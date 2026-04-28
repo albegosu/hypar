@@ -1,0 +1,21 @@
+export default {
+  familyName: 'Cascadia Code',
+  fullName: 'Cascadia Code SemiBold Italic',
+  postscriptName: 'CascadiaCode-SemiBoldItalic',
+  category: 'sans-serif',
+  capHeight: 1420,
+  ascent: 1900,
+  descent: -480,
+  lineGap: 0,
+  unitsPerEm: 2048,
+  xHeight: 1060,
+  xWidthAvg: 1200,
+  subsets: {
+    latin: {
+      xWidthAvg: 1200
+    },
+    thai: {
+      xWidthAvg: 1200
+    }
+  }
+};
