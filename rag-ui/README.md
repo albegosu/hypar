@@ -1,6 +1,6 @@
-# PKM RAG UI
+# From Zero RAG UI
 
-Personal Knowledge Management frontend built with Nuxt 3 + Nuxt UI.
+Frontend for the RAG application built with Nuxt 3 + Nuxt UI.
 
 ## Features
 

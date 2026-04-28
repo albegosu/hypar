@@ -1,6 +1,25 @@
+# Dependabot version updates: disabled via `ignore` on each entry (remove those blocks to re-enable).
 version: 2
 updates:
-  # Backend dependencies
+  # Monorepo workspace dependencies (pnpm)
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    reviewers:
+      - albegosu
+    labels:
+      - dependencies
+      - monorepo
+    commit-message:
+      prefix: 'chore(deps)'
+      include: scope
+    ignore:
+      - dependency-name: '*'
+
+  # Backend-only updates (explicit)
   - package-ecosystem: npm
     directory: /rag-api
     schedule:
@@ -15,8 +34,10 @@ updates:
     commit-message:
       prefix: 'chore(deps)'
       include: scope
+    ignore:
+      - dependency-name: '*'
 
-  # Frontend dependencies
+  # Frontend-only updates (explicit)
   - package-ecosystem: npm
     directory: /rag-ui
     schedule:
@@ -31,6 +52,44 @@ updates:
     commit-message:
       prefix: 'chore(deps)'
       include: scope
+    ignore:
+      - dependency-name: '*'
+
+  # Learning packages (explicit)
+  - package-ecosystem: npm
+    directory: /packages/rag-learning
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    reviewers:
+      - albegosu
+    labels:
+      - dependencies
+      - learning
+    commit-message:
+      prefix: 'chore(deps)'
+      include: scope
+    ignore:
+      - dependency-name: '*'
+
+  - package-ecosystem: npm
+    directory: /packages/rag-playground
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    reviewers:
+      - albegosu
+    labels:
+      - dependencies
+      - learning
+      - frontend
+    commit-message:
+      prefix: 'chore(deps)'
+      include: scope
+    ignore:
+      - dependency-name: '*'
 
   # Docker images
   - package-ecosystem: docker
@@ -44,3 +103,5 @@ updates:
     labels:
       - dependencies
       - docker
+    ignore:
+      - dependency-name: '*'

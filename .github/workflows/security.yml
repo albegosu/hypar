@@ -1,12 +1,16 @@
+# Security scan: automatic runs disabled. Re-enable by uncommenting `push`, `pull_request`, and `schedule`
+# under `on`, and set the `security` job in ci.yml to `if: always() && (...)`.
 name: Security Scan
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-  schedule:
-    - cron: '0 6 * * 1'  # Weekly on Monday
+  workflow_dispatch:
+  workflow_call:
+  # push:
+  #   branches: [main, develop]
+  # pull_request:
+  #   branches: [main, develop]
+  # schedule:
+  #   - cron: '0 6 * * 1'  # Weekly on Monday
 
 jobs:
   security:
@@ -56,12 +60,12 @@ jobs:
       # Docker image scan
       - name: Build backend image
         working-directory: ./rag-api
-        run: docker build -t pkm-backend:test .
+        run: docker build -t rag-backend:test .
 
       - name: Scan backend image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: pkm-backend:test
+          image-ref: rag-backend:test
           format: 'sarif'
           output: 'trivy-results.sarif'
 

@@ -1,6 +1,6 @@
 # 🎮 RAG Learning Quest - Gamified Learning System
 
-Welcome to **RAG Learning Quest**, an interactive, gamified learning platform built on top of the PKM RAG project!
+Welcome to **RAG Learning Quest**, an interactive, gamified learning platform built on top of the From Zero RAG project!
 
 ---
 
@@ -230,7 +230,7 @@ from-zero-rag/
                      │
 ┌─────────────────────────────────────────────────────────┐
 │                  RAG Backend API                        │
-│        (Original PKM RAG System)                        │
+│      (Original From Zero RAG System)                    │
 │  ┌────────────┐  ┌───────────┐  ┌──────────────────┐  │
 │  │ Embeddings │  │  Search   │  │  PostgreSQL      │  │
 │  │ Service    │  │  Service  │  │  + pgvector      │  │

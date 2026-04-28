@@ -20,6 +20,6 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  Logger.log(`PKM RAG API running on http://localhost:${port}`, 'Bootstrap');
+  Logger.log(`From Zero RAG API running on http://localhost:${port}`, 'Bootstrap');
 }
 bootstrap();

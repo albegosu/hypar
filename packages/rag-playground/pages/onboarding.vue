@@ -197,8 +197,8 @@
 </template>
 
 <script setup lang="ts">
-import { wizardSteps, buildEnvFile } from '@rag/learning/src/wizard/wizard-steps';
-import type { WizardConfig } from '@rag/learning/src/wizard-types';
+import { wizardSteps, buildEnvFile } from '@rag/learning';
+import type { WizardConfig } from '@rag/learning';
 // @ts-ignore
 import { marked } from 'marked';
 import { useI18n } from 'vue-i18n';

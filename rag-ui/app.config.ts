@@ -1,6 +1,6 @@
 export default defineAppConfig({
   ui: {
-    primary: 'violet',
+    primary: 'emerald',
     gray: 'slate',
     button: {
       rounded: 'rounded-lg',
@@ -10,17 +10,17 @@ export default defineAppConfig({
     },
     card: {
       rounded: 'rounded-xl',
-      background: 'bg-white dark:bg-slate-900/60',
-      ring: 'ring-1 ring-slate-200 dark:ring-white/10',
+      background: 'bg-black/35',
+      ring: 'ring-1 ring-emerald-300/20',
       shadow: 'shadow-none',
-      divide: 'divide-y divide-slate-200 dark:divide-white/5',
+      divide: 'divide-y divide-emerald-300/15',
     },
     input: {
       rounded: 'rounded-lg',
       color: {
         white: {
           outline:
-            'shadow-sm bg-white dark:bg-slate-900/60 text-slate-900 dark:text-white ring-1 ring-inset ring-slate-300 dark:ring-white/10 focus:ring-2 focus:ring-violet-500 dark:focus:ring-violet-400',
+            'shadow-sm bg-black/35 text-emerald-100 ring-1 ring-inset ring-emerald-300/25 focus:ring-2 focus:ring-emerald-400',
         },
       },
     },
