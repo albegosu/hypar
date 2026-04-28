@@ -1,6 +1,6 @@
-# 🧠 PKM RAG - Personal Knowledge Management with RAG
+# 🧠 From Zero RAG - Retrieval-Augmented Generation
 
-A production-ready full-stack application for managing personal knowledge with AI-powered **Retrieval-Augmented Generation (RAG)**. Built to demonstrate modern RAG architecture, vector databases, and cloud-native deployment.
+A production-ready full-stack application for AI-powered **Retrieval-Augmented Generation (RAG)**. Built to demonstrate modern RAG architecture, vector databases, and cloud-native deployment.
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10.3-red)](https://nestjs.com/)
@@ -95,7 +95,7 @@ A production-ready full-stack application for managing personal knowledge with A
 1. INGESTION PIPELINE
    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
    │ Document │───▶│ Chunking │───▶│Embedding │───▶│  Store   │
-   │  Upload  │    │(512 char)│    │(768 dims)│    │(pgvector)│
+   │  Upload  │    │(800 char)│    │(768 dims)│    │(pgvector)│
    └──────────┘    └──────────┘    └──────────┘    └──────────┘
 
 2. RETRIEVAL PIPELINE
@@ -145,15 +145,40 @@ A production-ready full-stack application for managing personal knowledge with A
 ## 🚀 Quick Start
 
 ### Prerequisites
+
+- Docker 20.10+ and Docker Compose 2.0+ (for containerized workflows)
+- Node.js 20+ and pnpm 10+ (for local development)
+- 4GB+ RAM recommended
+- API keys if you want real LLM/embedding providers
+
+### Option 1: Docker Profiles (Recommended)
+
 ```bash
-- Docker 20.10+ OR Node.js 20+
-- Docker Compose 2.0+ (for full stack)
-- pnpm 8+ (for monorepo)
-- 4GB+ RAM
-- Google Gemini API key (free)
+# Full stack: API + UI + Postgres + Ollama
+docker compose --profile full up --build -d
+
+# API-only stack: API + Postgres + Ollama
+docker compose --profile api up --build -d
+
+# Learning/onboarding playground only
+docker compose --profile learning up --build -d
 ```
 
-### Option 1: Learning Quest Only (NEW! 🎮)
+Access points:
+
+- Full stack UI: http://localhost:3000
+- API health: http://localhost:3001/health
+- Learning playground: http://localhost:3002
+
+Stop a profile:
+
+```bash
+docker compose --profile full down
+docker compose --profile api down
+docker compose --profile learning down
+```
+
+### Option 2: Local Development (Monorepo)
 
 ```bash
 # Clone repository
@@ -163,18 +188,19 @@ cd from-zero-rag
 # Install dependencies
 pnpm install
 
+# Start API
+pnpm dev:api
+
+# Start main UI
+pnpm dev:ui
+
 # Start learning playground
 pnpm dev:playground
 ```
 
-Visit **http://localhost:3002** and start learning RAG through interactive challenges!
-
-### Option 2: Full Stack (RAG App + Learning Quest)
+### Option 3: Local All-In-One
 
 ```bash
-# Install all dependencies
-pnpm install
-
 # Start everything
 pnpm dev
 ```
@@ -184,43 +210,7 @@ Access points:
 - 🌐 **RAG App**: http://localhost:3000
 - 🔌 **API**: http://localhost:3001
 
-### Option 3: Docker (Original Setup)
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/yourusername/from-zero-rag.git
-cd from-zero-rag
-```
-
-### 2. Configure Environment
-```bash
-cp .env.docker .env
-```
-
-Edit `.env` and add your API keys:
-```env
-# Get free API key at: https://aistudio.google.com/app/apikey
-GOOGLE_API_KEY=your_gemini_api_key
-
-# Get free API key at: https://ollama.com/settings/keys
-OLLAMA_API_KEY=your_ollama_api_key
-OLLAMA_LLM_MODEL=kimi-k2.5:cloud
-OLLAMA_URL=https://ollama.com
-```
-
-### 3. Start Application
-```bash
-docker-compose up -d --build
-```
-
-### 4. Access Services
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Frontend** | http://localhost:3000 | Web UI |
-| **Backend API** | http://localhost:3001 | REST API |
-| **API Docs** | http://localhost:3001/api | Swagger |
-
-### 5. Test the System
+### Quick API Smoke Test
 ```bash
 # Health check
 curl http://localhost:3001/health
@@ -248,8 +238,8 @@ curl -X POST http://localhost:3001/search \
 
 **Chunking Strategy** (`rag-api/src/documents/chunking.service.ts:30`)
 ```typescript
-- Chunk size: 512 characters
-- Overlap: 50 characters (10%)
+- Chunk size: 800 characters
+- Overlap: 100 characters (12.5%)
 - Preserves context across chunks
 - Handles sentence boundaries
 ```
@@ -397,15 +387,20 @@ vercel --prod
 ```
 from-zero-rag/
 ├── docs/                       # Documentation
-│   ├── ARCHITECTURE.md         # Technical architecture
-│   ├── gameplay/
+│   ├── architecture/
+│   │   └── core-rag-architecture.md
+│   ├── product/
 │   │   └── gamification-summary.md
 │   ├── learning/
 │   │   └── learning.md
-│   └── progress/
-│       ├── expansion-update.md
-│       ├── level3-complete.md
-│       └── session-summary.md
+│   ├── progress/
+│   │   ├── phase-0-baseline-checklist.md
+│   │   └── docker-profiles-smoke-checklist.md
+│   └── archive/
+│       └── progress/
+│           ├── expansion-update.md
+│           ├── level3-complete.md
+│           └── session-summary.md
 │
 ├── rag-api/                    # Backend API
 │   ├── src/
@@ -429,6 +424,10 @@ from-zero-rag/
 │   ├── stores/                 # Pinia state
 │   └── nuxt.config.ts          # Nuxt configuration
 │
+├── packages/
+│   ├── rag-learning/           # Shared learning logic/types/validators
+│   └── rag-playground/         # Learning/onboarding Nuxt app
+│
 ├── docker-compose.yml          # Local development
 └── .env                        # Configuration
 ```
@@ -437,12 +436,14 @@ from-zero-rag/
 
 ## 📚 Documentation
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Gamification Summary](docs/gameplay/gamification-summary.md)
+- [Docs Index](docs/README.md)
+- [Architecture](docs/architecture/core-rag-architecture.md)
+- [Gamification Summary](docs/product/gamification-summary.md)
 - [Learning Notes](docs/learning/learning.md)
-- [Expansion Update](docs/progress/expansion-update.md)
-- [Level 3 Complete](docs/progress/level3-complete.md)
-- [Session Summary](docs/progress/session-summary.md)
+- [Docker Profiles Checklist](docs/progress/docker-profiles-smoke-checklist.md)
+- [Expansion Update](docs/archive/progress/expansion-update.md)
+- [Level 3 Complete](docs/archive/progress/level3-complete.md)
+- [Session Summary](docs/archive/progress/session-summary.md)
 
 ---
 

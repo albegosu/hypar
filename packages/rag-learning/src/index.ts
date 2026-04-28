@@ -9,26 +9,14 @@ export * from './wizard-types';
 import type { Challenge } from './types';
 
 // Import levels for local use
-import { level1, challenge1_1, challenge1_2, challenge1_3 } from './levels/level-1-embeddings';
-import { level2, challenge2_1, challenge2_2, challenge2_3 } from './levels/level-2-chunking';
-import { level3, challenge3_1, challenge3_2, challenge3_3 } from './levels/level-3-vector-db';
+import { level1, level2, level3 } from './levels';
 
 // Re-export for external use
-export { level1, challenge1_1, challenge1_2, challenge1_3 } from './levels/level-1-embeddings';
-export { level2, challenge2_1, challenge2_2, challenge2_3 } from './levels/level-2-chunking';
-export { level3, challenge3_1, challenge3_2, challenge3_3 } from './levels/level-3-vector-db';
+export * from './levels';
+export * from './wizard';
 
 // Validators
-export { BaseValidator } from './validators/base-validator';
-export { EmbeddingBasicValidator } from './validators/embedding-basic-validator';
-export { SimilarityValidator } from './validators/similarity-validator';
-export { LRUCacheValidator } from './validators/lru-cache-validator';
-export { ChunkingFixedValidator } from './validators/chunking-fixed-validator';
-export { ChunkingOverlapValidator } from './validators/chunking-overlap-validator';
-export { ChunkingSentenceValidator } from './validators/chunking-sentence-validator';
-export { VectorTableValidator } from './validators/vector-table-validator';
-export { VectorInsertionValidator } from './validators/vector-insertion-validator';
-export { SimilaritySearchValidator } from './validators/similarity-search-validator';
+export * from './validators';
 
 // TODO: Add more levels as they are implemented
 // export { level4 } from './levels/level-4-retrieval';

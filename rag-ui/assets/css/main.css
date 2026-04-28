@@ -2,6 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+/* RAG UI terminal style (from playground) */
+.terminal-theme {
+  --term-bg: #0a0e0d;
+  --term-bg-elevated: rgba(0, 0, 0, 0.4);
+  --term-bg-soft: rgba(0, 0, 0, 0.3);
+  --term-accent: #34d399;
+  --term-accent-strong: #10b981;
+  --term-accent-line: rgba(52, 211, 153, 0.3);
+  --term-accent-soft: rgba(52, 211, 153, 0.1);
+  --term-text: #d1fae5;
+  --term-text-strong: #a7f3d0;
+  --term-text-muted: rgba(167, 243, 208, 0.75);
+  --term-text-dim: rgba(167, 243, 208, 0.58);
+  --term-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --term-scanlines: repeating-linear-gradient(
+    0deg,
+    rgba(52, 211, 153, 0.02) 0px,
+    rgba(52, 211, 153, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+
+  font-family: var(--term-font);
+  color: var(--term-text);
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -91,48 +117,50 @@ select {
    while adding a faint violet glow at the top — not a flashy
    gradient, just enough to lift the page off pure black. */
 .app-backdrop {
-  background-color: #020617; /* slate-950 */
+  background-color: var(--term-bg); /* terminal background */
   background-image:
     radial-gradient(
       1200px 600px at 80% -10%,
-      rgba(139, 92, 246, 0.12),
+      rgba(16, 185, 129, 0.18),
       transparent 60%
     ),
     radial-gradient(
       900px 500px at -10% 20%,
-      rgba(99, 102, 241, 0.08),
+      rgba(52, 211, 153, 0.12),
       transparent 60%
-    );
+    ),
+    var(--term-scanlines);
   background-attachment: fixed;
 }
 
 /* Glass surfaces — used by header / bottom nav */
 .glass {
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: var(--term-bg-elevated);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-color: var(--term-accent-line);
 }
 
 .dark .glass {
-  background-color: rgba(15, 23, 42, 0.65); /* slate-900 / 65% */
-  border-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--term-bg-elevated);
+  border-color: var(--term-accent-line);
 }
 
 /* Subtle violet hairline used to separate floating surfaces */
 .hairline-b {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid var(--term-accent-line);
 }
 
 .dark .hairline-b {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  border-bottom: 1px solid var(--term-accent-line);
 }
 
 .hairline-t {
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 1px solid var(--term-accent-line);
 }
 
 .dark .hairline-t {
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-top: 1px solid var(--term-accent-line);
 }
 
 /* Soft hoverable card — meant for clickable list items.
@@ -148,36 +176,36 @@ select {
 
 .dark .card-hover:hover {
   box-shadow:
-    0 0 0 1px rgba(167, 139, 250, 0.35),
-    0 8px 24px -12px rgba(139, 92, 246, 0.35);
+    0 0 0 1px var(--term-accent-line),
+    0 8px 24px -12px rgba(16, 185, 129, 0.35);
 }
 
 /* Chat bubble — user (violet gradient) */
 .bubble-user {
   background-image: linear-gradient(
     135deg,
-    #7c3aed 0%,
-    #8b5cf6 60%,
-    #a78bfa 100%
+    #059669 0%,
+    #10b981 60%,
+    #34d399 100%
   );
-  color: #ffffff;
+  color: #052e16;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.08) inset,
-    0 8px 24px -12px rgba(124, 58, 237, 0.55);
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 8px 24px -12px rgba(16, 185, 129, 0.6);
 }
 
 /* Chat bubble — assistant (glass) */
 .bubble-assistant {
-  background-color: #f1f5f9; /* slate-100 */
-  color: #0f172a; /* slate-900 */
+  background-color: var(--term-bg-soft);
+  color: var(--term-text);
 }
 
 .dark .bubble-assistant {
-  background-color: rgba(30, 41, 59, 0.6); /* slate-800 / 60% */
-  color: #e2e8f0; /* slate-200 */
+  background-color: var(--term-bg-soft);
+  color: var(--term-text);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+  box-shadow: inset 0 0 0 1px var(--term-accent-line);
 }
 
 /* Active pill in bottom nav */
@@ -190,13 +218,13 @@ select {
   position: absolute;
   inset: 0;
   border-radius: 0.75rem;
-  background: rgba(139, 92, 246, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.25);
+  background: var(--term-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--term-accent-line);
 }
 
 .dark .nav-active-pill::before {
-  background: rgba(139, 92, 246, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.3);
+  background: var(--term-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--term-accent-line);
 }
 
 /* Brand mark — subtle violet glow behind the logo icon */
@@ -208,10 +236,10 @@ select {
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 0.5rem;
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #047857 0%, #10b981 100%);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.15) inset,
-    0 6px 18px -8px rgba(124, 58, 237, 0.6);
+    0 1px 0 rgba(255, 255, 255, 0.1) inset,
+    0 6px 18px -8px rgba(16, 185, 129, 0.55);
 }
 
 .brand-mark > * {

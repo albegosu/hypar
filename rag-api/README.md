@@ -1,6 +1,6 @@
 # 🔧 RAG API - Backend Service
 
-NestJS backend API for Personal Knowledge Management with RAG capabilities.
+NestJS backend API for RAG capabilities.
 
 ---
 
@@ -77,10 +77,10 @@ npm install
 
 ```bash
 docker run -d \
-  --name pkm-postgres \
-  -e POSTGRES_USER=pkm \
-  -e POSTGRES_PASSWORD=pkm_password \
-  -e POSTGRES_DB=pkm_rag \
+  --name rag-postgres \
+  -e POSTGRES_USER=rag \
+  -e POSTGRES_PASSWORD=rag_password \
+  -e POSTGRES_DB=rag_db \
   -p 5432:5432 \
   pgvector/pgvector:pg16
 ```
@@ -106,7 +106,7 @@ Edit `.env`:
 
 ```env
 # Database
-DATABASE_URL="postgresql://pkm:pkm_password@localhost:5432/pkm_rag"
+DATABASE_URL="postgresql://rag:rag_password@localhost:5432/rag_db"
 
 # Embeddings - Get free key at: https://aistudio.google.com/app/apikey
 GOOGLE_API_KEY=your_gemini_api_key
@@ -518,7 +518,7 @@ npx prisma studio
 - [NestJS Documentation](https://docs.nestjs.com/)
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [pgvector Documentation](https://github.com/pgvector/pgvector)
-- [Technical Architecture](../docs/ARCHITECTURE.md)
+- [Technical Architecture](../docs/architecture/core-rag-architecture.md)
 
 ---
 

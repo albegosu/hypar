@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-Complete Docker Compose setup for PKM RAG application.
+Complete Docker Compose setup for the From Zero RAG application.
 
 ## Architecture
 
@@ -39,29 +39,37 @@ nano .env
 
 ### 3. Build and Start
 
+The `docker-compose.yml` uses **profiles** to group services:
+
+| Profile | Services included |
+|---------|-------------------|
+| `full` | postgres, ollama, backend, frontend |
+| `api` | postgres, ollama, backend (no UI) |
+| `learning` | playground (standalone, no backend needed) |
+
 ```bash
-# Build all services
-docker-compose build
+# Full stack (UI + API + Ollama + DB)
+docker compose --profile full up -d --build
 
-# Start all services
-docker-compose up -d
+# API only (no frontend)
+docker compose --profile api up -d --build
 
-# Or build and start in one command
-docker-compose up -d --build
+# Learning playground only
+docker compose --profile learning up -d --build
 ```
 
 ### 4. Verify Services
 
 ```bash
 # Check all containers are running
-docker-compose ps
+docker compose --profile full ps
 
 # View logs
-docker-compose logs -f
+docker compose --profile full logs -f
 
 # View specific service logs
-docker-compose logs -f backend
-docker-compose logs -f ollama
+docker compose logs -f backend
+docker compose logs -f ollama
 ```
 
 ### 5. Access Application
@@ -78,9 +86,9 @@ docker-compose logs -f ollama
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `POSTGRES_USER` | pkm | Database user |
-| `POSTGRES_PASSWORD` | pkm_password | Database password |
-| `POSTGRES_DB` | pkm_rag | Database name |
+| `POSTGRES_USER` | rag | Database user |
+| `POSTGRES_PASSWORD` | rag_password | Database password |
+| `POSTGRES_DB` | rag_db | Database name |
 | `POSTGRES_PORT` | 5432 | PostgreSQL port |
 | `OLLAMA_PORT` | 11434 | Ollama API port |
 | `OLLAMA_MODEL` | nomic-embed-text | Embedding model |
@@ -100,31 +108,31 @@ docker-compose logs -f ollama
 ## Commands
 
 ```bash
-# Start services
-docker-compose up -d
+# Start full stack
+docker compose --profile full up -d
 
 # Stop services
-docker-compose down
+docker compose --profile full down
 
 # Stop and remove volumes (⚠️ deletes data)
-docker-compose down -v
+docker compose --profile full down -v
 
 # Rebuild after code changes
-docker-compose up -d --build
+docker compose --profile full up -d --build
 
 # View logs
-docker-compose logs -f [service]
+docker compose logs -f [service]
 
 # Execute commands in containers
 # Backend
-ocker-compose exec backend sh
+docker compose exec backend sh
 # Frontend
-docker-compose exec frontend sh
+docker compose exec frontend sh
 # Database
-docker-compose exec postgres psql -U pkm -d pkm_rag
+docker compose exec postgres psql -U rag -d rag_db
 
 # Scale backend (if needed)
-docker-compose up -d --scale backend=2
+docker compose --profile api up -d --scale backend=2
 ```
 
 ## First Run Setup
@@ -133,7 +141,7 @@ After starting, the Ollama container will automatically download the configured 
 
 Check Ollama status:
 ```bash
-docker-compose logs -f ollama
+docker compose logs -f ollama
 ```
 
 Wait for:
@@ -177,21 +185,21 @@ curl -X POST http://localhost:11434/api/pull -d '{"name": "nomic-embed-text"}'
 Wait for PostgreSQL to be ready:
 ```bash
 # Check health
-docker-compose exec postgres pg_isready -U pkm
+docker compose exec postgres pg_isready -U rag
 
 # View logs
-docker-compose logs postgres
+docker compose logs postgres
 ```
 
 ### Rebuild from Scratch
 
 ```bash
 # Remove everything
-docker-compose down -v
+docker compose --profile full down -v
 docker system prune -a
 
 # Rebuild
-docker-compose up -d --build
+docker compose --profile full up -d --build
 ```
 
 ## Production Deployment
@@ -226,10 +234,10 @@ services:
 
 ```bash
 # Backup PostgreSQL
-docker-compose exec postgres pg_dump -U pkm pkm_rag > backup.sql
+docker compose exec postgres pg_dump -U rag rag_db > backup.sql
 
 # Restore
-docker-compose exec -T postgres psql -U pkm pkm_rag < backup.sql
+docker compose exec -T postgres psql -U rag rag_db < backup.sql
 ```
 
 ## Development Mode
@@ -255,7 +263,7 @@ All services include health checks:
 
 Check health:
 ```bash
-docker-compose ps
+docker compose --profile full ps
 # Shows health status: (healthy) or (unhealthy)
 ```
 
@@ -263,21 +271,21 @@ docker-compose ps
 
 ```bash
 # Pull latest images
-docker-compose pull
+docker compose --profile full pull
 
 # Rebuild with latest code
-docker-compose up -d --build
+docker compose --profile full up -d --build
 
 # Update Ollama models
-docker-compose exec ollama ollama pull nomic-embed-text
+docker compose exec ollama ollama pull nomic-embed-text
 ```
 
 ## Support
 
-- Backend issues: Check `docker-compose logs backend`
-- Frontend issues: Check `docker-compose logs frontend`
-- Database issues: Check `docker-compose logs postgres`
-- AI/embedding issues: Check `docker-compose logs ollama`
+- Backend issues: Check `docker compose logs backend`
+- Frontend issues: Check `docker compose logs frontend`
+- Database issues: Check `docker compose logs postgres`
+- AI/embedding issues: Check `docker compose logs ollama`
 
 ## License
 

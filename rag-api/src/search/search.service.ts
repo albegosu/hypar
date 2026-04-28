@@ -132,7 +132,7 @@ export class SearchService {
       ).values(),
     ];
 
-    const systemPrompt = `You are a helpful assistant for the user's personal knowledge base.
+    const systemPrompt = `You are a helpful assistant for the user's document knowledge base.
 Use ONLY the CONTEXT below to answer. If the context is empty or does not contain the answer, say clearly that the information was not found in their documents.
 Be concise. Match the language of the user's last message.
 
@@ -277,7 +277,7 @@ ${context || '(no matching passages found)'}`;
         ? `${rawContext.slice(0, maxCtxChars)}\n…[context truncated]`
         : rawContext;
 
-    const system = `You are a helpful assistant for the user's personal knowledge base.
+    const system = `You are a helpful assistant for the user's document knowledge base.
 Use ONLY the CONTEXT below to answer. If the context is empty or does not contain the answer, say clearly that the information was not found in their documents.
 Be concise. Match the language of the user's last message.
 

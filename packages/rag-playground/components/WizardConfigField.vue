@@ -147,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ConfigField } from '@rag/learning/src/wizard-types';
+import type { ConfigField } from '@rag/learning';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps<{

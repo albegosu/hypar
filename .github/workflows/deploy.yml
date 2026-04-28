@@ -61,7 +61,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "🚀 PKM RAG deployed to ${{ github.event.inputs.environment || 'production' }}: ${{ job.status }}"
+              "text": "🚀 From Zero RAG deployed to ${{ github.event.inputs.environment || 'production' }}: ${{ job.status }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
