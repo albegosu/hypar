@@ -93,14 +93,16 @@ export const useProgressStore = defineStore('progress', {
       );
 
       if (existing) {
-        // Update if better performance
+        // Update if better performance, only add the XP difference to avoid inflation
         if (xpEarned > existing.xpEarned) {
+          const xpDiff = xpEarned - existing.xpEarned;
           existing.xpEarned = xpEarned;
           existing.code = code;
           existing.hintsUsed = Math.min(existing.hintsUsed, hintsUsed);
           if (executionTime && (!existing.bestTime || executionTime < existing.bestTime)) {
             existing.bestTime = executionTime;
           }
+          this.totalXP += xpDiff;
         }
         existing.attempts += 1;
       } else {
@@ -117,9 +119,8 @@ export const useProgressStore = defineStore('progress', {
 
         this.completedChallenges.push(completion);
         this.stats.completedChallenges += 1;
+        this.totalXP += xpEarned;
       }
-
-      this.totalXP += xpEarned;
       this.stats.totalAttempts += 1;
       this.stats.totalHintsUsed += hintsUsed;
       this.updatedAt = new Date();

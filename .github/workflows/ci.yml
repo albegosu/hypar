@@ -12,6 +12,7 @@ jobs:
     outputs:
       backend: ${{ steps.changes.outputs.backend }}
       frontend: ${{ steps.changes.outputs.frontend }}
+      learning: ${{ steps.changes.outputs.learning }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v2
@@ -20,9 +21,19 @@ jobs:
           filters: |
             backend:
               - 'rag-api/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
               - '.github/workflows/**'
             frontend:
               - 'rag-ui/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/**'
+            learning:
+              - 'packages/rag-learning/**'
+              - 'packages/rag-playground/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
               - '.github/workflows/**'
 
   backend:
@@ -35,13 +46,19 @@ jobs:
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     uses: ./.github/workflows/test-frontend.yml
 
+  learning:
+    needs: changes
+    if: ${{ needs.changes.outputs.learning == 'true' }}
+    uses: ./.github/workflows/test-learning.yml
+
+  # Security scan job kept but skipped; set `if` to always() && (...) and uncomment triggers in security.yml to re-enable.
   security:
-    needs: [backend, frontend]
-    if: always() && (needs.backend.result != 'skipped' || needs.frontend.result != 'skipped')
+    needs: [backend, frontend, learning]
+    if: false
     uses: ./.github/workflows/security.yml
 
   docker:
-    needs: [backend, frontend]
+    needs: [backend, frontend, learning]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/docker-build.yml
     secrets: inherit

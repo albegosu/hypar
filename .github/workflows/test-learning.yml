@@ -1,22 +1,25 @@
-name: CI - Test Frontend
+name: CI - Test Learning
 
 on:
   push:
     branches: [main, develop]
     paths:
-      - 'rag-ui/**'
-      - '.github/workflows/test-frontend.yml'
+      - 'packages/rag-learning/**'
+      - 'packages/rag-playground/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/test-learning.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'rag-ui/**'
+      - 'packages/rag-learning/**'
+      - 'packages/rag-playground/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./rag-ui
 
     steps:
       - name: Checkout code
@@ -36,15 +39,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm --filter rag-ui exec nuxt typecheck
+      - name: Build learning package
+        run: pnpm --filter @rag/learning build
 
-      - name: Build
-        run: pnpm --filter rag-ui build
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./rag-ui/coverage
-          flags: frontend
-          name: frontend-coverage
+      - name: Build playground
+        run: pnpm --filter @rag/playground build

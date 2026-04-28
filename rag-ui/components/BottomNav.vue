@@ -9,8 +9,8 @@
           class="flex flex-col items-center gap-1 py-2 px-5 rounded-xl transition-colors duration-150"
           :class="[
             isActive(item.path)
-              ? 'nav-active-pill text-violet-600 dark:text-violet-300'
-              : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200',
+              ? 'nav-active-pill text-emerald-300'
+              : 'text-emerald-800/70 dark:text-emerald-200/70 hover:text-emerald-700 dark:hover:text-emerald-100',
           ]"
         >
           <UIcon :name="item.icon" class="w-5 h-5 relative" />

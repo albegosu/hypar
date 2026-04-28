@@ -4,33 +4,33 @@ services:
   # PostgreSQL with pgvector extension
   postgres:
     image: ankane/pgvector:latest
-    container_name: pkm-postgres
+    container_name: rag-postgres
     environment:
-      POSTGRES_USER: pkm_user
-      POSTGRES_PASSWORD: pkm_password
-      POSTGRES_DB: pkm_rag
+      POSTGRES_USER: rag_user
+      POSTGRES_PASSWORD: rag_password
+      POSTGRES_DB: rag_db
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pkm_user -d pkm_rag"]
+      test: ["CMD-SHELL", "pg_isready -U rag_user -d rag_db"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - pkm-network
+      - rag-network
 
   # Ollama for local LLM and embeddings
   ollama:
     image: ollama/ollama:latest
-    container_name: pkm-ollama
+    container_name: rag-ollama
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - pkm-network
+      - rag-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 30s
@@ -42,9 +42,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pkm-api
+    container_name: rag-api
     environment:
-      DATABASE_URL: postgresql://pkm_user:pkm_password@postgres:5432/pkm_rag?schema=public
+      DATABASE_URL: postgresql://rag_user:rag_password@postgres:5432/rag_db?schema=public
       OLLAMA_URL: http://ollama:11434
       FRONTEND_URL: http://localhost:3000
       PORT: 3001
@@ -59,7 +59,7 @@ services:
       ollama:
         condition: service_healthy
     networks:
-      - pkm-network
+      - rag-network
     restart: unless-stopped
 
 volumes:
@@ -67,5 +67,5 @@ volumes:
   ollama_data:
 
 networks:
-  pkm-network:
+  rag-network:
     driver: bridge

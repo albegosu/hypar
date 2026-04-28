@@ -2,7 +2,7 @@
 
 ## GitHub Actions Workflows
 
-Complete CI/CD pipeline for PKM RAG project.
+Complete CI/CD pipeline for the From Zero RAG project.
 
 ## Workflow Overview
 
@@ -163,7 +163,7 @@ npm run test:cov
 ```bash
 # Test build locally
 cd rag-api
-docker build -t pkm-backend:test .
+docker build -t rag-backend:test .
 ```
 
 ### Secrets not working

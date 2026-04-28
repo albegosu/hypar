@@ -10,7 +10,7 @@ interface PlannerOutput {
   direct_reply: string | null;
 }
 
-const PLANNER_SYSTEM = `You are a routing agent for a personal knowledge base (RAG) app.
+const PLANNER_SYSTEM = `You are a routing agent for a RAG application.
 Return ONLY valid JSON (no markdown fences) with exactly these keys:
 - "use_kb": boolean - true if a good answer needs facts from the user's uploaded documents (policies, internal notes, PDFs they indexed). false for greetings, thanks, small talk, or generic questions that do not depend on their files.
 - "search_query": string or null - if use_kb is true, a short search query in the user's language to retrieve relevant passages; otherwise null.
@@ -88,7 +88,7 @@ export class AgentService {
         ? `${rawContext.slice(0, maxCtxChars)}\n…[context truncated]`
         : rawContext;
 
-    const system = `You are a helpful assistant for the user's personal knowledge base.
+    const system = `You are a helpful assistant for the user's document knowledge base.
 Use ONLY the CONTEXT below to answer. If the context is empty or does not contain the answer, say clearly that the information was not found in their documents.
 Be concise. Match the language of the user's last message.
 

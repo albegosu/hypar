@@ -5,8 +5,8 @@
         <span class="brand-mark">
           <UIcon name="i-heroicons-cube" class="w-4 h-4" />
         </span>
-        <h1 class="text-base font-semibold tracking-tight text-slate-900 dark:text-white">
-          PKM <span class="text-violet-600 dark:text-violet-400">RAG</span>
+        <h1 class="text-base font-semibold tracking-tight text-emerald-100">
+          From Zero <span class="text-emerald-400">RAG</span>
         </h1>
       </NuxtLink>
 

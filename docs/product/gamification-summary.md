@@ -124,8 +124,8 @@ pnpm dev
 from-zero-rag/
 ├── pnpm-workspace.yaml                  # ✅ Monorepo config
 ├── package.json                         # ✅ Root package
-├── LEARNING.md                          # ✅ Learning guide
-├── GAMIFICATION_SUMMARY.md              # ✅ This file
+├── docs/learning/learning.md            # ✅ Learning guide
+├── docs/product/gamification-summary.md # ✅ This file
 │
 ├── packages/
 │   ├── rag-learning/                    # ✅ NEW

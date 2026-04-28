@@ -5,10 +5,17 @@
 </template>
 
 <script setup lang="ts">
-// Root app component
+import { useProgressStore } from '~/stores/progress';
+
+const progress = useProgressStore();
+
 useHead({
   htmlAttrs: {
     lang: 'en',
   },
+});
+
+onMounted(() => {
+  progress.loadProgress();
 });
 </script>

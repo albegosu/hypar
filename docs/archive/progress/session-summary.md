@@ -45,10 +45,10 @@
 from-zero-rag/
 ├── pnpm-workspace.yaml                 ✅ NEW
 ├── package.json                        ✅ NEW
-├── LEARNING.md                         ✅ NEW (User guide)
-├── GAMIFICATION_SUMMARY.md             ✅ NEW (Technical overview)
-├── EXPANSION_UPDATE.md                 ✅ NEW (This expansion)
-├── SESSION_SUMMARY.md                  ✅ NEW (This file)
+├── docs/learning/learning.md           ✅ NEW (User guide)
+├── docs/product/gamification-summary.md ✅ NEW (Technical overview)
+├── docs/archive/progress/expansion-update.md   ✅ NEW (This expansion)
+├── docs/archive/progress/session-summary.md    ✅ NEW (This file)
 ├── README.md                           ✅ UPDATED
 │
 ├── packages/
@@ -309,7 +309,7 @@ pnpm dev
 ## 📖 Documentation Created
 
 ### User-Facing Docs
-1. **LEARNING.md** - Complete learning guide
+1. **docs/learning/learning.md** - Complete learning guide
    - What is RAG Learning Quest
    - How to start
    - Learning path overview
@@ -322,19 +322,19 @@ pnpm dev
    - Deployment
 
 ### Technical Docs
-3. **GAMIFICATION_SUMMARY.md** - Implementation details
+3. **docs/product/gamification-summary.md** - Implementation details
    - What was built
    - How it works
    - File structure
    - Known limitations
 
-4. **EXPANSION_UPDATE.md** - Level 2 expansion
+4. **docs/archive/progress/expansion-update.md** - Level 2 expansion
    - New challenges
    - Validators
    - Updated features
    - Testing guide
 
-5. **SESSION_SUMMARY.md** - This file!
+5. **docs/archive/progress/session-summary.md** - This file!
 
 ---
 
@@ -405,8 +405,8 @@ pnpm dev
 - **Pages**: 3
 
 ### Documentation
-- **Guides**: 2 (LEARNING.md, README updates)
-- **Technical**: 2 (GAMIFICATION_SUMMARY.md, EXPANSION_UPDATE.md)
+- **Guides**: 2 (docs/learning/learning.md, README updates)
+- **Technical**: 2 (docs/product/gamification-summary.md, docs/archive/progress/expansion-update.md)
 - **README files**: 2 (playground, learning package)
 - **Total pages**: ~100+ pages of documentation
 

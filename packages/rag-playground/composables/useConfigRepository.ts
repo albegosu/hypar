@@ -1,4 +1,4 @@
-import type { WizardConfig } from '@rag/learning/src/wizard-types';
+import type { WizardConfig } from '@rag/learning';
 
 /**
  * Storage abstraction for the wizard configuration.

@@ -2,28 +2,29 @@ services:
   # PostgreSQL with pgvector extension
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: pkm-postgres
+    container_name: rag-postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-pkm}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pkm_password}
-      POSTGRES_DB: ${POSTGRES_DB:-pkm_rag}
+      POSTGRES_USER: ${POSTGRES_USER:-rag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_password}
+      POSTGRES_DB: ${POSTGRES_DB:-rag_db}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pkm} -d ${POSTGRES_DB:-pkm_rag}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rag} -d ${POSTGRES_DB:-rag_db}"]
       interval: 5s
       timeout: 5s
       retries: 5
     networks:
-      - pkm-network
+      - rag-network
+    profiles: ["full", "api"]
 
   # Ollama for local embeddings
   ollama:
     image: ollama/ollama:latest
-    container_name: pkm-ollama
+    container_name: rag-ollama
     ports:
       - "${OLLAMA_PORT:-11434}:11434"
     volumes:
@@ -44,18 +45,19 @@ services:
       retries: 20
       start_period: 120s
     networks:
-      - pkm-network
+      - rag-network
+    profiles: ["full", "api"]
 
   # Backend API (NestJS)
   backend:
     build:
       context: ./rag-api
       dockerfile: Dockerfile
-    container_name: pkm-backend
+    container_name: rag-backend
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://${POSTGRES_USER:-pkm}:${POSTGRES_PASSWORD:-pkm_password}@postgres:5432/${POSTGRES_DB:-pkm_rag}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_password}@postgres:5432/${POSTGRES_DB:-rag_db}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-tinyllama}
@@ -73,8 +75,9 @@ services:
     volumes:
       - backend_uploads:/app/uploads
     networks:
-      - pkm-network
+      - rag-network
     restart: unless-stopped
+    profiles: ["full", "api"]
 
   # Frontend (Nuxt 3)
   frontend:
@@ -83,7 +86,7 @@ services:
       dockerfile: Dockerfile
       args:
         NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}
-    container_name: pkm-frontend
+    container_name: rag-frontend
     environment:
       NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}
       NUXT_HOST: 0.0.0.0
@@ -93,8 +96,25 @@ services:
     depends_on:
       - backend
     networks:
-      - pkm-network
+      - rag-network
     restart: unless-stopped
+    profiles: ["full"]
+
+  # Learning playground (Nuxt + @rag/learning)
+  playground:
+    build:
+      context: .
+      dockerfile: ./packages/rag-playground/Dockerfile
+    container_name: rag-playground
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3002
+    ports:
+      - "${PLAYGROUND_PORT:-3002}:3002"
+    networks:
+      - rag-network
+    restart: unless-stopped
+    profiles: ["learning"]
 
 volumes:
   postgres_data:
@@ -102,5 +122,5 @@ volumes:
   backend_uploads:
 
 networks:
-  pkm-network:
+  rag-network:
     driver: bridge
