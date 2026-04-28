@@ -1,0 +1,126 @@
+{
+  "wizard": {
+    "chrome": {
+      "basic": "básico",
+      "advanced": "avanzado",
+      "visible": "visible",
+      "hiddenByDefault": "oculto por defecto",
+      "required": "Requerido",
+      "hide": "ocultar",
+      "show": "mostrar",
+      "enabled": "activo",
+      "disabled": "inactivo",
+      "addTag": "+ añadir",
+      "what": "qué",
+      "why": "por qué",
+      "copy": "copiar",
+      "copied": "copiado",
+      "previewEnv": "preview .env",
+      "prev": "anterior",
+      "next": "siguiente",
+      "downloadEnv": "descargar config .env",
+      "copySetup": "copiar comandos setup",
+      "setupCopied": "setup copiado",
+      "nextStepsTitle": "siguientes pasos",
+      "stepCloneRepo": "Clona tu repositorio RAG",
+      "stepAddEnv": "Coloca este archivo descargado como `.env` en la raíz del proyecto",
+      "stepRunStack": "Arranca servicios y app",
+      "ready": "listo",
+      "requiredMissing": "faltan campos requeridos",
+      "configCommand": "configure --step={stepId}",
+      "storageInfo": "escribe -> localStorage://rag-wizard-config"
+    },
+    "steps": {
+      "apis": {
+        "title": "Configuración de APIs",
+        "subtitle": "Conecta proveedores de embeddings y generación",
+        "what": "Tu RAG necesita dos servicios:\n- **Proveedor de embeddings** para convertir texto en vectores\n- **Proveedor LLM** para generar respuestas finales",
+        "why": "La abstracción por proveedor mantiene tu stack flexible.\nPuedes cambiar modelos sin reescribir el wizard ni el contrato del `.env`.",
+        "benefits": [
+          "Configuración agnóstica al proveedor",
+          "Cambio fácil de modelos",
+          "Flujo de secretos listo para producción",
+          "Contrato de config preparado para el futuro"
+        ],
+        "codeExplanation": "Estas variables definen proveedores activos y sus credenciales."
+      },
+      "vectorDb": {
+        "title": "Base de Datos Vectorial",
+        "subtitle": "Configura PostgreSQL con pgvector para almacenar embeddings",
+        "what": "Postgres con la extensión **pgvector** almacena y busca vectores por similitud semántica.",
+        "why": "Las BBDD tradicionales buscan palabras exactas. Las vectoriales buscan **significado**:\n\"deployment\" puede encontrar \"hosting\" o \"production setup\".",
+        "benefits": [
+          "Búsqueda semántica",
+          "Indexado HNSW (< 10ms)",
+          "Escala a millones de docs",
+          "Open source"
+        ],
+        "codeExplanation": "Postgres con pgvector preinstalado. Puertos y credenciales salen del `.env`."
+      },
+      "embeddings": {
+        "title": "Servicio de Embeddings",
+        "subtitle": "Convierte texto en vectores semánticos",
+        "what": "Servicio que transforma texto en vectores.\nCada vector representa el **significado** del texto.",
+        "why": "La búsqueda por keywords encuentra palabras exactas. La búsqueda por embeddings entiende intención:\n\"machine learning tutorial\" puede encontrar \"AI guide\" sin compartir palabras.",
+        "benefits": [
+          "Captura sinónimos y conceptos",
+          "Funciona entre idiomas",
+          "Conserva contexto y matiz",
+          "Habilita retrieval semántico real"
+        ],
+        "codeExplanation": "Llama a un endpoint de embeddings y devuelve el vector resultante."
+      },
+      "chunking": {
+        "title": "Procesamiento de Documentos",
+        "subtitle": "Trocea y guarda tus documentos con embeddings",
+        "what": "Pipeline de ingesta:\n1. **Divide** documentos en chunks\n2. **Genera** embeddings por chunk\n3. **Almacena** todo en la BBDD vectorial",
+        "why": "Los LLM tienen ventana de contexto limitada. Chunks más pequeños mejoran la precisión.\nEl **overlap** evita perder contexto en los cortes.",
+        "benefits": [
+          "Chunks óptimos para retrieval",
+          "El overlap preserva contexto",
+          "Soporta varios formatos",
+          "Listo para procesar en paralelo"
+        ],
+        "codeExplanation": "Divide contenido en chunks solapados para mantener continuidad de contexto."
+      },
+      "search": {
+        "title": "Búsqueda por Similitud",
+        "subtitle": "Encuentra chunks relevantes usando similitud vectorial",
+        "what": "El sistema de búsqueda encuentra los chunks más relevantes para una pregunta usando similitud vectorial.",
+        "why": "Pregunta -> embedding de consulta -> chunks más cercanos -> contexto top-K.\nLa similitud coseno mide cercanía semántica.",
+        "benefits": [
+          "Latencia HNSW por debajo de 10ms",
+          "Tolera sinónimos y typos",
+          "Escala a grandes volúmenes",
+          "Filtros opcionales por metadatos"
+        ],
+        "codeExplanation": "El operador `<=>` calcula distancia coseno. Cuanto menor, más similar."
+      },
+      "rag": {
+        "title": "RAG Completo",
+        "subtitle": "Combina retrieval y generación para respuestas fundamentadas",
+        "what": "**Retrieval-Augmented Generation** recupera contexto y lo inyecta al prompt antes de generar.",
+        "why": "Sin RAG, el LLM responde solo con su entrenamiento.\nCon RAG, responde apoyándose en **tus documentos**.",
+        "benefits": [
+          "Respuestas basadas en tus docs",
+          "Respuestas con fuente",
+          "Menor riesgo de alucinaciones",
+          "Siempre actualizado"
+        ],
+        "codeExplanation": "Retrieval + generación: el modelo responde usando el contexto recuperado."
+      }
+    },
+    "fields": {
+      "external": {
+        "getKey": "obtener key"
+      },
+      "geminiApiKey": { "helpText": "Se usa para embeddings con Gemini" },
+      "openaiApiKey": { "helpText": "Se usa para embeddings/chat de OpenAI" },
+      "voyageApiKey": { "helpText": "Se usa para embeddings de Voyage" },
+      "ollamaBaseUrl": { "helpText": "URL base de tu instancia local de Ollama" },
+      "ollamaApiKey": { "helpText": "Se usa para LLM de Ollama Cloud" },
+      "anthropicApiKey": { "helpText": "Se usa para modelos de Anthropic" },
+      "mistralApiKey": { "helpText": "Se usa para modelos de Mistral" }
+    }
+  }
+}

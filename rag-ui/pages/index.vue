@@ -1,10 +1,10 @@
 <template>
-  <div class="max-w-2xl mx-auto px-4 py-4 flex flex-col min-h-[calc(100dvh-5.5rem)]">
-    <div class="text-center mb-4 shrink-0">
-      <h1 class="text-xl font-bold text-gray-900 dark:text-white">
+  <div class="max-w-2xl mx-auto px-4 py-5 flex flex-col min-h-[calc(100dvh-5.5rem)]">
+    <div class="text-center mb-5 shrink-0">
+      <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
         Chat with your knowledge base
       </h1>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
         Lightweight agent: chooses whether to search your documents (RAG) or reply without the vector store.
       </p>
     </div>
@@ -15,9 +15,14 @@
     >
       <div
         v-if="!chatMessages.length"
-        class="text-center text-gray-500 dark:text-gray-400 py-8 text-sm"
+        class="text-center py-10 text-sm"
       >
-        Ask something about the documents you uploaded. Follow-up questions keep context.
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20 mb-3">
+          <UIcon name="i-heroicons-sparkles" class="w-6 h-6 text-violet-500 dark:text-violet-300" />
+        </div>
+        <p class="text-slate-500 dark:text-slate-400">
+          Ask something about the documents you uploaded. Follow-up questions keep context.
+        </p>
       </div>
 
       <div
@@ -27,16 +32,16 @@
         :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
       >
         <div
-          class="max-w-[90%] rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap"
+          class="max-w-[90%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap leading-relaxed"
           :class="
             msg.role === 'user'
-              ? 'bg-primary-500 text-white rounded-br-md'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-md'
+              ? 'bubble-user rounded-br-md'
+              : 'bubble-assistant rounded-bl-md'
           "
         >
           <div
             v-if="msg.role === 'assistant' && msg.usedKb != null"
-            class="mb-1 flex flex-wrap gap-1"
+            class="mb-1.5 flex flex-wrap gap-1"
           >
             <UBadge
               v-if="msg.usedKb"
@@ -49,7 +54,7 @@
             <UBadge
               v-else
               size="xs"
-              color="neutral"
+              color="gray"
               variant="subtle"
             >
               No KB
@@ -58,7 +63,7 @@
           {{ msg.content }}
           <div
             v-if="msg.role === 'assistant' && msg.sources?.length"
-            class="mt-2 pt-2 border-t border-gray-300 dark:border-gray-600 text-xs text-gray-600 dark:text-gray-300"
+            class="mt-2 pt-2 border-t border-slate-300/60 dark:border-white/10 text-xs text-slate-600 dark:text-slate-300"
           >
             Sources:
             <span
@@ -68,32 +73,37 @@
             >
               <NuxtLink
                 :to="`/documents/${s.id}`"
-                class="text-primary-600 dark:text-primary-400 underline"
+                class="text-violet-600 dark:text-violet-300 hover:text-violet-500 dark:hover:text-violet-200 underline underline-offset-2 decoration-violet-500/40"
               >{{ s.title }}</NuxtLink>{{ i < msg.sources.length - 1 ? ', ' : '' }}
             </span>
           </div>
           <div
             v-if="msg.role === 'assistant' && msg.results?.length"
-            class="mt-2 pt-2 border-t border-gray-300 dark:border-gray-600"
+            class="mt-2 pt-2 border-t border-slate-300/60 dark:border-white/10"
           >
             <button
               type="button"
-              class="text-xs text-gray-600 dark:text-gray-300 underline"
+              class="text-xs text-slate-600 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-300 inline-flex items-center gap-1 transition-colors"
               @click="msg.expanded = !msg.expanded"
             >
+              <UIcon
+                name="i-heroicons-chevron-down"
+                class="w-3 h-3 transition-transform"
+                :class="msg.expanded ? 'rotate-180' : ''"
+              />
               {{ msg.expanded ? 'Hide' : 'Show' }} retrieval ({{ msg.results.length }} chunks)
             </button>
             <div v-if="msg.expanded" class="mt-2 space-y-1.5">
               <div
                 v-for="(r, i) in msg.results"
                 :key="r.chunkId"
-                class="text-xs bg-white/60 dark:bg-gray-900/40 rounded-md p-2 border border-gray-300/60 dark:border-gray-600/60"
+                class="text-xs bg-white/70 dark:bg-slate-950/50 rounded-lg p-2.5 ring-1 ring-slate-200 dark:ring-white/10"
               >
-                <div class="flex items-center justify-between text-[10px] text-gray-500 mb-1 font-mono">
+                <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1 font-mono">
                   <span>#{{ i + 1 }} · {{ r.documentTitle }}</span>
-                  <span>score {{ r.score.toFixed(3) }}</span>
+                  <span class="text-violet-600 dark:text-violet-300">score {{ r.score.toFixed(3) }}</span>
                 </div>
-                <p class="whitespace-pre-wrap text-gray-700 dark:text-gray-200 line-clamp-3">
+                <p class="whitespace-pre-wrap text-slate-700 dark:text-slate-200 line-clamp-3">
                   {{ r.content }}
                 </p>
               </div>
@@ -103,8 +113,13 @@
       </div>
 
       <div v-if="sending" class="flex justify-start">
-        <div class="bg-gray-200 dark:bg-gray-700 rounded-2xl rounded-bl-md px-4 py-2 text-sm text-gray-500">
-          Thinking…
+        <div class="bubble-assistant rounded-2xl rounded-bl-md px-4 py-2.5 text-sm flex items-center gap-1.5">
+          <span class="inline-flex gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse [animation-delay:120ms]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse [animation-delay:240ms]"></span>
+          </span>
+          <span class="text-slate-500 dark:text-slate-400">Thinking…</span>
         </div>
       </div>
     </div>
@@ -143,8 +158,8 @@
     </div>
 
     <!-- Recent documents -->
-    <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 shrink-0">
-      <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+    <div class="mt-8 pt-6 hairline-t shrink-0">
+      <h2 class="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400 mb-3">
         Recent documents
       </h2>
       <div v-if="store.loading" class="space-y-2">
@@ -154,27 +169,30 @@
         <UCard
           v-for="doc in store.documents.slice(0, 5)"
           :key="doc.id"
-          class="cursor-pointer hover:shadow-md transition-shadow"
+          class="card-hover cursor-pointer"
           :ui="{ body: { padding: 'p-3 sm:p-3' } }"
           @click="navigateTo(`/documents/${doc.id}`)"
         >
-          <div class="flex items-center gap-2 min-w-0">
-            <UIcon
-              :name="getIconForType(doc.sourceType)"
-              class="w-4 h-4 text-gray-400 shrink-0"
-            />
-            <div class="min-w-0">
-              <h3 class="font-medium text-sm truncate text-gray-900 dark:text-white">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-8 h-8 shrink-0 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/15 flex items-center justify-center">
+              <UIcon
+                :name="getIconForType(doc.sourceType)"
+                class="w-4 h-4 text-violet-600 dark:text-violet-300"
+              />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h3 class="font-medium text-sm truncate text-slate-900 dark:text-white">
                 {{ doc.title }}
               </h3>
-              <p class="text-xs text-gray-500">
+              <p class="text-xs text-slate-500 dark:text-slate-400">
                 {{ doc._count?.chunks || 0 }} chunks
               </p>
             </div>
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 text-slate-400 dark:text-slate-500" />
           </div>
         </UCard>
       </div>
-      <div v-else class="text-center py-4 text-sm text-gray-500">
+      <div v-else class="text-center py-6 text-sm text-slate-500 dark:text-slate-400">
         <p>No documents yet.</p>
         <UButton to="/upload" size="sm" class="mt-2">Upload</UButton>
       </div>

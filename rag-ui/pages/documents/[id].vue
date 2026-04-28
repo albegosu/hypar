@@ -26,15 +26,18 @@
       <header>
         <div class="flex items-start justify-between gap-4">
           <div class="min-w-0">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white break-words">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white break-words">
               {{ doc.title }}
             </h1>
-            <div class="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
-              <span class="flex items-center gap-1">
-                <UIcon :name="iconForType(doc.sourceType)" class="w-4 h-4" />
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-violet-500/10 ring-1 ring-violet-500/15 text-violet-700 dark:text-violet-300">
+                <UIcon :name="iconForType(doc.sourceType)" class="w-3.5 h-3.5" />
                 {{ doc.sourceType }}
               </span>
-              <span>{{ doc.chunks?.length || 0 }} chunks</span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10">
+                <UIcon name="i-heroicons-cube" class="w-3.5 h-3.5" />
+                {{ doc.chunks?.length || 0 }} chunks
+              </span>
               <span>{{ formatDate(doc.createdAt) }}</span>
             </div>
           </div>
@@ -64,15 +67,15 @@
       </header>
 
       <section>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-          <UIcon name="i-heroicons-cube" class="w-4 h-4" />
+        <h2 class="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+          <UIcon name="i-heroicons-cube" class="w-4 h-4 text-violet-500 dark:text-violet-300" />
           Chunks
-          <span class="text-xs font-normal text-gray-500">
+          <span class="text-[11px] normal-case tracking-normal font-normal text-slate-400 dark:text-slate-500">
             (the pieces that get embedded and searched)
           </span>
         </h2>
 
-        <div v-if="!doc.chunks?.length" class="text-sm text-gray-500 py-4">
+        <div v-if="!doc.chunks?.length" class="text-sm text-slate-500 dark:text-slate-400 py-4">
           No chunks yet.
         </div>
 
@@ -82,14 +85,14 @@
             :key="chunk.id"
             :ui="{ body: { padding: 'p-3 sm:p-3' } }"
           >
-            <div class="flex items-center justify-between text-xs text-gray-500 mb-1.5">
-              <span class="font-mono">#{{ chunk.index }}</span>
-              <span class="font-mono">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-mono text-violet-600 dark:text-violet-300">#{{ chunk.index }}</span>
+              <span class="font-mono text-slate-500 dark:text-slate-400">
                 chars {{ chunk.startChar }}–{{ chunk.endChar }}
                 · ~{{ chunk.tokenCount }} tokens
               </span>
             </div>
-            <p class="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+            <p class="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
               {{ chunk.content }}
             </p>
           </UCard>
@@ -97,12 +100,12 @@
       </section>
 
       <section>
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-          <UIcon name="i-heroicons-document-text" class="w-4 h-4" />
+        <h2 class="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+          <UIcon name="i-heroicons-document-text" class="w-4 h-4 text-violet-500 dark:text-violet-300" />
           Original content
         </h2>
         <UCard :ui="{ body: { padding: 'p-3 sm:p-4' } }">
-          <pre class="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words font-mono max-h-96 overflow-y-auto">{{ doc.content }}</pre>
+          <pre class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap break-words font-mono max-h-96 overflow-y-auto">{{ doc.content }}</pre>
         </UCard>
       </section>
     </div>

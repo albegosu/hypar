@@ -1,0 +1,437 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* RAG Learning Quest — dark/violet theme */
+
+:root {
+  --color-primary: #8b5cf6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+/* ───── Wizard / Terminal Theme ─────────────────────────────
+   Centralised design tokens for the onboarding wizard.
+   Tweak these values to restyle the whole flow.
+   Scoped to .wizard-terminal so the rest of the app is untouched.
+*/
+.wizard-terminal {
+  /* Palette */
+  --wz-bg:            #0a0e0d;
+  --wz-bg-elevated:   rgba(0, 0, 0, 0.40);
+  --wz-bg-input:      #000;
+  --wz-bg-soft:       rgba(0, 0, 0, 0.30);
+
+  --wz-accent:        #34d399;        /* emerald-400 */
+  --wz-accent-strong: #10b981;        /* emerald-500 */
+  --wz-accent-soft:   rgba(52, 211, 153, 0.10);
+  --wz-accent-line:   rgba(52, 211, 153, 0.30);
+  --wz-accent-faint:  rgba(52, 211, 153, 0.15);
+  --wz-header-bg:     rgba(0, 0, 0, 0.40);
+
+  --wz-text:          #d1fae5;        /* emerald-100 */
+  --wz-text-strong:   #a7f3d0;        /* emerald-200 */
+  --wz-text-muted:    rgba(167, 243, 208, 0.70);
+  --wz-text-dim:      rgba(167, 243, 208, 0.50);
+  --wz-text-faint:    rgba(167, 243, 208, 0.30);
+
+  --wz-danger:        #f87171;
+  --wz-warn:          #fbbf24;
+
+  /* Typography */
+  --wz-font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --wz-font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Radii / spacing */
+  --wz-radius:       6px;
+  --wz-radius-lg:    10px;
+
+  /* Effects */
+  --wz-scanlines: repeating-linear-gradient(
+    0deg,
+    rgba(52, 211, 153, 0.02) 0px,
+    rgba(52, 211, 153, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+
+  font-family: var(--wz-font-mono);
+  background-color: var(--wz-bg);
+  color: var(--wz-text);
+}
+
+.wizard-terminal.theme-light {
+  --wz-bg:            #f5f1e8;
+  --wz-bg-elevated:   rgba(255, 253, 247, 0.72);
+  --wz-bg-input:      #fffdf7;
+  --wz-bg-soft:       rgba(255, 255, 255, 0.45);
+
+  --wz-accent:        #4b4b4b;
+  --wz-accent-strong: #303030;
+  --wz-accent-soft:   rgba(62, 62, 62, 0.06);
+  --wz-accent-line:   rgba(58, 58, 58, 0.28);
+  --wz-accent-faint:  rgba(58, 58, 58, 0.16);
+  --wz-header-bg:     rgba(250, 245, 235, 0.9);
+
+  --wz-text:          #3f3f3f;
+  --wz-text-strong:   #252525;
+  --wz-text-muted:    rgba(63, 63, 63, 0.82);
+  --wz-text-dim:      rgba(63, 63, 63, 0.65);
+  --wz-text-faint:    rgba(63, 63, 63, 0.52);
+
+  --wz-scanlines:
+    radial-gradient(rgba(55, 55, 55, 0.16) 0.7px, transparent 0.8px),
+    radial-gradient(rgba(55, 55, 55, 0.1) 0.7px, transparent 0.8px),
+    repeating-linear-gradient(
+      0deg,
+      rgba(72, 72, 72, 0.015) 0px,
+      rgba(72, 72, 72, 0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  background-size: 12px 12px, 12px 12px, auto;
+  background-position: 0 0, 6px 6px, 0 0;
+}
+
+.wizard-terminal .wz-sans { font-family: var(--wz-font-sans); }
+.wizard-terminal .wz-scanline { background-image: var(--wz-scanlines); }
+
+/* Inputs share styling */
+.wizard-terminal .wz-input,
+.wizard-terminal .wz-select {
+  background-color: var(--wz-bg-input);
+  border: 1px solid var(--wz-accent-line);
+  color: var(--wz-text-strong);
+  border-radius: var(--wz-radius);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--wz-font-mono);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.wizard-terminal .wz-input:focus,
+.wizard-terminal .wz-select:focus {
+  border-color: var(--wz-accent);
+  box-shadow: 0 0 0 1px var(--wz-accent-faint);
+}
+
+.wizard-terminal .wz-input::placeholder { color: var(--wz-text-faint); }
+
+.wizard-terminal .wz-panel {
+  border: 1px solid var(--wz-accent-line);
+  background-color: var(--wz-bg-elevated);
+  border-radius: var(--wz-radius);
+}
+
+.wizard-terminal .wz-panel-header {
+  border-bottom: 1px solid var(--wz-accent-faint);
+  background-color: var(--wz-accent-soft);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+}
+
+.wizard-terminal .wz-label { color: var(--wz-accent-strong); }
+.wizard-terminal .wz-muted { color: var(--wz-text-muted); }
+.wizard-terminal .wz-dim   { color: var(--wz-text-dim); }
+.wizard-terminal .wz-faint { color: var(--wz-text-faint); }
+
+.wizard-terminal .wz-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 11px;
+  border-radius: var(--wz-radius);
+  background-color: var(--wz-accent-soft);
+  border: 1px solid var(--wz-accent-line);
+  color: var(--wz-text-strong);
+  font-family: var(--wz-font-mono);
+}
+
+.wizard-terminal .wz-pill-dashed {
+  border-style: dashed;
+  background: transparent;
+  color: var(--wz-text-faint);
+}
+
+.wizard-terminal .wz-btn-primary {
+  background-color: var(--wz-accent-strong);
+  color: #000;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: var(--wz-radius);
+  font-family: var(--wz-font-mono);
+  transition: background-color 150ms ease;
+}
+.wizard-terminal .wz-btn-primary:hover { background-color: var(--wz-accent); }
+.wizard-terminal .wz-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wizard-terminal.theme-light .wz-btn-primary {
+  color: var(--wz-bg);
+}
+
+.wizard-terminal .wz-btn-ghost {
+  color: var(--wz-accent-strong);
+  font-family: var(--wz-font-mono);
+}
+.wizard-terminal .wz-btn-ghost:hover { color: var(--wz-text-strong); }
+
+.wizard-terminal input[type="range"] { accent-color: var(--wz-accent); }
+.wizard-terminal input[type="checkbox"] { accent-color: var(--wz-accent); }
+
+html,
+body {
+  background-color: #020617; /* slate-950 */
+  color: #e2e8f0; /* slate-200 */
+  color-scheme: dark;
+}
+
+::selection {
+  background-color: rgba(139, 92, 246, 0.35);
+  color: inherit;
+}
+
+/* App backdrop — radial violet glow */
+.quest-backdrop {
+  background-color: #020617;
+  background-image:
+    radial-gradient(
+      1100px 600px at 80% -10%,
+      rgba(139, 92, 246, 0.16),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at -10% 30%,
+      rgba(168, 85, 247, 0.1),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 500px at 50% 110%,
+      rgba(99, 102, 241, 0.08),
+      transparent 60%
+    );
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.55);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+/* ───── Level Map ───────────────────────────────────────── */
+.level-node {
+  position: relative;
+  transition: transform 200ms ease, box-shadow 250ms ease;
+  cursor: pointer;
+}
+
+.level-node.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+
+.level-node.unlocked:hover {
+  transform: translateY(-4px);
+}
+
+.level-node.current::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  padding: 2px;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7, #6366f1);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.level-node.completed {
+  --completed-glow: 0 0 0 1px rgba(34, 197, 94, 0.35),
+    0 8px 24px -12px rgba(16, 185, 129, 0.4);
+  box-shadow: var(--completed-glow);
+  border-radius: 12px;
+}
+
+/* ───── Challenge Cards ────────────────────────────────── */
+.challenge-card {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  transition: transform 200ms ease, border-color 200ms ease,
+    box-shadow 250ms ease;
+}
+
+.challenge-card:hover {
+  transform: translateY(-2px);
+}
+
+.challenge-card.easy {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.06),
+    rgba(15, 23, 42, 0.6)
+  );
+}
+
+.challenge-card.easy:hover {
+  box-shadow: 0 12px 30px -16px rgba(34, 197, 94, 0.5);
+}
+
+.challenge-card.medium {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.06),
+    rgba(15, 23, 42, 0.6)
+  );
+}
+
+.challenge-card.medium:hover {
+  box-shadow: 0 12px 30px -16px rgba(245, 158, 11, 0.5);
+}
+
+.challenge-card.hard {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.06),
+    rgba(15, 23, 42, 0.6)
+  );
+}
+
+.challenge-card.hard:hover {
+  box-shadow: 0 12px 30px -16px rgba(239, 68, 68, 0.5);
+}
+
+/* Code editor wrapper */
+.code-editor-container {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  overflow: hidden;
+  background: #020617;
+}
+
+/* XP / progress bar */
+.xp-bar {
+  height: 0.75rem;
+  background-image: linear-gradient(
+    90deg,
+    #8b5cf6 0%,
+    #a855f7 50%,
+    #d946ef 100%
+  );
+  border-radius: 999px;
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.45);
+  transition: width 500ms ease;
+}
+
+/* Badge unlock animation */
+@keyframes badge-unlock {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.badge-unlock {
+  animation: badge-unlock 0.6s ease-out;
+}
+
+/* Test results */
+.test-passed {
+  color: #4ade80;
+  background-color: rgba(22, 163, 74, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.test-failed {
+  color: #f87171;
+  background-color: rgba(220, 38, 38, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Glass surface */
+.glass {
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+/* Brand mark — gradient cube tile */
+.brand-cube {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.875rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 60%, #6366f1 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 30px -10px rgba(124, 58, 237, 0.55);
+}
+
+/* Prose tweaks for dark + violet */
+.prose-quest :where(strong) {
+  color: #f8fafc;
+}
+
+.prose-quest :where(code) {
+  background-color: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+  padding: 0.125rem 0.4rem;
+  border-radius: 0.3rem;
+  font-size: 0.875rem;
+  border: 1px solid rgba(139, 92, 246, 0.18);
+}
+
+.prose-quest :where(a) {
+  color: #c4b5fd;
+  text-decoration-color: rgba(139, 92, 246, 0.5);
+}
+
+.prose-quest :where(p) {
+  color: #cbd5e1;
+}
+
+.prose-quest :where(ul) {
+  color: #cbd5e1;
+}

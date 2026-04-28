@@ -1,9 +1,14 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-6">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-        Documents
-      </h1>
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Documents
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+          {{ store.documents.length }} in your knowledge base
+        </p>
+      </div>
       <UButton
         icon="i-heroicons-plus"
         color="primary"
@@ -18,6 +23,7 @@
       v-model="searchTerm"
       placeholder="Search documents..."
       icon="i-heroicons-magnifying-glass"
+      size="lg"
       class="mb-6"
     />
 
@@ -30,54 +36,58 @@
       <UCard
         v-for="doc in filteredDocuments"
         :key="doc.id"
-        class="cursor-pointer hover:shadow-md transition-shadow"
+        class="card-hover cursor-pointer"
         @click="navigateTo(`/documents/${doc.id}`)"
       >
         <div class="flex items-start gap-3">
-          <div class="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <div class="p-2 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/15">
             <UIcon
               :name="getIconForType(doc.sourceType)"
-              class="w-6 h-6 text-gray-600 dark:text-gray-400"
+              class="w-5 h-5 text-violet-600 dark:text-violet-300"
             />
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="font-semibold text-gray-900 dark:text-white">
+            <h3 class="font-semibold text-slate-900 dark:text-white truncate">
               {{ doc.title }}
             </h3>
-            <p class="text-sm text-gray-500 mt-1 line-clamp-2">
-              {{ doc.content.slice(0, 100) }}...
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+              {{ doc.content.slice(0, 120) }}…
             </p>
-            <div class="flex items-center gap-4 mt-2 text-xs text-gray-400">
-              <span class="flex items-center gap-1">
-                <UIcon name="i-heroicons-cube" class="w-3 h-3" />
+            <div class="flex items-center gap-3 mt-2 text-xs text-slate-500 dark:text-slate-400">
+              <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10">
+                <UIcon name="i-heroicons-cube" class="w-3 h-3 text-violet-500 dark:text-violet-300" />
                 {{ doc._count?.chunks || 0 }} chunks
               </span>
               <span>{{ formatDate(doc.createdAt) }}</span>
             </div>
           </div>
-          <UButton
-            icon="i-heroicons-trash"
-            variant="ghost"
-            color="red"
-            size="xs"
-            :loading="deletingId === doc.id"
-            @click.stop="onDelete(doc)"
-          />
-          <UIcon name="i-heroicons-chevron-right" class="w-5 h-5 text-gray-300" />
+          <div class="flex items-center gap-1 shrink-0">
+            <UButton
+              icon="i-heroicons-trash"
+              variant="ghost"
+              color="red"
+              size="xs"
+              :loading="deletingId === doc.id"
+              @click.stop="onDelete(doc)"
+            />
+            <UIcon name="i-heroicons-chevron-right" class="w-4 h-4 text-slate-400 dark:text-slate-500" />
+          </div>
         </div>
       </UCard>
     </div>
 
     <!-- Empty State -->
-    <div v-else class="text-center py-12">
-      <UIcon name="i-heroicons-document" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">
+    <div v-else class="text-center py-16">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20 mb-4">
+        <UIcon name="i-heroicons-document" class="w-8 h-8 text-violet-500 dark:text-violet-300" />
+      </div>
+      <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">
         No documents yet
       </h3>
-      <p class="text-gray-500 mb-4">
+      <p class="text-slate-500 dark:text-slate-400 mb-4">
         Upload your first document to get started
       </p>
-      <UButton to="/upload" color="primary">
+      <UButton to="/upload" color="primary" size="md">
         Upload Document
       </UButton>
     </div>

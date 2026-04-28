@@ -19,11 +19,20 @@ A production-ready full-stack application for managing personal knowledge with A
 - [API Documentation](#-api-documentation)
 - [Deployment](#-deployment)
 - [Project Structure](#-project-structure)
+- [Documentation](#-documentation)
 - [Learning Resources](#-learning-resources)
 
 ---
 
 ## ✨ Features
+
+### 🎮 NEW: RAG Learning Quest
+- **Interactive Tutorial System** - Learn RAG through coding challenges
+- **3 Complete Levels** - Embeddings + Chunking + Vector Database
+- **9 Coding Challenges** - From easy to hard difficulty
+- **Gamification** - XP points, badges, progress tracking
+- **Live Code Editor** - Monaco Editor with instant validation
+- **Total**: 650 XP available across 9 challenges (3.5 hours of learning)
 
 ### Core RAG Capabilities
 - 🔍 **Semantic Search** - Vector similarity search with pgvector
@@ -137,11 +146,45 @@ A production-ready full-stack application for managing personal knowledge with A
 
 ### Prerequisites
 ```bash
-- Docker 20.10+
-- Docker Compose 2.0+
+- Docker 20.10+ OR Node.js 20+
+- Docker Compose 2.0+ (for full stack)
+- pnpm 8+ (for monorepo)
 - 4GB+ RAM
 - Google Gemini API key (free)
 ```
+
+### Option 1: Learning Quest Only (NEW! 🎮)
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/from-zero-rag.git
+cd from-zero-rag
+
+# Install dependencies
+pnpm install
+
+# Start learning playground
+pnpm dev:playground
+```
+
+Visit **http://localhost:3002** and start learning RAG through interactive challenges!
+
+### Option 2: Full Stack (RAG App + Learning Quest)
+
+```bash
+# Install all dependencies
+pnpm install
+
+# Start everything
+pnpm dev
+```
+
+Access points:
+- 🎮 **Learning Playground**: http://localhost:3002
+- 🌐 **RAG App**: http://localhost:3000
+- 🔌 **API**: http://localhost:3001
+
+### Option 3: Docker (Original Setup)
 
 ### 1. Clone Repository
 ```bash
@@ -353,6 +396,17 @@ vercel --prod
 
 ```
 from-zero-rag/
+├── docs/                       # Documentation
+│   ├── ARCHITECTURE.md         # Technical architecture
+│   ├── gameplay/
+│   │   └── gamification-summary.md
+│   ├── learning/
+│   │   └── learning.md
+│   └── progress/
+│       ├── expansion-update.md
+│       ├── level3-complete.md
+│       └── session-summary.md
+│
 ├── rag-api/                    # Backend API
 │   ├── src/
 │   │   ├── documents/          # Document ingestion
@@ -375,13 +429,20 @@ from-zero-rag/
 │   ├── stores/                 # Pinia state
 │   └── nuxt.config.ts          # Nuxt configuration
 │
-├── docs/                       # Documentation
-│   ├── ARCHITECTURE.md         # Technical architecture
-│   └── DEPLOYMENT.md           # Deployment guide
-│
 ├── docker-compose.yml          # Local development
 └── .env                        # Configuration
 ```
+
+---
+
+## 📚 Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Gamification Summary](docs/gameplay/gamification-summary.md)
+- [Learning Notes](docs/learning/learning.md)
+- [Expansion Update](docs/progress/expansion-update.md)
+- [Level 3 Complete](docs/progress/level3-complete.md)
+- [Session Summary](docs/progress/session-summary.md)
 
 ---
 

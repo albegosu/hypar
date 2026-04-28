@@ -6,9 +6,12 @@
       </UButton>
     </div>
 
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
       Add Document
     </h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+      Paste text or upload a file. We'll chunk and embed it for retrieval.
+    </p>
 
     <!-- Tabs -->
     <UTabs v-model="activeTab" :items="tabs" class="mb-6" />
@@ -51,15 +54,20 @@
 
     <!-- File Upload -->
     <div v-else class="space-y-4">
-      <UCard class="border-2 border-dashed border-gray-300 dark:border-gray-600">
-        <div class="text-center py-8">
-          <UIcon name="i-heroicons-cloud-arrow-up" class="w-12 h-12 text-gray-400 mb-4" />
-          
-          <p class="text-gray-600 dark:text-gray-400 mb-2">
+      <div
+        class="rounded-xl border-2 border-dashed border-slate-300 dark:border-white/10 bg-white/50 dark:bg-slate-900/40 hover:border-violet-400 dark:hover:border-violet-500/50 transition-colors cursor-pointer"
+        @click="$refs.fileInput.click()"
+      >
+        <div class="text-center py-10 px-6">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/20 mb-4">
+            <UIcon name="i-heroicons-cloud-arrow-up" class="w-6 h-6 text-violet-600 dark:text-violet-300" />
+          </div>
+
+          <p class="text-slate-700 dark:text-slate-200 font-medium mb-1">
             Drag and drop files here, or click to browse
           </p>
-          
-          <p class="text-sm text-gray-400">
+
+          <p class="text-sm text-slate-500 dark:text-slate-400">
             Supports: .txt, .md, .pdf
           </p>
 
@@ -73,21 +81,24 @@
 
           <UButton
             variant="outline"
+            color="primary"
             class="mt-4"
-            @click="$refs.fileInput.click()"
+            @click.stop="$refs.fileInput.click()"
           >
             Select File
           </UButton>
         </div>
-      </UCard>
+      </div>
 
-      <div v-if="selectedFile" class="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <UIcon name="i-heroicons-document" class="w-8 h-8 text-primary-500" />
+      <div v-if="selectedFile" class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900/60 ring-1 ring-slate-200 dark:ring-white/10 rounded-xl">
+        <div class="w-10 h-10 shrink-0 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/15 flex items-center justify-center">
+          <UIcon name="i-heroicons-document" class="w-5 h-5 text-violet-600 dark:text-violet-300" />
+        </div>
         <div class="flex-1 min-w-0">
-          <p class="font-medium text-gray-900 dark:text-white truncate">
+          <p class="font-medium text-slate-900 dark:text-white truncate">
             {{ selectedFile.name }}
           </p>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-slate-500 dark:text-slate-400">
             {{ formatFileSize(selectedFile.size) }}
           </p>
         </div>
