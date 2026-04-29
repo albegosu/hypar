@@ -24,8 +24,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
-.claude/settings.local.json
-.claude/scheduled_tasks.lock
+.claude/
 
 # Test / coverage
 coverage/
