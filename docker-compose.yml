@@ -19,7 +19,7 @@ services:
       retries: 5
     networks:
       - rag-network
-    profiles: ["full", "api"]
+    profiles: ["full", "api", "all"]
 
   # Ollama for local embeddings
   ollama:
@@ -46,7 +46,7 @@ services:
       start_period: 120s
     networks:
       - rag-network
-    profiles: ["full", "api"]
+    profiles: ["full", "api", "all"]
 
   # Backend API (NestJS)
   backend:
@@ -77,7 +77,7 @@ services:
     networks:
       - rag-network
     restart: unless-stopped
-    profiles: ["full", "api"]
+    profiles: ["full", "api", "all"]
 
   # Frontend (Nuxt 3)
   frontend:
@@ -98,7 +98,7 @@ services:
     networks:
       - rag-network
     restart: unless-stopped
-    profiles: ["full"]
+    profiles: ["full", "all"]
 
   # Learning playground (Nuxt + @rag/learning)
   playground:
@@ -114,7 +114,7 @@ services:
     networks:
       - rag-network
     restart: unless-stopped
-    profiles: ["learning"]
+    profiles: ["learning", "all"]
 
 volumes:
   postgres_data:

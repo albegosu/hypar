@@ -160,29 +160,28 @@ A production-ready full-stack application for AI-powered **Retrieval-Augmented G
 
 ### Option 1: Docker Profiles (Recommended)
 
+| Profile | What starts | Command |
+|---------|------------|---------|
+| `all` | Everything (API + UI + Playground + DB + Ollama) | `docker compose --profile all up --build -d` |
+| `full` | API + UI + DB + Ollama | `docker compose --profile full up --build -d` |
+| `api` | API + DB + Ollama (no UI) | `docker compose --profile api up --build -d` |
+| `learning` | Playground only | `docker compose --profile learning up --build -d` |
+
 ```bash
-# Full stack: API + UI + Postgres + Ollama
-docker compose --profile full up --build -d
-
-# API-only stack: API + Postgres + Ollama
-docker compose --profile api up --build -d
-
-# Learning/onboarding playground only
-docker compose --profile learning up --build -d
+# Everything at once
+docker compose --profile all up --build -d
 ```
 
-Access points:
+Access points once running:
 
-- Full stack UI: http://localhost:3000
-- API health: http://localhost:3001/health
-- Learning playground: http://localhost:3002
+- **UI** → http://localhost:3000
+- **API** → http://localhost:3001
+- **Learning playground** → http://localhost:3002
 
-Stop a profile:
+Stop:
 
 ```bash
-docker compose --profile full down
-docker compose --profile api down
-docker compose --profile learning down
+docker compose --profile all down
 ```
 
 ### Option 2: Local Development (Monorepo)

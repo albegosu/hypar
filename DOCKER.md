@@ -43,11 +43,15 @@ The `docker-compose.yml` uses **profiles** to group services:
 
 | Profile | Services included |
 |---------|-------------------|
+| `all` | postgres, ollama, backend, frontend, playground |
 | `full` | postgres, ollama, backend, frontend |
 | `api` | postgres, ollama, backend (no UI) |
 | `learning` | playground (standalone, no backend needed) |
 
 ```bash
+# Everything (full stack + learning playground)
+docker compose --profile all up -d --build
+
 # Full stack (UI + API + Ollama + DB)
 docker compose --profile full up -d --build
 
