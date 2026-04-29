@@ -21,6 +21,11 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+LABEL org.opencontainers.image.title="from-zero-rag frontend" \
+      org.opencontainers.image.description="Nuxt 3 UI — chat interface, document management and RAG search for from-zero-rag" \
+      org.opencontainers.image.source="https://github.com/albegosu/from-zero-rag" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV NODE_ENV=production
 
 # Copy built files

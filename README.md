@@ -2,10 +2,17 @@
 
 A production-ready full-stack application for AI-powered **Retrieval-Augmented Generation (RAG)**. Built to demonstrate modern RAG architecture, vector databases, and cloud-native deployment.
 
+[![CI Backend](https://github.com/albegosu/from-zero-rag/actions/workflows/test-backend.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/test-backend.yml)
+[![CI Frontend](https://github.com/albegosu/from-zero-rag/actions/workflows/test-frontend.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/test-frontend.yml)
+[![CI Learning](https://github.com/albegosu/from-zero-rag/actions/workflows/test-learning.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/test-learning.yml)
+[![Docker Build](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-20-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10.3-red)](https://nestjs.com/)
 [![Nuxt](https://img.shields.io/badge/Nuxt-3-green)](https://nuxt.com/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.5-purple)](https://github.com/pgvector/pgvector)
+[![pnpm](https://img.shields.io/badge/pnpm-workspace-orange)](https://pnpm.io/)
 
 ---
 

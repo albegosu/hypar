@@ -22,6 +22,11 @@ FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat openssl curl
 WORKDIR /app
 
+LABEL org.opencontainers.image.title="from-zero-rag backend" \
+      org.opencontainers.image.description="NestJS RAG API — document ingestion, vector search, embeddings and chat with pgvector + Ollama" \
+      org.opencontainers.image.source="https://github.com/albegosu/from-zero-rag" \
+      org.opencontainers.image.licenses="MIT"
+
 ENV NODE_ENV=production
 
 # Install Prisma CLI for migrations
