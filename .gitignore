@@ -17,6 +17,9 @@ dist/
 npm-debug.log*
 .cache/
 
+# pnpm
+.pnpm-store/
+
 # OS / editor
 .DS_Store
 Thumbs.db
