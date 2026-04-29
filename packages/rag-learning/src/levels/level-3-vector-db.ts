@@ -209,7 +209,7 @@ export function createChunksTable(): string {
     },
     {
       id: 'hint-3-1-3',
-      text: 'Check the actual schema in rag-api/prisma/schema.prisma for reference',
+      text: 'Check the actual schema in apps/rag-api/prisma/schema.prisma for reference',
       xpPenalty: 10,
       order: 3,
     },
@@ -625,10 +625,10 @@ ORDER BY chunks.embedding <=> $1::vector
 LIMIT 5;
 \`\`\`
 
-## Real-World Example from rag-api
+## Real-World Example from apps/rag-api
 
 \`\`\`typescript
-// rag-api/src/search/search.service.ts:38
+// apps/rag-api/src/search/search.service.ts:38
 const results = await this.prisma.$queryRaw\`
   SELECT
     c.id as "chunkId",
@@ -761,7 +761,7 @@ export function findSimilarChunks(
     },
     {
       id: 'hint-3-3-3',
-      text: 'Check rag-api/src/search/search.service.ts:38 for reference implementation',
+      text: 'Check apps/rag-api/src/search/search.service.ts:38 for reference implementation',
       xpPenalty: 20,
       order: 3,
     },

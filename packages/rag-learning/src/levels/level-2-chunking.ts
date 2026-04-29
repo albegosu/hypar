@@ -367,7 +367,7 @@ export function chunkTextWithOverlap(
     },
     {
       id: 'hint-2-2-3',
-      text: 'Look at rag-api/src/documents/chunking.service.ts for reference implementation',
+      text: 'Look at apps/rag-api/src/documents/chunking.service.ts for reference implementation',
       xpPenalty: 15,
       order: 3,
     },
@@ -471,12 +471,12 @@ More robust:
 
 ## Real-World Implementation
 
-The **rag-api** uses a hybrid approach:
+The **apps/rag-api** uses a hybrid approach:
 1. Try sentence boundaries first
 2. Fall back to fixed-size if sentence too long
 3. Add overlap for safety
 
-Check: \`rag-api/src/documents/chunking.service.ts:30\`
+Check: \`apps/rag-api/src/documents/chunking.service.ts:30\`
   `,
 
   starterCode: `/**

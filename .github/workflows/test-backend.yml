@@ -4,19 +4,19 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'rag-api/**'
+      - 'apps/rag-api/**'
       - '.github/workflows/test-backend.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'rag-api/**'
+      - 'apps/rag-api/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./rag-api
+        working-directory: ./apps/rag-api
 
     services:
       postgres:
@@ -71,6 +71,6 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
-          directory: ./rag-api/coverage
+          directory: ./apps/rag-api/coverage
           flags: backend
           name: backend-coverage

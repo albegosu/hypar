@@ -1,0 +1,197 @@
+<template>
+  <div class="max-w-3xl mx-auto px-4 py-6">
+    <div class="mb-4">
+      <NuxtLink to="/" class="wz-btn-ghost text-xs">
+        ← {{ t('nav.back') }}
+      </NuxtLink>
+    </div>
+
+    <section class="wz-panel mb-6">
+      <div class="wz-panel-header flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="wz-accent">$</span>
+          <span class="wz-label">upload --document</span>
+        </div>
+      </div>
+      <div class="p-4">
+        <h1 class="text-lg font-semibold wz-strong">// {{ t('upload.title') }}</h1>
+        <p class="wz-muted text-xs mt-1">{{ t('upload.subtitle') }}</p>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-1 mb-4 text-[11px]">
+      <button
+        type="button"
+        class="px-3 py-1.5 rounded transition-colors"
+        :class="activeTab === 0 ? 'wz-pill' : 'wz-faint hover:text-[color:var(--term-text-strong)]'"
+        @click="activeTab = 0"
+      >
+        [● {{ t('upload.tabText') }}]
+      </button>
+      <button
+        type="button"
+        class="px-3 py-1.5 rounded transition-colors"
+        :class="activeTab === 1 ? 'wz-pill' : 'wz-faint hover:text-[color:var(--term-text-strong)]'"
+        @click="activeTab = 1"
+      >
+        [● {{ t('upload.tabFile') }}]
+      </button>
+    </div>
+
+    <!-- Text Input -->
+    <div v-if="activeTab === 0" class="space-y-4">
+      <div>
+        <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldTitle') }}</label>
+        <input
+          v-model="form.title"
+          type="text"
+          class="wz-input mt-1"
+          :placeholder="t('upload.fieldTitlePlaceholder')"
+        >
+      </div>
+
+      <div>
+        <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldContent') }}</label>
+        <textarea
+          v-model="form.content"
+          class="wz-textarea mt-1"
+          rows="12"
+          :placeholder="t('upload.fieldContentPlaceholder')"
+        />
+      </div>
+
+      <div>
+        <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldType') }}</label>
+        <select v-model="form.sourceType" class="wz-select mt-1">
+          <option value="text">text</option>
+          <option value="markdown">markdown</option>
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="wz-btn-primary w-full justify-center"
+        :disabled="!form.title || !form.content || uploading"
+        @click="submitText"
+      >
+        {{ uploading ? '…' : `${t('upload.save')} ▶` }}
+      </button>
+    </div>
+
+    <!-- File Upload -->
+    <div v-else class="space-y-4">
+      <div
+        class="wz-panel p-8 text-center cursor-pointer transition-colors"
+        style="border-style: dashed;"
+        @click="fileInput?.click()"
+      >
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-md mb-3" style="background: var(--term-accent-soft); border: 1px solid var(--term-accent-line)">
+          <UIcon name="i-heroicons-cloud-arrow-up" class="w-6 h-6 wz-accent" />
+        </div>
+        <p class="wz-strong font-medium mb-1">{{ t('upload.dropZone') }}</p>
+        <p class="text-sm wz-muted">{{ t('upload.supports') }}</p>
+
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".txt,.md,.pdf"
+          class="hidden"
+          @change="handleFileChange"
+        >
+
+        <button
+          type="button"
+          class="wz-btn-outline mt-4 text-xs"
+          @click.stop="fileInput?.click()"
+        >
+          {{ t('upload.selectFile') }}
+        </button>
+      </div>
+
+      <div v-if="selectedFile" class="wz-panel flex items-center gap-3 p-3">
+        <div class="w-10 h-10 shrink-0 rounded-md flex items-center justify-center" style="background: var(--term-accent-soft); border: 1px solid var(--term-accent-line)">
+          <UIcon name="i-heroicons-document" class="w-5 h-5 wz-accent" />
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-medium wz-strong truncate">{{ selectedFile.name }}</p>
+          <p class="text-sm wz-faint">{{ formatFileSize(selectedFile.size) }}</p>
+        </div>
+        <button
+          type="button"
+          class="wz-btn-ghost"
+          @click="selectedFile = null"
+        >
+          ✕
+        </button>
+      </div>
+
+      <button
+        v-if="selectedFile"
+        type="button"
+        class="wz-btn-primary w-full justify-center"
+        :disabled="uploading"
+        @click="submitFile"
+      >
+        {{ uploading ? '…' : `${t('upload.uploadFile')} ▶` }}
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+const store = useDocumentsStore()
+const router = useRouter()
+
+const activeTab = ref(0)
+const uploading = ref(false)
+const selectedFile = ref(null)
+const fileInput = ref(null)
+
+const form = reactive({
+  title: '',
+  content: '',
+  sourceType: 'text',
+})
+
+function handleFileChange(event) {
+  const file = event.target.files[0]
+  if (file) selectedFile.value = file
+}
+
+async function submitText() {
+  uploading.value = true
+  try {
+    await store.createDocument({
+      title: form.title,
+      content: form.content,
+      sourceType: form.sourceType,
+    })
+    router.push('/documents')
+  } finally {
+    uploading.value = false
+  }
+}
+
+async function submitFile() {
+  if (!selectedFile.value) return
+  uploading.value = true
+  try {
+    await store.uploadFile(selectedFile.value)
+    router.push('/documents')
+  } finally {
+    uploading.value = false
+  }
+}
+
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+</script>

@@ -253,8 +253,8 @@ Or mount volumes for development:
 services:
   backend:
     volumes:
-      - ./rag-api/src:/app/src:ro
-      - ./rag-api/prisma:/app/prisma:ro
+      - ./apps/rag-api/src:/app/src:ro
+      - ./apps/rag-api/prisma:/app/prisma:ro
 ```
 
 ## Health Checks

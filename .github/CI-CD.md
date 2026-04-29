@@ -188,8 +188,8 @@ Add to README.md:
 Automatic dependency updates configured:
 
 - **Weekly** - Every Monday
-- **Backend** - rag-api/package.json
-- **Frontend** - rag-ui/package.json
+- **Backend** - apps/rag-api/package.json
+- **Frontend** - apps/rag-ui/package.json
 - **Docker** - Dockerfile updates
 
 ## Release Process

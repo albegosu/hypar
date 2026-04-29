@@ -4,19 +4,19 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'rag-ui/**'
+      - 'apps/rag-ui/**'
       - '.github/workflows/test-frontend.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'rag-ui/**'
+      - 'apps/rag-ui/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./rag-ui
+        working-directory: ./apps/rag-ui
 
     steps:
       - name: Checkout code
@@ -45,6 +45,6 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v3
         with:
-          directory: ./rag-ui/coverage
+          directory: ./apps/rag-ui/coverage
           flags: frontend
           name: frontend-coverage

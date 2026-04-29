@@ -638,7 +638,7 @@ export class EmbeddingCache {
     },
     {
       id: 'hint-1-3-3',
-      text: 'Check the rag-api/src/documents/embedding.service.ts file for a reference implementation.',
+      text: 'Check the apps/rag-api/src/documents/embedding.service.ts file for a reference implementation.',
       xpPenalty: 20,
       order: 3,
     },

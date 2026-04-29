@@ -375,7 +375,7 @@ railway up
 
 #### Vercel (Frontend only)
 ```bash
-cd rag-ui
+cd apps/rag-ui
 vercel --prod
 ```
 
@@ -408,27 +408,28 @@ from-zero-rag/
 │           ├── level3-complete.md
 │           └── session-summary.md
 │
-├── rag-api/                    # Backend API
-│   ├── src/
-│   │   ├── documents/          # Document ingestion
-│   │   │   ├── chunking.service.ts    # Text splitting
-│   │   │   ├── embedding.service.ts   # Multi-provider embeddings
-│   │   │   └── documents.service.ts   # Orchestration
-│   │   ├── search/             # RAG & Search
-│   │   │   ├── search.service.ts      # Vector search + RAG
-│   │   │   └── search.controller.ts   # API endpoints
-│   │   ├── agent/              # Conversational AI
-│   │   ├── admin/              # Analytics
-│   │   └── ollama/             # Ollama integration
-│   ├── prisma/                 # Database schema
-│   │   └── schema.prisma       # pgvector setup
-│   └── Dockerfile              # Production image
-│
-├── rag-ui/                     # Frontend
-│   ├── components/             # Vue components
-│   ├── pages/                  # Application pages
-│   ├── stores/                 # Pinia state
-│   └── nuxt.config.ts          # Nuxt configuration
+├── apps/
+│   ├── rag-api/                # Backend API
+│   │   ├── src/
+│   │   │   ├── documents/          # Document ingestion
+│   │   │   │   ├── chunking.service.ts    # Text splitting
+│   │   │   │   ├── embedding.service.ts   # Multi-provider embeddings
+│   │   │   │   └── documents.service.ts   # Orchestration
+│   │   │   ├── search/             # RAG & Search
+│   │   │   │   ├── search.service.ts      # Vector search + RAG
+│   │   │   │   └── search.controller.ts   # API endpoints
+│   │   │   ├── agent/              # Conversational AI
+│   │   │   ├── admin/              # Analytics
+│   │   │   └── ollama/             # Ollama integration
+│   │   ├── prisma/                 # Database schema
+│   │   │   └── schema.prisma       # pgvector setup
+│   │   └── Dockerfile              # Production image
+│   │
+│   └── rag-ui/                 # Frontend
+│       ├── components/             # Vue components
+│       ├── pages/                  # Application pages
+│       ├── stores/                 # Pinia state
+│       └── nuxt.config.ts          # Nuxt configuration
 │
 ├── packages/
 │   ├── rag-learning/           # Shared learning logic/types/validators

@@ -1,4 +1,17 @@
 {
+  "home": {
+    "header": "welcome --rag-quest",
+    "title": "// build your RAG system",
+    "subtitle": "Onboarding: generate your local RAG config (`.env`) and start the stack. Challenges: learn embeddings, chunking, and retrieval end-to-end.",
+    "ctaOnboarding": "start onboarding (configure RAG) ▶",
+    "ctaChallenges": "jump to challenges →",
+    "durationLabel": "duration",
+    "durationValue": "~30 min",
+    "stepsLabel": "steps",
+    "stepsValue": "6 guided",
+    "configLabel": "config",
+    "configValue": "100% local"
+  },
   "wizard": {
     "chrome": {
       "basic": "basic",
@@ -29,6 +42,10 @@
       "requiredMissing": "required fields missing",
       "configCommand": "configure --step={stepId}",
       "storageInfo": "writes -> localStorage://rag-wizard-config"
+    },
+    "intro": {
+      "title": "onboarding wizard",
+      "subtitle": "Configure your local RAG stack and generate `.env`. Then jump to challenges to implement embeddings, chunking, and retrieval."
     },
     "steps": {
       "apis": {

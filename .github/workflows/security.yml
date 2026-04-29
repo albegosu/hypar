@@ -27,21 +27,21 @@ jobs:
           node-version: '20'
 
       - name: Install backend dependencies
-        working-directory: ./rag-api
+        working-directory: ./apps/rag-api
         run: npm ci
 
       - name: Run npm audit (backend)
-        working-directory: ./rag-api
+        working-directory: ./apps/rag-api
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
       # Frontend dependencies scan
       - name: Install frontend dependencies
-        working-directory: ./rag-ui
+        working-directory: ./apps/rag-ui
         run: npm ci
 
       - name: Run npm audit (frontend)
-        working-directory: ./rag-ui
+        working-directory: ./apps/rag-ui
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
@@ -59,7 +59,7 @@ jobs:
 
       # Docker image scan
       - name: Build backend image
-        working-directory: ./rag-api
+        working-directory: ./apps/rag-api
         run: docker build -t rag-backend:test .
 
       - name: Scan backend image

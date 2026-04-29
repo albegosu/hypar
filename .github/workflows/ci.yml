@@ -20,12 +20,12 @@ jobs:
         with:
           filters: |
             backend:
-              - 'rag-api/**'
+              - 'apps/rag-api/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/**'
             frontend:
-              - 'rag-ui/**'
+              - 'apps/rag-ui/**'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/**'

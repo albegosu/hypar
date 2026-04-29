@@ -194,8 +194,9 @@ from-zero-rag/
 │       │   └── progress.ts             # Pinia state management
 │       └── package.json
 │
-├── rag-api/                   # 🔌 Original RAG backend
-├── rag-ui/                    # 🌐 Original RAG frontend
+├── apps/
+│   ├── rag-api/                   # 🔌 Original RAG backend
+│   └── rag-ui/                    # 🌐 Original RAG frontend
 └── pnpm-workspace.yaml        # Monorepo config
 ```
 

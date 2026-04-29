@@ -88,7 +88,7 @@ This document provides a deep dive into the technical architecture of the From Z
 
 #### 1. Documents Module
 
-**Location**: `rag-api/src/documents/`
+**Location**: `apps/rag-api/src/documents/`
 
 **Responsibilities**:
 - Document ingestion and processing
@@ -119,7 +119,7 @@ This document provides a deep dive into the technical architecture of the From Z
 
 #### 2. Search Module
 
-**Location**: `rag-api/src/search/`
+**Location**: `apps/rag-api/src/search/`
 
 **Responsibilities**:
 - Vector similarity search
@@ -146,7 +146,7 @@ This document provides a deep dive into the technical architecture of the From Z
 
 #### 3. Agent Module
 
-**Location**: `rag-api/src/agent/`
+**Location**: `apps/rag-api/src/agent/`
 
 **Responsibilities**:
 - Planner-driven chat

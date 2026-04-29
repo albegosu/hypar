@@ -4,7 +4,7 @@ This checklist defines the minimum smoke tests we use before and after each clea
 
 ## Scope
 
-- Core RAG app: `rag-api` + `rag-ui`
+- Core RAG app: `apps/rag-api` + `apps/rag-ui`
 - Learning app: `packages/rag-playground` + `packages/rag-learning`
 - API contracts that must remain stable during cleanup
 
@@ -16,7 +16,7 @@ From repo root:
 - UI only: `pnpm dev:ui`
 - Learning playground: `pnpm dev:playground`
 
-## API Contract Smoke (rag-api)
+## API Contract Smoke (apps/rag-api)
 
 Start API with `pnpm dev:api`, then verify:
 
@@ -31,11 +31,11 @@ Start API with `pnpm dev:api`, then verify:
 
 Current contract references:
 
-- `rag-api/src/app.controller.ts`
-- `rag-api/src/search/search.controller.ts`
-- `rag-api/src/documents/documents.controller.ts`
+- `apps/rag-api/src/app.controller.ts`
+- `apps/rag-api/src/search/search.controller.ts`
+- `apps/rag-api/src/documents/documents.controller.ts`
 
-## Core UI Smoke (rag-ui)
+## Core UI Smoke (apps/rag-ui)
 
 Start UI with `pnpm dev:ui` (with API running), then verify:
 
@@ -61,10 +61,10 @@ Start playground with `pnpm dev:playground`, then verify:
 
 Do not refactor behavior in these files until after interface hardening:
 
-- `rag-api/src/search/search.service.ts`
-- `rag-api/src/documents/documents.service.ts`
-- `rag-api/prisma/schema.prisma`
-- `rag-ui/stores/documents.ts`
+- `apps/rag-api/src/search/search.service.ts`
+- `apps/rag-api/src/documents/documents.service.ts`
+- `apps/rag-api/prisma/schema.prisma`
+- `apps/rag-ui/stores/documents.ts`
 - `packages/rag-playground/pages/onboarding.vue`
 
 ## Pass Criteria Per Cleanup Phase

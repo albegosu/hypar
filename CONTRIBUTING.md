@@ -25,11 +25,11 @@ pnpm install
 docker compose --profile api up -d
 
 # 4. Set up environment for the API
-cp rag-api/.env.example rag-api/.env
-# Edit rag-api/.env with your settings
+# Edit apps/rag-api/.env with your settings
+cp apps/rag-api/.env.example apps/rag-api/.env
 
 # 5. Run database migrations
-cd rag-api && npx prisma migrate dev && cd ..
+cd apps/rag-api && npx prisma migrate dev && cd ..
 
 # 6. Start everything in dev mode
 pnpm dev
@@ -39,8 +39,9 @@ pnpm dev
 
 ```
 from-zero-rag/
-├── rag-api/              # NestJS backend (RAG pipeline, vector search)
-├── rag-ui/               # Nuxt 3 frontend (chat, document management)
+├── apps/
+│   ├── rag-api/          # NestJS backend (RAG pipeline, vector search)
+│   └── rag-ui/           # Nuxt 3 frontend (chat, document management)
 ├── packages/
 │   ├── rag-learning/     # Shared challenge/validator library
 │   └── rag-playground/   # Interactive learning UI
@@ -56,10 +57,10 @@ from-zero-rag/
 
 ```bash
 # Backend tests
-cd rag-api && pnpm test
+cd apps/rag-api && pnpm test
 
 # Backend lint
-cd rag-api && pnpm lint
+cd apps/rag-api && pnpm lint
 
 # Learning package build
 pnpm --filter @rag/learning build

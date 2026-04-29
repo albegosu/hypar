@@ -51,7 +51,7 @@ services:
   # Backend API (NestJS)
   backend:
     build:
-      context: ./rag-api
+      context: ./apps/rag-api
       dockerfile: Dockerfile
     container_name: rag-backend
     environment:
@@ -82,7 +82,7 @@ services:
   # Frontend (Nuxt 3)
   frontend:
     build:
-      context: ./rag-ui
+      context: ./apps/rag-ui
       dockerfile: Dockerfile
       args:
         NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}

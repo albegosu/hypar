@@ -21,7 +21,7 @@ updates:
 
   # Backend-only updates (explicit)
   - package-ecosystem: npm
-    directory: /rag-api
+    directory: /apps/rag-api
     schedule:
       interval: weekly
       day: monday
@@ -39,7 +39,7 @@ updates:
 
   # Frontend-only updates (explicit)
   - package-ecosystem: npm
-    directory: /rag-ui
+    directory: /apps/rag-ui
     schedule:
       interval: weekly
       day: monday

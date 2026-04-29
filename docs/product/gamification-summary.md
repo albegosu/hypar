@@ -7,7 +7,7 @@
 - **3 packages**:
   - `@rag/learning` - Backend logic & challenge system
   - `@rag/playground` - Interactive UI
-  - Existing `rag-api` and `rag-ui` maintained
+  - Existing `apps/rag-api` and `apps/rag-ui` maintained
 
 ### 2. Learning Engine (`packages/rag-learning/`)
 
@@ -204,7 +204,7 @@ Navigate to:
 ### Medium-term (Features)
 
 1. **Backend Integration**
-   - Optional: Use real rag-api for advanced challenges
+  - Optional: Use real `apps/rag-api` for advanced challenges
    - Validate actual embeddings from Google Gemini
    - Test real vector search
 

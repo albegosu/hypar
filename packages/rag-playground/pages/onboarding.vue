@@ -16,7 +16,7 @@
               <button type="button" class="wz-btn-ghost text-[10px]" :class="{ 'opacity-50': locale !== 'es' }" @click="setLocale('es')">ES</button>
             </div>
             <button type="button" class="wz-btn-ghost wz-theme-toggle text-xs" @click="toggleTheme">
-              {{ theme === 'light' ? '[ ☀ ]' : '[ ☾ ]' }}
+              {{ theme === 'light' ? '[ light ]' : '[ dark ]' }}
             </button>
             <span class="hidden sm:inline">{{ progressBar }}</span>
             <span class="wz-faint">{{ String(currentStep + 1).padStart(2, '0') }}/{{ String(steps.length).padStart(2, '0') }}</span>
@@ -25,6 +25,16 @@
       </header>
 
       <main class="container mx-auto px-6 py-8 max-w-4xl">
+        <section class="wz-panel mb-8">
+          <div class="wz-panel-header flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span style="color: var(--wz-accent)">$</span>
+              <span class="wz-label">{{ t('wizard.intro.title') }}</span>
+            </div>
+            <span class="wz-faint text-[10px]">{{ t('wizard.intro.subtitle') }}</span>
+          </div>
+        </section>
+
         <!-- step nav (ASCII style) -->
         <nav class="mb-8 overflow-x-auto">
           <div class="flex items-center gap-1 text-[11px] whitespace-nowrap">
@@ -35,7 +45,7 @@
                 class="px-2 py-1 rounded transition-colors"
                 :class="[
                   index === currentStep ? 'wz-pill' : '',
-                  index < currentStep ? 'wz-faint hover:opacity-100 hover:text-[color:var(--wz-accent-strong)]' : '',
+                  index < currentStep ? 'wz-faint hover:opacity-100 hover:text-(--wz-accent-strong)' : '',
                   index > currentStep ? 'wz-faint cursor-not-allowed' : 'cursor-pointer',
                 ]"
                 @click="goToStep(index)"
