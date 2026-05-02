@@ -4,18 +4,22 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'packages/rag-learning/**'
-      - 'packages/rag-playground/**'
+      - 'utils/learning/**'
+      - 'pages/learn/**'
+      - 'components/learn/**'
+      - 'stores/progress.ts'
       - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
+      - 'package.json'
       - '.github/workflows/test-learning.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'packages/rag-learning/**'
-      - 'packages/rag-playground/**'
+      - 'utils/learning/**'
+      - 'pages/learn/**'
+      - 'components/learn/**'
+      - 'stores/progress.ts'
       - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
+      - 'package.json'
 
 jobs:
   test:
@@ -39,8 +43,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build learning package
-        run: pnpm --filter @rag/learning build
-
-      - name: Build playground
-        run: pnpm --filter @rag/playground build
+      - name: Build app (learning routes smoke)
+        run: pnpm build

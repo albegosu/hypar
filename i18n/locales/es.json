@@ -1,0 +1,235 @@
+{
+  "app": {
+    "brand": "from-zero-rag",
+    "subtitle": "consola de chat con recuperación aumentada"
+  },
+  "nav": {
+    "chat": "chat",
+    "documents": "docs",
+    "upload": "subir",
+    "add": "añadir",
+    "back": "volver",
+    "learn": "aprender"
+  },
+  "chat": {
+    "title": "chatea con tu base de conocimiento",
+    "subtitle": "agente ligero: decide si busca en tus documentos (RAG) o responde sin el vector store.",
+    "placeholder": "escribe tu mensaje…",
+    "empty": "pregunta algo sobre los documentos que subiste. el contexto se mantiene entre turnos.",
+    "thinking": "pensando…",
+    "kbHit": "kb hit",
+    "kbMiss": "sin kb",
+    "sources": "fuentes",
+    "showRetrieval": "ver recuperación",
+    "hideRetrieval": "ocultar recuperación",
+    "chunks": "chunks",
+    "score": "score",
+    "clear": "limpiar chat",
+    "send": "enviar",
+    "recentDocs": "documentos recientes",
+    "noDocs": "aún no hay documentos.",
+    "uploadCta": "subir",
+    "errorReach": "no se pudo conectar a la api en {url}. ¿está corriendo el backend?",
+    "errorHint": "con docker: `docker compose up -d --build backend frontend` y luego recarga forzada."
+  },
+  "documents": {
+    "title": "documentos",
+    "count": "{n} en tu base de conocimiento",
+    "search": "buscar documentos…",
+    "addNew": "añadir",
+    "empty": "aún no hay documentos",
+    "emptyHint": "sube tu primer documento para empezar",
+    "uploadCta": "subir documento",
+    "chunks": "chunks",
+    "delete": "eliminar",
+    "deleted": "documento eliminado",
+    "deleteFailed": "no se pudo eliminar",
+    "confirmDelete": "¿eliminar \"{title}\"? sus chunks y embeddings serán borrados."
+  },
+  "document": {
+    "notFound": "documento no encontrado.",
+    "rechunk": "re-chunk",
+    "delete": "eliminar",
+    "rechunkOk": "re-chunked y re-embebido",
+    "rechunkFailed": "fallo al reprocesar",
+    "chunksTitle": "chunks",
+    "chunksHint": "(las piezas que se embeben y se buscan)",
+    "noChunks": "aún no hay chunks.",
+    "originalContent": "contenido original"
+  },
+  "upload": {
+    "title": "añadir documento",
+    "subtitle": "pega texto o sube un archivo. lo dividimos y embebemos para recuperación.",
+    "tabText": "texto",
+    "tabFile": "archivo",
+    "fieldTitle": "título",
+    "fieldTitlePlaceholder": "introduce el título del documento",
+    "fieldContent": "contenido",
+    "fieldContentPlaceholder": "pega tu texto o notas aquí…",
+    "fieldType": "tipo",
+    "save": "guardar documento",
+    "dropZone": "arrastra archivos aquí, o haz clic para buscar",
+    "supports": "soporta: .txt, .md, .pdf",
+    "selectFile": "seleccionar archivo",
+    "uploadFile": "subir archivo"
+  },
+  "common": {
+    "loading": "cargando…",
+    "cancel": "cancelar"
+  },
+  "home": {
+    "header": "bienvenido --rag-quest",
+    "title": "// monta tu sistema RAG",
+    "subtitle": "Onboarding: genera tu configuración local RAG (`.env`) y arranca el stack. Challenges: aprende embeddings, chunking y recuperación de punta a punta.",
+    "ctaOnboarding": "iniciar onboarding (configurar RAG) ▶",
+    "ctaChallenges": "ir a challenges →",
+    "durationLabel": "duración",
+    "durationValue": "~30 min",
+    "stepsLabel": "pasos",
+    "stepsValue": "6 guiados",
+    "configLabel": "config",
+    "configValue": "100% local"
+  },
+  "wizard": {
+    "chrome": {
+      "basic": "básico",
+      "advanced": "avanzado",
+      "visible": "visible",
+      "hiddenByDefault": "oculto por defecto",
+      "required": "Requerido",
+      "hide": "ocultar",
+      "show": "mostrar",
+      "enabled": "activo",
+      "disabled": "inactivo",
+      "addTag": "+ añadir",
+      "what": "qué",
+      "why": "por qué",
+      "copy": "copiar",
+      "copied": "copiado",
+      "previewEnv": "preview .env",
+      "prev": "anterior",
+      "next": "siguiente",
+      "downloadEnv": "descargar config .env",
+      "copySetup": "copiar comandos setup",
+      "setupCopied": "setup copiado",
+      "nextStepsTitle": "siguientes pasos",
+      "stepCloneRepo": "Clona tu repositorio RAG",
+      "stepAddEnv": "Coloca este archivo descargado como `.env` en la raíz del proyecto",
+      "stepRunStack": "Arranca servicios y app",
+      "ready": "listo",
+      "requiredMissing": "faltan campos requeridos",
+      "configCommand": "configure --step={stepId}",
+      "storageInfo": "escribe -> localStorage://rag-wizard-config"
+    },
+    "intro": {
+      "title": "wizard de onboarding",
+      "subtitle": "Configura tu stack RAG local y genera `.env`. Luego pasa a challenges para implementar embeddings, chunking y retrieval."
+    },
+    "steps": {
+      "apis": {
+        "title": "Configuración de APIs",
+        "subtitle": "Conecta proveedores de embeddings y generación",
+        "what": "Tu RAG necesita dos servicios:\n- **Proveedor de embeddings** para convertir texto en vectores\n- **Proveedor LLM** para generar respuestas finales",
+        "why": "La abstracción por proveedor mantiene tu stack flexible.\nPuedes cambiar modelos sin reescribir el wizard ni el contrato del `.env`.",
+        "benefits": [
+          "Configuración agnóstica al proveedor",
+          "Cambio fácil de modelos",
+          "Flujo de secretos listo para producción",
+          "Contrato de config preparado para el futuro"
+        ],
+        "codeExplanation": "Estas variables definen proveedores activos y sus credenciales."
+      },
+      "vectorDb": {
+        "title": "Base de Datos Vectorial",
+        "subtitle": "Configura PostgreSQL con pgvector para almacenar embeddings",
+        "what": "Postgres con la extensión **pgvector** almacena y busca vectores por similitud semántica.",
+        "why": "Las BBDD tradicionales buscan palabras exactas. Las vectoriales buscan **significado**:\n\"deployment\" puede encontrar \"hosting\" o \"production setup\".",
+        "benefits": [
+          "Búsqueda semántica",
+          "Indexado HNSW (< 10ms)",
+          "Escala a millones de docs",
+          "Open source"
+        ],
+        "codeExplanation": "Postgres con pgvector preinstalado. Puertos y credenciales salen del `.env`."
+      },
+      "embeddings": {
+        "title": "Servicio de Embeddings",
+        "subtitle": "Convierte texto en vectores semánticos",
+        "what": "Servicio que transforma texto en vectores.\nCada vector representa el **significado** del texto.",
+        "why": "La búsqueda por keywords encuentra palabras exactas. La búsqueda por embeddings entiende intención:\n\"machine learning tutorial\" puede encontrar \"AI guide\" sin compartir palabras.",
+        "benefits": [
+          "Captura sinónimos y conceptos",
+          "Funciona entre idiomas",
+          "Conserva contexto y matiz",
+          "Habilita retrieval semántico real"
+        ],
+        "codeExplanation": "Llama a un endpoint de embeddings y devuelve el vector resultante."
+      },
+      "chunking": {
+        "title": "Procesamiento de Documentos",
+        "subtitle": "Trocea y guarda tus documentos con embeddings",
+        "what": "Pipeline de ingesta:\n1. **Divide** documentos en chunks\n2. **Genera** embeddings por chunk\n3. **Almacena** todo en la BBDD vectorial",
+        "why": "Los LLM tienen ventana de contexto limitada. Chunks más pequeños mejoran la precisión.\nEl **overlap** evita perder contexto en los cortes.",
+        "benefits": [
+          "Chunks óptimos para retrieval",
+          "El overlap preserva contexto",
+          "Soporta varios formatos",
+          "Listo para procesar en paralelo"
+        ],
+        "codeExplanation": "Divide contenido en chunks solapados para mantener continuidad de contexto."
+      },
+      "search": {
+        "title": "Búsqueda por Similitud",
+        "subtitle": "Encuentra chunks relevantes usando similitud vectorial",
+        "what": "El sistema de búsqueda encuentra los chunks más relevantes para una pregunta usando similitud vectorial.",
+        "why": "Pregunta -> embedding de consulta -> chunks más cercanos -> contexto top-K.\nLa similitud coseno mide cercanía semántica.",
+        "benefits": [
+          "Latencia HNSW por debajo de 10ms",
+          "Tolera sinónimos y typos",
+          "Escala a grandes volúmenes",
+          "Filtros opcionales por metadatos"
+        ],
+        "codeExplanation": "El operador `<=>` calcula distancia coseno. Cuanto menor, más similar."
+      },
+      "rag": {
+        "title": "RAG Completo",
+        "subtitle": "Combina retrieval y generación para respuestas fundamentadas",
+        "what": "**Retrieval-Augmented Generation** recupera contexto y lo inyecta al prompt antes de generar.",
+        "why": "Sin RAG, el LLM responde solo con su entrenamiento.\nCon RAG, responde apoyándose en **tus documentos**.",
+        "benefits": [
+          "Respuestas basadas en tus docs",
+          "Respuestas con fuente",
+          "Menor riesgo de alucinaciones",
+          "Siempre actualizado"
+        ],
+        "codeExplanation": "Retrieval + generación: el modelo responde usando el contexto recuperado."
+      }
+    },
+    "fields": {
+      "external": {
+        "getKey": "obtener key"
+      },
+      "geminiApiKey": {
+        "helpText": "Se usa para embeddings con Gemini"
+      },
+      "openaiApiKey": {
+        "helpText": "Se usa para embeddings/chat de OpenAI"
+      },
+      "voyageApiKey": {
+        "helpText": "Se usa para embeddings de Voyage"
+      },
+      "ollamaBaseUrl": {
+        "helpText": "URL base de tu instancia local de Ollama"
+      },
+      "ollamaApiKey": {
+        "helpText": "Se usa para LLM de Ollama Cloud"
+      },
+      "anthropicApiKey": {
+        "helpText": "Se usa para modelos de Anthropic"
+      },
+      "mistralApiKey": {
+        "helpText": "Se usa para modelos de Mistral"
+      }
+    }
+  }
+}

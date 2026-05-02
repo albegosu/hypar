@@ -1,562 +1,206 @@
-# 🏗️ Technical Architecture
+# Technical Architecture
 
-This document provides a deep dive into the technical architecture of the From Zero RAG system.
-
-> **Note**: This document focuses on the core RAG application. For the **RAG Learning Quest** gamified tutorial system, see [learning notes](../learning/learning.md).
-
----
-
-## Table of Contents
-
-1. [System Overview](#system-overview)
-2. [Component Architecture](#component-architecture)
-3. [Data Flow](#data-flow)
-4. [RAG Pipeline](#rag-pipeline)
-5. [Database Schema](#database-schema)
-6. [API Design](#api-design)
-7. [Performance Optimizations](#performance-optimizations)
-8. [Security](#security)
+From Zero RAG is a single Nuxt 3 application. The frontend (Vue 3) and the backend (Nitro/h3 server routes) run in the same process on port 3000. There is no separate API server.
 
 ---
 
 ## System Overview
 
-### High-Level Architecture
-
 ```
-┌───────────────────────────────────────────────────────────────────────┐
-│                          CLIENT LAYER                                  │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐      │
-│  │  Web Browser    │  │  Mobile Browser │  │  API Clients    │      │
-│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘      │
-└───────────┼───────────────────┼───────────────────┼─────────────────┘
-            │                   │                   │
-            └───────────────────┴───────────────────┘
-                                │
-┌───────────────────────────────┼─────────────────────────────────────┐
-│                    APPLICATION LAYER                                 │
-│                                │                                     │
-│  ┌────────────────────────────▼──────────────────────────────┐     │
-│  │                 Nuxt 3 Frontend (SSR)                      │     │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │     │
-│  │  │Components│  │  Pages   │  │  Stores  │  │   API    │  │     │
-│  │  │  (Vue)   │  │ (Routes) │  │ (Pinia)  │  │ Client   │  │     │
-│  │  └──────────┘  └──────────┘  └──────────┘  └────┬─────┘  │     │
-│  └────────────────────────────────────────────────────┼───────┘     │
-└───────────────────────────────────────────────────────┼─────────────┘
-                                                        │
-┌───────────────────────────────────────────────────────┼─────────────┐
-│                      API LAYER                        │             │
-│  ┌────────────────────────────────────────────────────▼──────────┐ │
-│  │                   NestJS Backend API                           │ │
-│  │  ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐  │ │
-│  │  │Controllers│  │ Services  │  │    DTOs   │  │Middleware │  │ │
-│  │  └─────┬─────┘  └─────┬─────┘  └───────────┘  └───────────┘  │ │
-│  │        │              │                                        │ │
-│  │  ┌─────▼──────────────▼───────┐                               │ │
-│  │  │     Business Logic         │                               │ │
-│  │  │  ┌──────────┐ ┌──────────┐│                               │ │
-│  │  │  │Documents │ │  Search  ││                               │ │
-│  │  │  │  Module  │ │  Module  ││                               │ │
-│  │  │  └──────────┘ └──────────┘│                               │ │
-│  │  └─────────────────────────────┘                               │ │
-│  └────────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────────┘
-                    │                         │
-┌───────────────────┼─────────────────────────┼─────────────────────────┐
-│              DATA LAYER                     │                         │
-│  ┌────────────────▼──────────────┐  ┌───────▼──────────┐             │
-│  │      PostgreSQL + pgvector    │  │ External APIs    │             │
-│  │  ┌──────────┐  ┌───────────┐  │  │ ┌──────────────┐ │             │
-│  │  │Documents │  │   Chunks  │  │  │ │Google Gemini │ │             │
-│  │  │  Table   │  │  Table    │  │  │ │ (Embeddings) │ │             │
-│  │  └──────────┘  │(+vectors) │  │  │ └──────────────┘ │             │
-│  │                └───────────┘  │  │ ┌──────────────┐ │             │
-│  │  ┌──────────┐                 │  │ │Ollama Cloud  │ │             │
-│  │  │ Queries  │                 │  │ │    (LLM)     │ │             │
-│  │  │  Table   │                 │  │ └──────────────┘ │             │
-│  │  └──────────┘                 │  └──────────────────┘             │
-│  └────────────────────────────────┘                                   │
-└───────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Component Architecture
-
-### Backend Modules
-
-#### 1. Documents Module
-
-**Location**: `apps/rag-api/src/documents/`
-
-**Responsibilities**:
-- Document ingestion and processing
-- Text chunking with overlap
-- Embedding generation
-- Metadata extraction
-
-**Key Services**:
-
-```typescript
-// documents.service.ts
-- createFromText(): Upload text document
-- createFromFile(): Upload file (PDF, TXT, MD)
-- processDocument(): Chunk + embed pipeline
-- reprocess(): Re-chunk and re-embed
-
-// chunking.service.ts
-- chunkText(): Split text into overlapping segments
-- Strategy: 512 chars, 50 char overlap
-- Preserves sentence boundaries
-
-// embedding.service.ts
-- generate(): Create vector embedding
-- Multi-provider: Google Gemini, OpenAI, Ollama
-- LRU cache (256 entries)
-- Dimensions: 768 (configurable)
-```
-
-#### 2. Search Module
-
-**Location**: `apps/rag-api/src/search/`
-
-**Responsibilities**:
-- Vector similarity search
-- RAG query processing
-- Conversational context management
-- Query tracking
-
-**Key Services**:
-
-```typescript
-// search.service.ts
-- search(): Vector similarity search
-- rag(): Retrieval + context assembly
-- converse(): Multi-turn RAG chat
-- Uses pgvector cosine similarity
-- HNSW index for performance
-
-// Flow:
-1. Embed query → 768-dim vector
-2. pgvector similarity search
-3. Rank by cosine distance
-4. Return top-K chunks
-```
-
-#### 3. Agent Module
-
-**Location**: `apps/rag-api/src/agent/`
-
-**Responsibilities**:
-- Planner-driven chat
-- Route to knowledge base or direct response
-- Intent detection
-
-```typescript
-// agent.service.ts
-- chat(): Determine if KB search needed
-- Uses LLM to plan actions
-- Searches KB when relevant
-- Falls back to direct LLM response
-```
-
----
-
-## Data Flow
-
-### 1. Document Ingestion Flow
-
-```
-┌─────────────┐
-│   Client    │
-│  (Upload)   │
-└──────┬──────┘
-       │ POST /documents
-       ▼
-┌────────────────────┐
-│  DocumentsController│
-└──────┬─────────────┘
-       │
-       ▼
-┌────────────────────┐
-│ DocumentsService   │───┐
-│  processDocument() │   │
-└────────────────────┘   │
-       │                 │
-       ▼                 │
-┌────────────────────┐   │
-│  ChunkingService   │   │
-│   chunkText()      │   │
-│  (512 char chunks) │   │
-└──────┬─────────────┘   │
-       │                 │
-       ▼                 │
-┌────────────────────┐   │
-│ EmbeddingService   │◀──┘ Parallel batch processing
-│   generate()       │     (Promise.all for chunks)
-│  (768-dim vector)  │
-└──────┬─────────────┘
-       │
-       ▼
-┌────────────────────┐
-│    PostgreSQL      │
-│   INSERT chunks    │
-│ (text + embedding) │
-└────────────────────┘
-```
-
-### 2. Search/RAG Flow
-
-```
-┌─────────────┐
-│   Client    │
-│  (Query)    │
-└──────┬──────┘
-       │ POST /search/rag
-       ▼
-┌────────────────────┐
-│  SearchController  │
-└──────┬─────────────┘
-       │
-       ▼
-┌────────────────────┐
-│  SearchService     │
-│     rag()          │
-└──────┬─────────────┘
-       │
-       ├─────────────────────────┐
-       │                         │
-       ▼                         ▼
-┌────────────────────┐  ┌────────────────────┐
-│ EmbeddingService   │  │  QueryTracking     │
-│ Embed query text   │  │  Log to DB         │
-└──────┬─────────────┘  └────────────────────┘
-       │
-       ▼
-┌────────────────────────────────────┐
-│      pgvector Search               │
-│  SELECT ... ORDER BY               │
-│  embedding <=> $query_vector       │
-│  LIMIT 5                           │
-└──────┬─────────────────────────────┘
-       │ Top-K chunks
-       ▼
-┌────────────────────┐
-│  Context Assembly  │
-│  Format chunks     │
-│  Add metadata      │
-└──────┬─────────────┘
-       │
-       ▼
-┌────────────────────┐
-│   Ollama Cloud     │
-│  LLM generation    │
-│  (kimi-k2.5)       │
-└──────┬─────────────┘
-       │
-       ▼
-┌────────────────────┐
-│   Response         │
-│ - Answer text      │
-│ - Source chunks    │
-│ - Similarity scores│
-└────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                  Nuxt 3  (port 3000)                 │
+│                                                      │
+│  Vue 3 pages + components                            │
+│  ├── /               RAG chat & search               │
+│  ├── /documents      Document management             │
+│  ├── /upload         File upload                     │
+│  └── /learn/*        RAG Learning Quest              │
+│                                                      │
+│  Nitro server (h3)                                   │
+│  └── server/api/                                     │
+│      ├── documents/  CRUD + file upload              │
+│      ├── search/     vector search + RAG             │
+│      ├── agent/      planner-driven chat             │
+│      └── admin/      stats + query log               │
+│                                                      │
+│  server/utils/                                       │
+│  ├── prisma.ts        Prisma singleton               │
+│  ├── embedding.ts     multi-provider embeddings      │
+│  ├── chunking.ts      text splitting                 │
+│  ├── ollama.ts        Ollama HTTP client             │
+│  ├── documents.service.ts                            │
+│  ├── search.service.ts                               │
+│  └── agent.service.ts                               │
+└──────────────────────────────────────────────────────┘
+          │                          │
+          ▼                          ▼
+  PostgreSQL + pgvector      Embedding / LLM providers
+  (vector(768) columns)      Google Gemini / OpenAI / Ollama
 ```
 
 ---
 
 ## RAG Pipeline
 
-### Pipeline Stages
+### Ingestion
 
-#### Stage 1: Ingestion
-
-```typescript
-Input: Raw document (text/PDF/MD)
-↓
-Text Extraction
-├─ PDF: pdf-parse library
-├─ Markdown: Direct text
-└─ Text: Direct input
-↓
-Chunking
-├─ Algorithm: Sliding window
-├─ Size: 512 characters
-├─ Overlap: 50 characters (10%)
-└─ Boundary: Sentence-aware
-↓
-Embedding Generation
-├─ Provider: Google Gemini
-├─ Model: gemini-embedding-001
-├─ Dimensions: 768
-├─ Cache: LRU (prevent re-computation)
-└─ Batch: Parallel processing
-↓
-Storage
-├─ Document metadata → documents table
-├─ Chunks + embeddings → chunks table
-└─ pgvector index: HNSW algorithm
+```
+Upload (text / PDF / MD)
+  → Text extraction (pdf-parse for PDFs)
+  → Chunking: 800-char sliding window, 100-char overlap
+  → Embedding generation: 768-dim vector
+       priority: Google Gemini → OpenAI → Ollama
+       LRU cache (256 entries) prevents re-computation
+  → Store: documents + chunks tables (pgvector)
 ```
 
-#### Stage 2: Retrieval
+### Retrieval + Generation
 
-```typescript
-Input: User query
-↓
-Query Embedding
-├─ Same model as documents
-├─ Same dimensions (768)
-└─ Cache for repeat queries
-↓
-Vector Search
-├─ Algorithm: Cosine similarity
-├─ Index: pgvector HNSW
-├─ SQL: embedding <=> query_vector
-└─ Result: Top-K chunks (default: 5)
-↓
-Ranking
-├─ Primary: Similarity score
-├─ Optional: Recency boost
-└─ Optional: Diversity
+```
+User query
+  → Embed query (same model as documents)
+  → pgvector cosine similarity search
+       SELECT ... ORDER BY embedding <=> $query LIMIT k
+  → Assemble context from top-K chunks
+  → LLM generation (Ollama) with context in system prompt
+  → Return answer + source citations
 ```
 
-#### Stage 3: Augmentation
+### Agent Planner
 
-```typescript
-Input: Query + Retrieved chunks
-↓
-Context Assembly
-├─ Format: Numbered list
-├─ Include: Source document title
-├─ Include: Chunk text
-└─ Include: Similarity score
-↓
-Prompt Construction
-├─ System: "You are a helpful assistant..."
-├─ Context: Assembled chunks
-├─ Query: User question
-└─ Instructions: Cite sources
-↓
-LLM Generation
-├─ Provider: Ollama Cloud
-├─ Model: kimi-k2.5:cloud
-├─ Temperature: 0.7
-├─ Max tokens: 2048
-└─ Streaming: Supported
+The `/api/agent/chat` endpoint adds a planning step before retrieval:
+
 ```
+User message
+  → Planner LLM call (JSON format):
+       { use_kb: bool, search_query: string|null, direct_reply: string|null }
+  → If use_kb=false  → return direct_reply immediately
+  → If use_kb=true   → run RAG pipeline with search_query
+```
+
+Memory commands (`/remember`, `/forget`, `/memory clear`) are intercepted before the planner and handled directly.
 
 ---
 
 ## Database Schema
 
-### Tables
-
-#### documents
 ```sql
+-- Documents
 CREATE TABLE documents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  source_type VARCHAR(50),  -- 'text', 'markdown', 'pdf'
-  metadata JSONB DEFAULT '{}',
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title        TEXT NOT NULL,
+  content      TEXT NOT NULL,
+  source_type  VARCHAR(50),   -- 'text' | 'markdown' | 'pdf'
+  user_id      TEXT,
+  metadata     JSONB DEFAULT '{}',
+  created_at   TIMESTAMP DEFAULT NOW(),
+  updated_at   TIMESTAMP DEFAULT NOW()
 );
-```
 
-#### chunks
-```sql
+-- Chunks (with vectors)
 CREATE TABLE chunks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  embedding vector(768),  -- pgvector type
-  start_char INT,
-  end_char INT,
-  created_at TIMESTAMP DEFAULT NOW()
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id  UUID REFERENCES documents(id) ON DELETE CASCADE,
+  content      TEXT NOT NULL,
+  embedding    vector(768),
+  chunk_index  INT,
+  created_at   TIMESTAMP DEFAULT NOW()
 );
 
--- HNSW index for fast similarity search
-CREATE INDEX idx_chunks_embedding
-ON chunks USING hnsw (embedding vector_cosine_ops);
-```
+CREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops);
 
-#### queries
-```sql
+-- Query log
 CREATE TABLE queries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  query_text TEXT NOT NULL,
-  query_embedding vector(768),
-  results JSONB,
-  created_at TIMESTAMP DEFAULT NOW()
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  query_text    TEXT NOT NULL,
+  response_text TEXT,
+  results       JSONB,
+  latency_ms    INT,
+  created_at    TIMESTAMP DEFAULT NOW()
 );
-```
 
-### Indexes
-
-```sql
--- Performance indexes
-CREATE INDEX idx_chunks_document_id ON chunks(document_id);
-CREATE INDEX idx_queries_created_at ON queries(created_at DESC);
-
--- Full-text search (optional future enhancement)
-CREATE INDEX idx_chunks_content_fts
-ON chunks USING gin(to_tsvector('english', content));
+CREATE INDEX ON queries (created_at DESC);
 ```
 
 ---
 
-## API Design
+## Embedding Providers
 
-### RESTful Principles
+Priority order (first configured wins):
 
-- **Resource-based URLs**: `/documents`, `/search`
-- **HTTP verbs**: GET, POST, DELETE
-- **Status codes**: 200 (OK), 201 (Created), 400 (Bad Request), 503 (Service Unavailable)
-- **JSON payloads**: Consistent structure
+| Provider | Env var | Model | Notes |
+|---|---|---|---|
+| Google Gemini | `GOOGLE_API_KEY` | `gemini-embedding-001` | Free tier: 10M tokens/min |
+| OpenAI | `OPENAI_API_KEY` | `text-embedding-3-small` | Paid |
+| Ollama | `OLLAMA_URL` + `OLLAMA_MODEL` | `nomic-embed-text` | Local or cloud |
 
-### Error Handling
-
-```typescript
-// Standard error response
-{
-  "statusCode": 503,
-  "message": "Failed to generate embedding",
-  "error": "Service Unavailable"
-}
-```
-
-### Pagination
-
-```typescript
-// List endpoints support pagination
-GET /documents?page=1&limit=10
-
-// Response includes metadata
-{
-  "data": [...],
-  "total": 100,
-  "page": 1,
-  "limit": 10
-}
-```
+All providers output 768-dim vectors. `EMBEDDING_DIMENSIONS` must match the pgvector column.
 
 ---
 
-## Performance Optimizations
+## API Endpoints
 
-### 1. Embedding Cache
-
-```typescript
-// LRU cache prevents re-computing embeddings
-class LruCache<V> {
-  private readonly store = new Map<string, V>();
-  constructor(private readonly capacity: number) {}
-  // Most recent embeddings stay in memory
-  // Evicts oldest when full
-}
+### Documents
+```
+GET    /api/documents
+POST   /api/documents               body: { title, content, sourceType }
+POST   /api/documents/upload        multipart/form-data, max 10MB
+GET    /api/documents/:id
+DELETE /api/documents/:id
+POST   /api/documents/:id/reprocess
 ```
 
-### 2. Batch Processing
-
-```typescript
-// Parallel embedding generation
-const embeddings = await Promise.all(
-  chunks.map(chunk => this.embeddingService.generate(chunk.content))
-);
+### Search
+```
+POST /api/search          body: { query, limit?, userId? }
+POST /api/search/rag      body: { query, limit?, userId? }
+POST /api/search/converse body: { messages, userId? }
+POST /api/search/inspect  body: { query }
 ```
 
-### 3. Database Indexing
+### Agent
+```
+POST /api/agent/chat      body: { messages, userId?, limit? }
+```
 
-- **HNSW index**: Fast approximate nearest neighbor search
-- **B-tree indexes**: Fast lookups on foreign keys
-- **Connection pooling**: Reuse database connections
-
-### 4. Docker Multi-Stage Builds
-
-```dockerfile
-# Stage 1: Build
-FROM node:20-alpine AS builder
-# ... build application
-
-# Stage 2: Dependencies
-FROM node:20-alpine AS deps
-# ... production dependencies only
-
-# Stage 3: Runner
-FROM node:20-alpine AS runner
-# ... minimal runtime image
+### Admin
+```
+GET /api/admin/stats      ?limit=10&offset=0
+GET /api/admin/queries    ?limit=10&offset=0
 ```
 
 ---
 
-## Security
+## Memory System
 
-### 1. Input Validation
+`MEMORY_SCOPE` controls how chat memories are scoped:
 
-- **DTO validation**: class-validator decorators
-- **File upload limits**: Max 10MB
-- **Content-Type checking**: PDF/TXT/MD only
+| Value | Behavior |
+|---|---|
+| `local_per_user` | memories are scoped to `userId`, isolated per user |
+| `global` | all users share the same memory pool |
+| `disabled` | memory commands and proactive saving are off |
 
-### 2. SQL Injection Prevention
-
-- **Prisma ORM**: Parameterized queries
-- **No raw SQL**: Except for vector operations
-
-### 3. API Rate Limiting
-
-- **Embeddings**: Respect provider limits
-- **Optional**: Add express-rate-limit middleware
-
-### 4. Environment Variables
-
-- **Secrets**: Never commit `.env`
-- **Docker**: Use secrets management
-- **Production**: Use vault services
+Memories are stored as `Document` rows with `sourceType = 'memory'`.
 
 ---
 
-## Scalability Considerations
+## Performance
 
-### Horizontal Scaling
-
-- **Stateless API**: Can run multiple instances
-- **Shared database**: PostgreSQL handles concurrency
-- **Load balancer**: Nginx or cloud LB
-
-### Vertical Scaling
-
-- **Database**: Increase PostgreSQL resources
-- **Vector search**: HNSW scales to millions of vectors
-- **Memory**: LRU cache size adjustable
-
-### Future Enhancements
-
-1. **Redis cache**: Shared cache across instances
-2. **Message queue**: Async document processing
-3. **CDN**: Frontend static assets
-4. **Read replicas**: Separate read/write databases
+- **Embedding LRU cache** (256 entries) — avoids re-computing identical texts
+- **HNSW index** — sub-linear approximate nearest-neighbor search at scale
+- **Prisma `globalThis` singleton** — prevents connection pool exhaustion during HMR in dev
+- **Context truncation** — RAG context is capped at 20,000 chars before sending to the LLM
 
 ---
 
-## Monitoring & Observability
+## Security Notes
 
-### Recommended Tools
-
-- **Logging**: NestJS built-in logger
-- **Metrics**: Prometheus + Grafana
-- **Tracing**: OpenTelemetry
-- **Error tracking**: Sentry
-
-### Key Metrics
-
-- Embedding generation time
-- Search latency (p50, p95, p99)
-- LLM response time
-- Database query performance
-- Cache hit rate
+- File uploads are validated for MIME type and capped at 10MB in `server/api/documents/upload.post.ts`
+- All route inputs are validated with zod schemas (`readValidatedBody`)
+- Secrets are read via `useRuntimeConfig()` — never from `process.env` directly in route handlers
+- No CORS configuration needed (same-origin)
 
 ---
 
-**Last Updated**: 2026-04-26
+*Last updated: 2026-05-01*

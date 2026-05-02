@@ -524,5 +524,3 @@ Visit http://localhost:3002 and **start learning RAG!**
 ---
 
 **🎮 Let's learn RAG the fun way!**
-
-**Built with ❤️ and Claude Code**
