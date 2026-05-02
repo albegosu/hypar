@@ -9,7 +9,7 @@ Thanks for your interest in contributing! This is primarily a learning project, 
 - [Node.js 20+](https://nodejs.org/)
 - [pnpm 10+](https://pnpm.io/) — `npm install -g pnpm`
 - [Docker + Docker Compose](https://docs.docker.com/get-docker/)
-- An Ollama instance or API key for Google/OpenAI embeddings
+- A Google AI / OpenAI / Ollama API key for embeddings
 
 ### Local Setup
 
@@ -18,60 +18,61 @@ Thanks for your interest in contributing! This is primarily a learning project, 
 git clone https://github.com/albegosu/from-zero-rag.git
 cd from-zero-rag
 
-# 2. Install dependencies (all workspace packages)
+# 2. Install dependencies
 pnpm install
 
-# 3. Start the backend services (DB + Ollama)
+# 3. Start the database
 docker compose --profile api up -d
 
-# 4. Set up environment for the API
-# Edit apps/rag-api/.env with your settings
-cp apps/rag-api/.env.example apps/rag-api/.env
+# 4. Configure environment
+cp .env.docker .env
+# Edit .env — set DATABASE_URL, GOOGLE_API_KEY, OLLAMA_LLM_MODEL at minimum
 
 # 5. Run database migrations
-cd apps/rag-api && npx prisma migrate dev && cd ..
+pnpm db:migrate
 
-# 6. Start everything in dev mode
+# 6. Start the dev server
 pnpm dev
 ```
+
+Open http://localhost:3000.
 
 ## Project Structure
 
 ```
 from-zero-rag/
-├── apps/
-│   ├── rag-api/          # NestJS backend (RAG pipeline, vector search)
-│   └── rag-ui/           # Nuxt 3 frontend (chat, document management)
-├── packages/
-│   ├── rag-learning/     # Shared challenge/validator library
-│   └── rag-playground/   # Interactive learning UI
-└── docker-compose.yml    # Full stack orchestration
+├── pages/              # All routes (/ + /learn/*)
+├── components/         # Vue components
+├── stores/             # Pinia stores
+├── server/
+│   ├── api/            # h3 route handlers
+│   └── utils/          # Services and utilities
+├── utils/learning/     # Learning challenge logic (inlined library)
+├── prisma/             # Database schema + migrations
+└── nuxt.config.ts
 ```
 
 ## Development Workflow
 
 1. **Fork** the repository
 2. **Create a branch** from `main`: `git checkout -b feat/your-feature`
-3. **Make your changes** and add tests if applicable
-4. **Run the checks** before pushing:
+3. **Make your changes**
+4. **Verify** before pushing:
 
 ```bash
-# Backend tests
-cd apps/rag-api && pnpm test
+# Type check
+pnpm build
 
-# Backend lint
-cd apps/rag-api && pnpm lint
-
-# Learning package build
-pnpm --filter @rag/learning build
+# Database (if schema changed)
+pnpm db:migrate
 ```
 
-5. **Open a pull request** against `main` — CI will run automatically
+5. **Open a pull request** against `main`
 
 ## Branch Naming
 
 | Type | Pattern | Example |
-|------|---------|---------|
+|---|---|---|
 | Feature | `feat/short-description` | `feat/streaming-responses` |
 | Bug fix | `fix/short-description` | `fix/chunking-offset` |
 | Docs | `docs/short-description` | `docs/api-endpoints` |
@@ -84,18 +85,24 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 feat: add streaming support for chat responses
 fix: correct chunk offset calculation for unicode text
-docs: add deployment guide for Railway
+docs: update quick start guide
 chore: update pnpm lockfile
 ```
 
 ## What to Contribute
 
-- **Bug fixes** — especially around chunking accuracy, embedding edge cases
-- **New validators** for the learning playground challenges
-- **Documentation** improvements and clarifications
-- **Tests** — the backend test coverage can always grow
-- **UI/UX** improvements for the chat or document management views
+- **Bug fixes** — especially around chunking, embedding edge cases, or memory commands
+- **New learning challenges** — add levels/validators under `utils/learning/`
+- **Documentation** — clarifications and improvements are always welcome
+- **UI/UX improvements** — chat interface, document management, or `/learn` pages
+
+## Adding a Learning Challenge
+
+1. Add challenge data to the relevant level file in `utils/learning/levels/`
+2. Create a validator in `utils/learning/validators/`
+3. Export from `utils/learning/index.ts`
+4. Test via `/learn/challenge/<id>`
 
 ## Questions?
 
-Open an [issue](https://github.com/albegosu/from-zero-rag/issues) with your question or idea before starting large changes — it helps align effort.
+Open an [issue](https://github.com/albegosu/from-zero-rag/issues) before starting large changes — it helps align effort.

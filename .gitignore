@@ -12,6 +12,11 @@ dist/
 .nuxt/
 .turbo/
 
+# Nuxt / Nitro
+.nitro/
+.vercel/
+.netlify/
+
 # Logs and caches
 *.log
 npm-debug.log*
@@ -31,3 +36,6 @@ Thumbs.db
 
 # Test / coverage
 coverage/
+
+# Prisma
+prisma/generated/

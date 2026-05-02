@@ -27,22 +27,18 @@ jobs:
           node-version: '20'
 
       - name: Install backend dependencies
-        working-directory: ./apps/rag-api
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run npm audit (backend)
-        working-directory: ./apps/rag-api
-        run: npm audit --audit-level=moderate
+        run: pnpm audit --audit-level moderate
         continue-on-error: true
 
       # Frontend dependencies scan
       - name: Install frontend dependencies
-        working-directory: ./apps/rag-ui
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Run npm audit (frontend)
-        working-directory: ./apps/rag-ui
-        run: npm audit --audit-level=moderate
+        run: pnpm audit --audit-level moderate
         continue-on-error: true
 
       # CodeQL Analysis
@@ -58,14 +54,13 @@ jobs:
         uses: github/codeql-action/analyze@v2
 
       # Docker image scan
-      - name: Build backend image
-        working-directory: ./apps/rag-api
-        run: docker build -t rag-backend:test .
+      - name: Build app image
+        run: docker build -t from-zero-rag:test .
 
-      - name: Scan backend image
+      - name: Scan app image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: rag-backend:test
+          image-ref: from-zero-rag:test
           format: 'sarif'
           output: 'trivy-results.sarif'
 

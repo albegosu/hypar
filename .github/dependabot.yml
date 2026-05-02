@@ -1,7 +1,6 @@
 # Dependabot version updates: disabled via `ignore` on each entry (remove those blocks to re-enable).
 version: 2
 updates:
-  # Monorepo workspace dependencies (pnpm)
   - package-ecosystem: npm
     directory: /
     schedule:
@@ -13,78 +12,6 @@ updates:
     labels:
       - dependencies
       - monorepo
-    commit-message:
-      prefix: 'chore(deps)'
-      include: scope
-    ignore:
-      - dependency-name: '*'
-
-  # Backend-only updates (explicit)
-  - package-ecosystem: npm
-    directory: /apps/rag-api
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 10
-    reviewers:
-      - albegosu
-    labels:
-      - dependencies
-      - backend
-    commit-message:
-      prefix: 'chore(deps)'
-      include: scope
-    ignore:
-      - dependency-name: '*'
-
-  # Frontend-only updates (explicit)
-  - package-ecosystem: npm
-    directory: /apps/rag-ui
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 10
-    reviewers:
-      - albegosu
-    labels:
-      - dependencies
-      - frontend
-    commit-message:
-      prefix: 'chore(deps)'
-      include: scope
-    ignore:
-      - dependency-name: '*'
-
-  # Learning packages (explicit)
-  - package-ecosystem: npm
-    directory: /packages/rag-learning
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 10
-    reviewers:
-      - albegosu
-    labels:
-      - dependencies
-      - learning
-    commit-message:
-      prefix: 'chore(deps)'
-      include: scope
-    ignore:
-      - dependency-name: '*'
-
-  - package-ecosystem: npm
-    directory: /packages/rag-playground
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 10
-    reviewers:
-      - albegosu
-    labels:
-      - dependencies
-      - learning
-      - frontend
     commit-message:
       prefix: 'chore(deps)'
       include: scope

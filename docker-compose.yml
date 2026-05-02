@@ -48,78 +48,53 @@ services:
       - rag-network
     profiles: ["full", "api", "all"]
 
-  # Backend API (NestJS)
-  backend:
+  # Unified Nuxt 3 app (RAG UI + Learning Quest + server API)
+  app:
     build:
-      context: ./apps/rag-api
+      context: .
       dockerfile: Dockerfile
-    container_name: rag-backend
+    container_name: rag-app
     environment:
       NODE_ENV: production
-      PORT: 3001
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_password}@postgres:5432/${POSTGRES_DB:-rag_db}
+      NUXT_DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_password}@postgres:5432/${POSTGRES_DB:-rag_db}
       OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      NUXT_OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
+      NUXT_OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
       OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-tinyllama}
+      NUXT_OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-tinyllama}
       OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
+      NUXT_OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
       OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
+      NUXT_OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
       OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      NUXT_OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      NUXT_GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NUXT_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
-    ports:
-      - "${BACKEND_PORT:-3001}:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - backend_uploads:/app/uploads
-    networks:
-      - rag-network
-    restart: unless-stopped
-    profiles: ["full", "api", "all"]
-
-  # Frontend (Nuxt 3)
-  frontend:
-    build:
-      context: ./apps/rag-ui
-      dockerfile: Dockerfile
-      args:
-        NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}
-    container_name: rag-frontend
-    environment:
-      NUXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-3001}
+      NUXT_EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
+      MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
+      NUXT_MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
+      MEMORY_PROACTIVE: ${MEMORY_PROACTIVE:-true}
+      NUXT_MEMORY_PROACTIVE: ${MEMORY_PROACTIVE:-true}
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: 3000
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${PORT:-3000}:3000"
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
     networks:
       - rag-network
     restart: unless-stopped
     profiles: ["full", "all"]
 
-  # Learning playground (Nuxt + @rag/learning)
-  playground:
-    build:
-      context: .
-      dockerfile: ./packages/rag-playground/Dockerfile
-    container_name: rag-playground
-    environment:
-      HOST: 0.0.0.0
-      PORT: 3002
-    ports:
-      - "${PLAYGROUND_PORT:-3002}:3002"
-    networks:
-      - rag-network
-    restart: unless-stopped
-    profiles: ["learning", "all"]
-
 volumes:
   postgres_data:
   ollama_data:
-  backend_uploads:
 
 networks:
   rag-network:
