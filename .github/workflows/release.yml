@@ -34,7 +34,7 @@ jobs:
           files: |
             docker-compose.yml
             .env.docker
-            DOCKER.md
+            docs/DOCKER.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

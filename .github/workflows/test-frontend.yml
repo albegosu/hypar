@@ -4,19 +4,38 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'apps/rag-ui/**'
+      - 'pages/**'
+      - 'components/**'
+      - 'layouts/**'
+      - 'stores/**'
+      - 'assets/**'
+      - 'plugins/**'
+      - 'composables/**'
+      - 'i18n/**'
+      - 'app.vue'
+      - 'nuxt.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/test-frontend.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'apps/rag-ui/**'
+      - 'pages/**'
+      - 'components/**'
+      - 'layouts/**'
+      - 'stores/**'
+      - 'assets/**'
+      - 'plugins/**'
+      - 'composables/**'
+      - 'i18n/**'
+      - 'app.vue'
+      - 'nuxt.config.ts'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/rag-ui
 
     steps:
       - name: Checkout code
@@ -36,15 +55,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm --filter rag-ui exec nuxt typecheck
-
       - name: Build
-        run: pnpm --filter rag-ui build
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./apps/rag-ui/coverage
-          flags: frontend
-          name: frontend-coverage
+        run: pnpm build

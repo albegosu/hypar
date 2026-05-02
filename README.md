@@ -1,533 +1,305 @@
-# 🧠 From Zero RAG - Retrieval-Augmented Generation
+# From Zero RAG
 
-A production-ready full-stack application for AI-powered **Retrieval-Augmented Generation (RAG)**. Built to demonstrate modern RAG architecture, vector databases, and cloud-native deployment.
+A production-ready full-stack application for **Retrieval-Augmented Generation (RAG)** built as a single Nuxt 3 project. Includes a RAG chat interface, document management, and an interactive learning quest — all in one app.
 
-[![CI Backend](https://github.com/albegosu/from-zero-rag/actions/workflows/test-backend.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/test-backend.yml)
-[![CI Frontend](https://github.com/albegosu/from-zero-rag/actions/workflows/test-frontend.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/test-frontend.yml)
-[![CI Learning](https://github.com/albegosu/from-zero-rag/actions/workflows/test-learning.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/test-learning.yml)
 [![Docker Build](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-20-brightgreen)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-10.3-red)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![Nuxt](https://img.shields.io/badge/Nuxt-3-green)](https://nuxt.com/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.5-purple)](https://github.com/pgvector/pgvector)
-[![pnpm](https://img.shields.io/badge/pnpm-workspace-orange)](https://pnpm.io/)
 
 ---
 
-## 📖 Table of Contents
+## Features
 
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Quick Start](#-quick-start)
-- [RAG Pipeline](#-rag-pipeline-explained)
-- [API Documentation](#-api-documentation)
-- [Deployment](#-deployment)
-- [Project Structure](#-project-structure)
-- [Documentation](#-documentation)
-- [Learning Resources](#-learning-resources)
-
----
-
-## ✨ Features
-
-### 🎮 NEW: RAG Learning Quest
-- **Interactive Tutorial System** - Learn RAG through coding challenges
-- **3 Complete Levels** - Embeddings + Chunking + Vector Database
-- **9 Coding Challenges** - From easy to hard difficulty
-- **Gamification** - XP points, badges, progress tracking
-- **Live Code Editor** - Monaco Editor with instant validation
-- **Total**: 650 XP available across 9 challenges (3.5 hours of learning)
-
-### Core RAG Capabilities
-- 🔍 **Semantic Search** - Vector similarity search with pgvector
-- 🤖 **RAG Mode** - Context-aware AI responses with source citations
-- 💬 **Conversational AI** - Multi-turn dialogue with memory
-- 📊 **Intelligent Chunking** - Optimized document splitting with overlap
+### RAG Chat & Search
+- **Semantic Search** — vector similarity search with pgvector
+- **RAG Mode** — context-aware AI responses with source citations
+- **Conversational AI** — multi-turn dialogue with per-user memory
+- **Agent Planner** — automatically routes queries to KB or direct reply
+- **Memory Commands** — `/remember`, `/forget`, `/memory clear`
 
 ### Document Management
-- 📄 **Multi-format Support** - Text, Markdown, PDF
-- ⚡ **Real-time Processing** - Async document ingestion
-- 🔄 **Reprocessing** - Update embeddings on demand
-- 📈 **Analytics** - Query history and stats
+- **Multi-format** — Text, Markdown, PDF upload
+- **Smart Chunking** — 800-char chunks with 100-char overlap
+- **Multi-provider Embeddings** — Google Gemini (free) > OpenAI > Ollama
+- **Reprocessing** — update embeddings on demand
 
-### Technical Features
-- 🎯 **Multi-provider Embeddings** - Google Gemini, OpenAI, or Ollama
-- 🚀 **Cloud-Ready** - Deploy on Vercel, Railway, or Render
-- 🐳 **Docker Support** - One-command full stack
-- 💾 **Efficient Caching** - LRU cache for embeddings
-- 🔒 **Type Safety** - Full TypeScript + Prisma
+### RAG Learning Quest (`/learn`)
+- **3 Levels** — Embeddings, Chunking, Vector Database
+- **9 Coding Challenges** — easy → hard, 650 XP total
+- **Live Code Editor** — Monaco Editor with instant validation
+- **Progress Tracking** — XP, badges, persisted state
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
-### System Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER INTERFACE                          │
-│                     Nuxt 3 + Vue 3 + Tailwind                   │
-└────────────────┬───────────────────────┬────────────────────────┘
-                 │                       │
-                 ▼                       ▼
-        ┌────────────────┐      ┌────────────────┐
-        │  Document API  │      │   Search API   │
-        │   (Upload)     │      │  (RAG/Vector)  │
-        └────────┬───────┘      └────────┬───────┘
-                 │                       │
-                 ▼                       ▼
-        ┌─────────────────────────────────────────┐
-        │          NestJS Backend API              │
-        │  ┌──────────┐  ┌──────────┐  ┌────────┐│
-        │  │Chunking  │  │Embedding │  │Search  ││
-        │  │Service   │  │Service   │  │Service ││
-        │  └──────────┘  └──────────┘  └────────┘│
-        └─────────┬──────────────┬────────────────┘
-                  │              │
-                  ▼              ▼
-        ┌──────────────┐  ┌──────────────────┐
-        │  PostgreSQL  │  │ Embedding Provider│
-        │  + pgvector  │  │ (Gemini/OpenAI)  │
-        │   (Vector    │  └──────────────────┘
-        │   Database)  │
-        └──────────────┘
-```
-
-### RAG Flow
+Everything runs as a **single Nuxt 3 app** on port 3000. The frontend and backend share the same process — no CORS, no separate API server.
 
 ```
-1. INGESTION PIPELINE
-   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-   │ Document │───▶│ Chunking │───▶│Embedding │───▶│  Store   │
-   │  Upload  │    │(800 char)│    │(768 dims)│    │(pgvector)│
-   └──────────┘    └──────────┘    └──────────┘    └──────────┘
+┌──────────────────────────────────────────┐
+│            Nuxt 3  (port 3000)           │
+│                                          │
+│  pages/          server/api/             │
+│  ├── /           ├── documents/          │
+│  ├── /documents  ├── search/             │
+│  ├── /upload     ├── agent/              │
+│  └── /learn/*    └── admin/              │
+│                                          │
+│  server/utils/                           │
+│  ├── prisma.ts (pgvector)                │
+│  ├── embedding.ts (Gemini/OpenAI/Ollama) │
+│  ├── chunking.ts                         │
+│  ├── documents.service.ts                │
+│  ├── search.service.ts                   │
+│  └── agent.service.ts                    │
+└──────────────────────────────────────────┘
+         │                    │
+         ▼                    ▼
+  PostgreSQL + pgvector    Ollama / Cloud LLM
+```
 
-2. RETRIEVAL PIPELINE
-   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-   │  Query   │───▶│ Embed    │───▶│ Vector   │───▶│ Top-K    │
-   │  Text    │    │  Query   │    │  Search  │    │ Chunks   │
-   └──────────┘    └──────────┘    └──────────┘    └──────────┘
+### RAG Pipeline
 
-3. GENERATION PIPELINE
-   ┌──────────┐    ┌──────────┐    ┌──────────┐
-   │ Context  │───▶│   LLM    │───▶│ Response │
-   │ + Query  │    │ (Ollama) │    │+ Sources │
-   └──────────┘    └──────────┘    └──────────┘
+```
+INGESTION
+  Upload → Chunk (800 chars) → Embed (768 dims) → Store (pgvector)
+
+RETRIEVAL
+  Query → Embed → Cosine Search → Top-K Chunks
+
+GENERATION
+  Chunks + Query → LLM (Ollama) → Response + Sources
 ```
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
-### Frontend
-- **Nuxt 3** - Full-stack Vue framework
-- **Nuxt UI** - Beautiful component library
-- **Tailwind CSS** - Utility-first styling
-- **Pinia** - State management
-- **TypeScript** - Type safety
-
-### Backend
-- **NestJS** - Enterprise Node.js framework
-- **Prisma** - Type-safe ORM
-- **PostgreSQL** - Primary database
-- **pgvector** - Vector similarity search
-- **TypeScript** - End-to-end type safety
-
-### AI/ML
-- **Google Gemini** - Free embeddings (10M tokens/min)
-- **OpenAI** - Alternative embeddings provider
-- **Ollama Cloud** - Cloud-hosted LLM
-- **Ollama Local** - Local LLM option
-
-### Infrastructure
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **GitHub Actions** - CI/CD (ready)
+| Layer | Technology |
+|---|---|
+| Framework | Nuxt 3 (Vue 3 + Nitro/h3) |
+| UI | Nuxt UI v3 + Tailwind CSS v4 |
+| State | Pinia |
+| ORM | Prisma 7 + `@prisma/adapter-pg` |
+| Database | PostgreSQL 16 + pgvector |
+| Embeddings | Google Gemini / OpenAI / Ollama |
+| LLM | Ollama (local or cloud) |
+| Code Editor | Monaco Editor (learning only) |
+| Runtime | Node.js 20 |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-- Docker 20.10+ and Docker Compose 2.0+ (for containerized workflows)
-- Node.js 20+ and pnpm 10+ (for local development)
-- 4GB+ RAM recommended
-- API keys if you want real LLM/embedding providers
+- **Docker 20.10+** and **Docker Compose 2.0+**
+- OR **Node.js 20+** and **pnpm 10+** for local dev
+- A PostgreSQL instance with pgvector (the Docker setup includes one)
+- At least one API key: [Google AI Studio](https://aistudio.google.com/app/apikey) (free, recommended) or OpenAI
 
-### Option 1: Docker Profiles (Recommended)
+---
 
-| Profile | What starts | Command |
-|---------|------------|---------|
-| `all` | Everything (API + UI + Playground + DB + Ollama) | `docker compose --profile all up --build -d` |
-| `full` | API + UI + DB + Ollama | `docker compose --profile full up --build -d` |
-| `api` | API + DB + Ollama (no UI) | `docker compose --profile api up --build -d` |
-| `learning` | Playground only | `docker compose --profile learning up --build -d` |
+### Option 1: Docker (recommended)
 
 ```bash
-# Everything at once
-docker compose --profile all up --build -d
-```
-
-Access points once running:
-
-- **UI** → http://localhost:3000
-- **API** → http://localhost:3001
-- **Learning playground** → http://localhost:3002
-
-Stop:
-
-```bash
-docker compose --profile all down
-```
-
-### Option 2: Local Development (Monorepo)
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/from-zero-rag.git
+# 1. Clone
+git clone https://github.com/albegosu/from-zero-rag.git
 cd from-zero-rag
 
-# Install dependencies
-pnpm install
+# 2. Configure
+cp .env.docker .env
+# Edit .env — set GOOGLE_API_KEY or OLLAMA_API_KEY + OLLAMA_URL at minimum
+# (.env.docker sets COMPOSE_PROFILES=full so profiled services start by default.)
 
-# Start API
-pnpm dev:api
+# 3. Start (app + postgres + ollama)
+docker compose --profile full up -d --build
+# Equivalent after copying .env: docker compose up -d --build
 
-# Start main UI
-pnpm dev:ui
-
-# Start learning playground
-pnpm dev:playground
+# 4. Open
+open http://localhost:3000
 ```
 
-### Option 3: Local All-In-One
+**Profiles:**
+
+| Profile | Services |
+|---|---|
+| `full` | app + postgres + ollama |
+| `api` | postgres + ollama only (no app) |
+| `all` | same as `full` |
+
+**Stop:**
+```bash
+docker compose --profile full down
+```
+
+---
+
+### Option 2: Local Development
 
 ```bash
-# Start everything
+# 1. Clone & install
+git clone https://github.com/albegosu/from-zero-rag.git
+cd from-zero-rag
+pnpm install
+
+# 2. Configure
+cp .env.docker .env
+# Edit .env — set DATABASE_URL and at least GOOGLE_API_KEY
+
+# 3. Run database migrations
+pnpm db:migrate
+
+# 4. Start dev server
 pnpm dev
 ```
 
-Access points:
-- 🎮 **Learning Playground**: http://localhost:3002
-- 🌐 **RAG App**: http://localhost:3000
-- 🔌 **API**: http://localhost:3001
+Open http://localhost:3000.
 
-### Quick API Smoke Test
-```bash
-# Health check
-curl http://localhost:3001/health
+**Useful scripts:**
 
-# Create a document
-curl -X POST http://localhost:3001/documents \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "What is RAG?",
-    "content": "RAG (Retrieval-Augmented Generation) combines information retrieval with LLM generation...",
-    "sourceType": "text"
-  }'
+| Script | Description |
+|---|---|
+| `pnpm dev` | Start dev server with HMR |
+| `pnpm build` | Production build |
+| `pnpm start` | Run production build |
+| `pnpm db:migrate` | Run Prisma migrations (dev) |
+| `pnpm db:deploy` | Run migrations (production) |
+| `pnpm db:studio` | Open Prisma Studio |
 
-# Search
-curl -X POST http://localhost:3001/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "explain RAG", "limit": 5}'
+---
+
+### Environment Variables
+
+Copy `.env.docker` to `.env` and fill in:
+
+```env
+# Database
+DATABASE_URL=postgresql://rag:rag_password@localhost:5432/rag_db
+
+# Embedding provider — pick one (Google is free)
+GOOGLE_API_KEY=your_key       # https://aistudio.google.com/app/apikey
+OPENAI_API_KEY=your_key       # fallback if Google not set
+
+# LLM (Ollama local or cloud)
+OLLAMA_URL=http://localhost:11434   # local
+# OLLAMA_URL=https://ollama.com    # cloud
+# OLLAMA_API_KEY=your_key          # cloud only
+OLLAMA_LLM_MODEL=tinyllama
+
+# Embedding model (used when Google/OpenAI not set)
+OLLAMA_MODEL=nomic-embed-text
+
+# Memory
+MEMORY_SCOPE=local_per_user   # local_per_user | global | disabled
+MEMORY_PROACTIVE=true
 ```
 
 ---
 
-## 🎯 RAG Pipeline Explained
+## API Reference
 
-### 1. Document Ingestion
+All endpoints are under `/api/` (same origin, no CORS needed).
 
-**Chunking Strategy** (`rag-api/src/documents/chunking.service.ts:30`)
-```typescript
-- Chunk size: 800 characters
-- Overlap: 100 characters (12.5%)
-- Preserves context across chunks
-- Handles sentence boundaries
+### Documents
+
+```http
+GET    /api/documents               # list documents
+POST   /api/documents               # create from text/markdown
+POST   /api/documents/upload        # upload PDF/TXT/MD (multipart, max 10MB)
+GET    /api/documents/:id           # get document + chunks
+DELETE /api/documents/:id           # delete document
+POST   /api/documents/:id/reprocess # re-embed document
 ```
 
-**Embedding Generation** (`rag-api/src/documents/embedding.service.ts`)
-```typescript
-- Provider: Google Gemini (free tier)
-- Model: gemini-embedding-001
-- Dimensions: 768 (optimized for pgvector)
-- Cache: LRU (256 entries)
+### Search
+
+```http
+POST /api/search         # semantic vector search
+POST /api/search/rag     # RAG query (search + LLM response)
+POST /api/search/converse  # multi-turn chat with history
+POST /api/search/inspect   # embedding debug + latency info
 ```
 
-### 2. Vector Search
+### Agent
 
-**Similarity Search** (`rag-api/src/search/search.service.ts:38`)
-```typescript
-- Algorithm: Cosine similarity
-- Index: pgvector HNSW
-- Query: Embedded with same model
-- Results: Top-K ranked chunks
+```http
+POST /api/agent/chat     # agentic chat with planner + memory
 ```
 
-### 3. Context Generation
+### Admin
 
-**RAG Augmentation** (`rag-api/src/search/search.service.ts:88`)
-```typescript
-- Retrieval: Top 5 similar chunks
-- Context assembly: Ranked by similarity
-- Source tracking: Document + chunk references
-- LLM: Ollama Cloud (kimi-k2.5)
+```http
+GET /api/admin/stats     # document/chunk/query counts
+GET /api/admin/queries   # recent query log
 ```
 
 ---
 
-## 📚 API Documentation
-
-### Documents API
-
-#### Create Document
-```http
-POST /documents
-Content-Type: application/json
-
-{
-  "title": "Document Title",
-  "content": "Document content...",
-  "sourceType": "text" | "markdown"
-}
-```
-
-#### Upload File
-```http
-POST /documents/upload
-Content-Type: multipart/form-data
-
-file: <PDF/TXT/MD file>
-```
-
-#### List Documents
-```http
-GET /documents?page=1&limit=10
-```
-
-### Search API
-
-#### Semantic Search
-```http
-POST /search
-Content-Type: application/json
-
-{
-  "query": "What is RAG?",
-  "limit": 5
-}
-```
-
-#### RAG Query
-```http
-POST /search/rag
-Content-Type: application/json
-
-{
-  "query": "Explain RAG architecture",
-  "limit": 5
-}
-```
-
-#### Conversational Chat
-```http
-POST /search/converse
-Content-Type: application/json
-
-{
-  "message": "Tell me more about embeddings",
-  "conversationHistory": [...]
-}
-```
-
----
-
-## 🌍 Deployment
-
-### Supported Platforms
-
-#### Railway (Recommended)
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login and deploy
-railway login
-railway up
-```
-
-**Environment Variables:**
-- `GOOGLE_API_KEY`
-- `OLLAMA_API_KEY`
-- `OLLAMA_URL=https://ollama.com`
-- `DATABASE_URL` (auto-provided by Railway PostgreSQL)
-
-#### Render
-1. Connect GitHub repository
-2. Create PostgreSQL database
-3. Deploy backend as Web Service
-4. Deploy frontend as Static Site
-5. Add environment variables
-
-#### Vercel (Frontend only)
-```bash
-cd apps/rag-ui
-vercel --prod
-```
-
-### Cloud-Ready Features
-- ✅ No local GPU required
-- ✅ Stateless API design
-- ✅ Connection pooling
-- ✅ Health checks
-- ✅ Graceful shutdown
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 from-zero-rag/
-├── docs/                       # Documentation
-│   ├── architecture/
-│   │   └── core-rag-architecture.md
-│   ├── product/
-│   │   └── gamification-summary.md
-│   ├── learning/
-│   │   └── learning.md
-│   ├── progress/
-│   │   ├── phase-0-baseline-checklist.md
-│   │   └── docker-profiles-smoke-checklist.md
-│   └── archive/
-│       └── progress/
-│           ├── expansion-update.md
-│           ├── level3-complete.md
-│           └── session-summary.md
-│
-├── apps/
-│   ├── rag-api/                # Backend API
-│   │   ├── src/
-│   │   │   ├── documents/          # Document ingestion
-│   │   │   │   ├── chunking.service.ts    # Text splitting
-│   │   │   │   ├── embedding.service.ts   # Multi-provider embeddings
-│   │   │   │   └── documents.service.ts   # Orchestration
-│   │   │   ├── search/             # RAG & Search
-│   │   │   │   ├── search.service.ts      # Vector search + RAG
-│   │   │   │   └── search.controller.ts   # API endpoints
-│   │   │   ├── agent/              # Conversational AI
-│   │   │   ├── admin/              # Analytics
-│   │   │   └── ollama/             # Ollama integration
-│   │   ├── prisma/                 # Database schema
-│   │   │   └── schema.prisma       # pgvector setup
-│   │   └── Dockerfile              # Production image
-│   │
-│   └── rag-ui/                 # Frontend
-│       ├── components/             # Vue components
-│       ├── pages/                  # Application pages
-│       ├── stores/                 # Pinia state
-│       └── nuxt.config.ts          # Nuxt configuration
-│
-├── packages/
-│   ├── rag-learning/           # Shared learning logic/types/validators
-│   └── rag-playground/         # Learning/onboarding Nuxt app
-│
-├── docker-compose.yml          # Local development
-└── .env                        # Configuration
+├── nuxt.config.ts          # modules, runtimeConfig
+├── app.vue / app.config.ts
+├── prisma/
+│   ├── schema.prisma       # Document, Chunk, Query models
+│   └── migrations/
+├── assets/css/main.css     # Tailwind v4 + theme tokens
+├── pages/
+│   ├── index.vue           # RAG chat
+│   ├── upload.vue
+│   ├── documents/
+│   └── learn/              # Learning Quest (/learn/*)
+├── components/
+│   ├── AppHeader.vue
+│   ├── BottomNav.vue
+│   └── learn/              # auto-prefixed <Learn*>
+├── layouts/
+│   ├── default.vue         # RAG shell
+│   └── learn.vue           # Learning shell
+├── stores/
+│   ├── documents.ts
+│   └── progress.ts         # Learning XP/badges
+├── utils/learning/         # inlined learning library
+│   ├── levels/
+│   ├── validators/
+│   └── wizard/
+└── server/
+    ├── api/                # h3 route handlers
+    │   ├── documents/
+    │   ├── search/
+    │   ├── agent/
+    │   └── admin/
+    ├── utils/              # services + singletons
+    │   ├── prisma.ts
+    │   ├── embedding.ts
+    │   ├── chunking.ts
+    │   ├── ollama.ts
+    │   ├── documents.service.ts
+    │   ├── search.service.ts
+    │   └── agent.service.ts
+    └── plugins/
+        └── prisma.ts       # disconnect on shutdown
 ```
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-- [Docs Index](docs/README.md)
-- [Architecture](docs/architecture/core-rag-architecture.md)
-- [Gamification Summary](docs/product/gamification-summary.md)
-- [Learning Notes](docs/learning/learning.md)
-- [Docker Profiles Checklist](docs/progress/docker-profiles-smoke-checklist.md)
-- [Expansion Update](docs/archive/progress/expansion-update.md)
-- [Level 3 Complete](docs/archive/progress/level3-complete.md)
-- [Session Summary](docs/archive/progress/session-summary.md)
+- [Docker Guide](docs/DOCKER.md)
+- [Contributing](CONTRIBUTING.md)
+- [Architecture Notes](docs/architecture/core-rag-architecture.md)
 
 ---
 
-## 📖 Learning Resources
+## License
 
-### What You'll Learn
-
-#### RAG Fundamentals
-- ✅ Document chunking strategies
-- ✅ Embedding generation and caching
-- ✅ Vector similarity search
-- ✅ Context retrieval and ranking
-- ✅ LLM integration and prompting
-
-#### Vector Databases
-- ✅ pgvector setup and configuration
-- ✅ HNSW indexing for performance
-- ✅ Cosine similarity computation
-- ✅ Efficient batch operations
-
-#### Production Best Practices
-- ✅ Multi-provider architecture
-- ✅ Error handling and retries
-- ✅ Caching strategies
-- ✅ Docker multi-stage builds
-- ✅ Cloud deployment
-
-### Recommended Next Steps
-
-1. **Hybrid Search** - Combine vector + keyword search
-2. **Reranking** - Add cross-encoder reranking
-3. **Evaluation** - Implement RAGAS metrics
-4. **Fine-tuning** - Custom embedding models
-5. **GraphRAG** - Knowledge graph integration
+MIT — see [LICENSE](LICENSE).
 
 ---
 
-## 🤝 Contributing
-
-This is an educational project. Feel free to:
-- Fork and experiment
-- Report issues
-- Suggest improvements
-- Share your learnings
-
----
-
-## 📝 License
-
-MIT License - See [LICENSE](LICENSE) for details
-
----
-
-## 👤 Author
-
-**Alberto González**
-- Full Stack Developer
-- RAG & AI enthusiast
-
----
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ to learn RAG architecture
-- Inspired by LangChain and LlamaIndex
-- Thanks to the open-source community
-
----
-
-## 📊 Project Stats
-
-- **Lines of Code**: ~5,000
-- **Files**: 50+
-- **Technologies**: 15+
-- **Learning Time**: Perfect for weekend learning
-- **Production Ready**: ✅ Yes
-
----
-
-**⭐ If this helped you learn RAG, please star the repository!**
+**Built by [Alberto González](https://github.com/albegosu) to learn RAG architecture from scratch.**
