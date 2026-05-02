@@ -37,20 +37,20 @@ jobs:
             set -e
             cd /opt/from-zero-rag
             
-            # Pull latest images
-            docker-compose pull
+            # Pull published images; `app` is build-based (see docker-compose.yml), so it is rebuilt via up --build below
+            docker compose pull postgres ollama || true
             
             # Update env if needed
             echo "${{ secrets.ENV_FILE }}" > .env
             
             # Restart services
-            docker-compose up -d --remove-orphans
+            docker compose --profile full up -d --build --remove-orphans
             
-            # Run migrations
-            docker-compose exec -T backend npx prisma migrate deploy
+            # Migrations run on app startup via docker-entrypoint.sh; rerun is idempotent if needed:
+            docker compose exec -T app npx prisma migrate deploy
             
-            # Cleanup
-            docker system prune -af --volumes
+            # Cleanup unused Docker data (avoid --volumes: can delete named volumes)
+            docker system prune -af
             
             echo "✅ Deployment complete"
           EOF

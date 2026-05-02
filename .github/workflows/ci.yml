@@ -20,20 +20,33 @@ jobs:
         with:
           filters: |
             backend:
-              - 'apps/rag-api/**'
+              - 'server/**'
+              - 'prisma/**'
+              - 'init-scripts/**'
               - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
+              - 'package.json'
               - '.github/workflows/**'
             frontend:
-              - 'apps/rag-ui/**'
+              - 'pages/**'
+              - 'components/**'
+              - 'layouts/**'
+              - 'stores/**'
+              - 'assets/**'
+              - 'plugins/**'
+              - 'composables/**'
+              - 'i18n/**'
+              - 'app.vue'
+              - 'nuxt.config.ts'
               - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
+              - 'package.json'
               - '.github/workflows/**'
             learning:
-              - 'packages/rag-learning/**'
-              - 'packages/rag-playground/**'
+              - 'utils/learning/**'
+              - 'pages/learn/**'
+              - 'components/learn/**'
+              - 'stores/progress.ts'
               - 'pnpm-lock.yaml'
-              - 'pnpm-workspace.yaml'
+              - 'package.json'
               - '.github/workflows/**'
 
   backend:

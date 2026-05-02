@@ -1,33 +1,25 @@
 # Documentation Index
 
-This folder contains technical and product documentation for the project.
+Technical and product documentation for From Zero RAG.
 
 ## Core Docs
 
-- `architecture/core-rag-architecture.md`: technical architecture of the core RAG app
-- `learning/learning.md`: learning and onboarding notes
-- `product/gamification-summary.md`: gamification and challenge-system overview
-- `progress/phase-0-baseline-checklist.md`: smoke checklist used during cleanup and reorganization
-- `progress/docker-profiles-smoke-checklist.md`: smoke checklist for docker profile validation
+- [`architecture/core-rag-architecture.md`](architecture/core-rag-architecture.md) — technical architecture of the unified Nuxt 3 app
+- [`learning/learning.md`](learning/learning.md) — RAG Learning Quest user guide
+- [`product/gamification-summary.md`](product/gamification-summary.md) — gamification and challenge-system overview
 
-## Docker Profiles
+## Docker
 
-Use a single compose file with profiles:
+```bash
+# Full stack (app + postgres + ollama)
+docker compose --profile full up -d --build
 
-- Full stack: `docker compose --profile full up --build -d`
-- API standalone: `docker compose --profile api up --build -d`
-- Learning playground: `docker compose --profile learning up --build -d`
+# Infrastructure only (no app)
+docker compose --profile api up -d --build
+```
 
-Legacy API-only compose has been archived at:
-
-- `archive/docker/rag-api-docker-compose.legacy.yml`
+See [DOCKER.md](./DOCKER.md) for the complete guide.
 
 ## Archive
 
-Historical session/progress reports are stored in:
-
-- `archive/progress/expansion-update.md`
-- `archive/progress/level3-complete.md`
-- `archive/progress/session-summary.md`
-
-Use archived docs as historical context, not as the source of truth for current implementation.
+Historical session/progress reports are in [`archive/progress/`](archive/progress/). Use these as historical context only — they describe the old monorepo structure.

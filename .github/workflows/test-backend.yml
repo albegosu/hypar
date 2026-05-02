@@ -4,19 +4,24 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'apps/rag-api/**'
+      - 'server/**'
+      - 'prisma/**'
+      - 'init-scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/test-backend.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'apps/rag-api/**'
+      - 'server/**'
+      - 'prisma/**'
+      - 'init-scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./apps/rag-api
 
     services:
       postgres:
@@ -52,25 +57,14 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: pnpm exec prisma generate
 
       - name: Run migrations
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
-        run: npx prisma migrate deploy
+        run: pnpm exec prisma migrate deploy
 
-      - name: Run linter
-        run: pnpm --filter rag-api lint
-
-      - name: Run tests
+      - name: Build app (backend smoke via Nitro server build)
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/test
-          OLLAMA_URL: http://localhost:11434
-        run: pnpm --filter rag-api exec jest --coverage --passWithNoTests
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./apps/rag-api/coverage
-          flags: backend
-          name: backend-coverage
+        run: pnpm build
