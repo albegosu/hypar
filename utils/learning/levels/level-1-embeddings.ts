@@ -1,4 +1,4 @@
-import { Level, Challenge } from '../types';
+import type { Level, Challenge } from '../types';
 
 /**
  * LEVEL 1: Embeddings Fundamentals

@@ -13,8 +13,20 @@ function createPrismaClient(): PrismaClient {
   return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0])
 }
 
-export const prisma: PrismaClient = globalThis.__prisma ?? createPrismaClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.__prisma = prisma
+/**
+ * Lazy proxy: defers PrismaClient instantiation until the first property
+ * access. This lets test files import modules that depend on `prisma`
+ * without requiring DATABASE_URL.
+ */
+function getOrCreate(): PrismaClient {
+  if (!globalThis.__prisma) globalThis.__prisma = createPrismaClient()
+  return globalThis.__prisma
 }
+
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getOrCreate() as unknown as Record<string | symbol, unknown>
+    const value = client[prop]
+    return typeof value === 'function' ? (value as (...a: unknown[]) => unknown).bind(client) : value
+  },
+}) as PrismaClient

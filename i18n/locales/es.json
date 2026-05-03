@@ -1,6 +1,6 @@
 {
   "app": {
-    "brand": "from-zero-rag",
+    "brand": "f[rag]ua",
     "subtitle": "consola de chat con recuperación aumentada"
   },
   "nav": {
@@ -17,6 +17,13 @@
     "placeholder": "escribe tu mensaje…",
     "empty": "pregunta algo sobre los documentos que subiste. el contexto se mantiene entre turnos.",
     "thinking": "pensando…",
+    "searching": "buscando en la base de conocimiento…",
+    "errorTitle": "error del agente",
+    "errorGeneric": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "errorUnreachable": "No se puede alcanzar el modelo. ¿Está Ollama en marcha?",
+    "errorUnauthorized": "API key inválida o ausente. Revisa la configuración del proveedor.",
+    "errorRateLimit": "Límite de peticiones alcanzado. Espera un momento e inténtalo de nuevo.",
+    "errorModel": "Error del proveedor del modelo",
     "kbHit": "kb hit",
     "kbMiss": "sin kb",
     "sources": "fuentes",
@@ -29,6 +36,19 @@
     "recentDocs": "documentos recientes",
     "noDocs": "aún no hay documentos.",
     "uploadCta": "subir",
+    "conversations": "conversaciones",
+    "newConversation": "+ nueva",
+    "noModelReply": "El modelo consultó tu base de conocimiento pero no devolvió texto de respuesta (pasa a veces con modelos locales muy pequeños). Vuelve a enviar el mensaje, prueba un modelo de chat mayor, o abre **ver recuperación** abajo para leer los pasajes recuperados.",
+    "untitled": "Sin título",
+    "noConversations": "sin conversaciones",
+    "deleteTitle": "eliminar",
+    "commandsAvailable": "// comandos disponibles",
+    "commands": {
+      "remember": "guardar un dato en tu memoria local. Ej: /remember mi color favorito es naranja",
+      "forget": "borrar memorias que contengan un texto. Ej: /forget color favorito",
+      "memoryClear": "limpiar toda tu memoria local.",
+      "help": "mostrar ayuda sobre comandos disponibles."
+    },
     "errorReach": "no se pudo conectar a la api en {url}. ¿está corriendo el backend?",
     "errorHint": "con docker: `docker compose up -d --build backend frontend` y luego recarga forzada."
   },
@@ -71,7 +91,11 @@
     "dropZone": "arrastra archivos aquí, o haz clic para buscar",
     "supports": "soporta: .txt, .md, .pdf",
     "selectFile": "seleccionar archivo",
-    "uploadFile": "subir archivo"
+    "uploadFile": "subir archivo",
+    "saving": "Guardando…",
+    "uploading": "Subiendo…",
+    "processing": "Procesando…",
+    "errorIngestion": "El procesamiento falló. Prueba a re-chunkear desde la página del documento."
   },
   "common": {
     "loading": "cargando…",

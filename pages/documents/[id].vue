@@ -141,7 +141,7 @@ async function onDelete() {
     toast.add({ title: t('documents.deleted') })
     await navigateTo('/documents')
   } catch (err: any) {
-    toast.add({ title: t('documents.deleteFailed'), description: err?.message ?? '', color: 'red' })
+    toast.add({ title: t('documents.deleteFailed'), description: err?.message ?? '', color: 'error' })
   } finally {
     deleting.value = false
   }
@@ -150,11 +150,31 @@ async function onDelete() {
 async function onReprocess() {
   reprocessing.value = true
   try {
-    await store.reprocessDocument(documentId.value)
+    const { runId } = await store.reprocessDocument(documentId.value)
+    let status = 'processing'
+    let lastError: string | null = null
+    // API uses ingestStatus 'ready' on success (not 'completed').
+    while (status !== 'ready' && status !== 'completed' && status !== 'failed') {
+      await new Promise(r => setTimeout(r, 1500))
+      const poll = await $fetch<{ status: string; error?: string | null }>(
+        `/api/documents/${documentId.value}/ingest-status?runId=${encodeURIComponent(runId)}`,
+      )
+      status = poll.status
+      lastError = poll.error ?? null
+    }
+    if (status === 'failed') {
+      toast.add({
+        title: t('document.rechunkFailed'),
+        description: lastError ?? '',
+        color: 'error',
+      })
+      await load()
+      return
+    }
     toast.add({ title: t('document.rechunkOk') })
     await load()
   } catch (err: any) {
-    toast.add({ title: t('document.rechunkFailed'), description: err?.message ?? '', color: 'red' })
+    toast.add({ title: t('document.rechunkFailed'), description: err?.message ?? '', color: 'error' })
   } finally {
     reprocessing.value = false
   }

@@ -1,0 +1,14 @@
+{
+  "eventType": "step_completed",
+  "specVersion": 3,
+  "correlationId": "step_01KQQPT7WA5PX343YCRY78N4S9",
+  "eventData": {
+    "result": {
+      "__type": "Uint8Array",
+      "data": "ZGV2bFtbMV0seyJjb250ZW50IjoyLCJ0b2tlbkNvdW50IjozLCJzdGFydENoYXIiOjQsImVuZENoYXIiOjV9LCJNaSBub21icmUgZXMgQWxiZXJ0byIsOCwwLDIwXQ=="
+    }
+  },
+  "runId": "wrun_01KQQPT7VTD165FRM27R386J6P",
+  "eventId": "evnt_01KQQPT817CQYENAR3NJTGYZ1A",
+  "createdAt": "2026-05-03T19:59:59.527Z"
+}

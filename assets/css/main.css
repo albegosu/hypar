@@ -390,6 +390,13 @@ html.dark {
   background-color: #020617;
 }
 
+html.light,
+html.light body {
+  background-color: #f5f1e8;
+  color: #3f3f3f;
+  color-scheme: light;
+}
+
 ::selection {
   background-color: rgba(52, 211, 153, 0.30);
   color: inherit;

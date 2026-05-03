@@ -8,5 +8,5 @@ const schema = z.object({
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, schema.parse)
-  return search(body.query, body.limit ?? 5)
+  return search(body.query, { limit: body.limit ?? 5 })
 })

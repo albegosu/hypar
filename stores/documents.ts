@@ -21,25 +21,6 @@ export interface SearchResult {
   endChar: number
 }
 
-export interface ConverseSource {
-  title: string
-  id: string
-}
-
-export interface ConverseResponse {
-  reply: string
-  sources: ConverseSource[]
-  results: SearchResult[]
-}
-
-export interface AgentChatResponse {
-  reply: string
-  used_kb: boolean
-  search_query: string | null
-  sources: ConverseSource[]
-  results: SearchResult[]
-}
-
 export interface DocumentChunk {
   id: string
   content: string
@@ -53,6 +34,13 @@ export interface DocumentDetail extends Document {
   chunks?: DocumentChunk[]
 }
 
+export interface ConverseSource {
+  chunkId: string
+  documentId: string
+  documentTitle: string
+  score: number
+}
+
 export interface InspectResponse {
   query: string
   embedding: { dimensions: number; preview: number[] }
@@ -61,6 +49,14 @@ export interface InspectResponse {
   sources: ConverseSource[]
   systemPrompt: string
   latencyMs: { embed: number; retrieve: number; total: number }
+}
+
+/** Response from POST /api/documents (async ingest started). */
+export interface IngestStartResponse {
+  documentId: string
+  title: string
+  runId: string
+  status: 'processing'
 }
 
 export const useDocumentsStore = defineStore('documents', () => {
@@ -85,9 +81,9 @@ export const useDocumentsStore = defineStore('documents', () => {
     title: string
     content: string
     sourceType: string
-  }) {
+  }): Promise<IngestStartResponse> {
     try {
-      const response = await $fetch<Document>('/api/documents', {
+      const response = await $fetch<IngestStartResponse>('/api/documents', {
         method: 'POST',
         body: data,
       })
@@ -99,15 +95,15 @@ export const useDocumentsStore = defineStore('documents', () => {
     }
   }
 
-  async function uploadFile(file: File) {
+  async function uploadFile(file: File): Promise<{ documentId: string; runId: string }> {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      await $fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-      })
-      await fetchDocuments()
+      const response = await $fetch<{ documentId: string; runId: string; title: string; status: string }>(
+        '/api/documents/upload',
+        { method: 'POST', body: formData },
+      )
+      return { documentId: response.documentId, runId: response.runId }
     } catch (err) {
       error.value = 'Failed to upload file'
       throw err
@@ -124,29 +120,6 @@ export const useDocumentsStore = defineStore('documents', () => {
       error.value = 'Search failed'
       return []
     }
-  }
-
-  async function converse(
-    messages: { role: 'user' | 'assistant' | 'system'; content: string }[],
-    limit = 8,
-  ): Promise<ConverseResponse> {
-    return await $fetch<ConverseResponse>('/api/search/converse', {
-      method: 'POST',
-      body: { messages, limit },
-      timeout: 210_000,
-    })
-  }
-
-  async function agentChat(
-    messages: { role: 'user' | 'assistant' | 'system'; content: string }[],
-    limit = 8,
-    userId?: string | null,
-  ): Promise<AgentChatResponse> {
-    return await $fetch<AgentChatResponse>('/api/agent/chat', {
-      method: 'POST',
-      body: { messages, limit, userId: userId || undefined },
-      timeout: 210_000,
-    })
   }
 
   async function ragQuery(query: string, limit = 5) {
@@ -170,8 +143,8 @@ export const useDocumentsStore = defineStore('documents', () => {
     documents.value = documents.value.filter((d) => d.id !== id)
   }
 
-  async function reprocessDocument(id: string): Promise<void> {
-    await $fetch(`/api/documents/${id}/reprocess`, { method: 'POST' })
+  async function reprocessDocument(id: string): Promise<{ documentId: string; runId: string }> {
+    return await $fetch<{ documentId: string; runId: string }>(`/api/documents/${id}/reprocess`, { method: 'POST' })
   }
 
   async function inspect(query: string, limit = 5): Promise<InspectResponse> {
@@ -194,7 +167,5 @@ export const useDocumentsStore = defineStore('documents', () => {
     search,
     ragQuery,
     inspect,
-    converse,
-    agentChat,
   }
 })

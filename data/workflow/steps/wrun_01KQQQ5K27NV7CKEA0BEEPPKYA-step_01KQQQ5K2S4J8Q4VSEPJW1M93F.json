@@ -1,0 +1,20 @@
+{
+  "runId": "wrun_01KQQQ5K27NV7CKEA0BEEPPKYA",
+  "stepId": "step_01KQQQ5K2S4J8Q4VSEPJW1M93F",
+  "stepName": "step//./server/workflows/ingest-document//markStatus",
+  "status": "completed",
+  "input": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFt7ImFyZ3MiOjEsImNsb3N1cmVWYXJzIjotMSwidGhpc1ZhbCI6LTF9LFsyLDMsNCw1XSwiYWY3YTk4YjctNzMyZi00ZDhlLTk3OGQtYTdjNzNhZDBkNDE3IiwiZmFpbGVkIiwwLCJTdGVwIFwic3RlcC8vLi9zZXJ2ZXIvd29ya2Zsb3dzL2luZ2VzdC1kb2N1bWVudC8vZW1iZWRDaHVua3NXaXRoUmV0cnlcIiBmYWlsZWQgYWZ0ZXIgMyByZXRyaWVzOiBFbWJlZGRpbmcgZmFpbGVkOiAqIEJhdGNoRW1iZWRDb250ZW50c1JlcXVlc3QucmVxdWVzdHM6IGF0IG1vc3QgMTAwIHJlcXVlc3RzIGNhbiBiZSBpbiBvbmUgYmF0Y2hcbiJd"
+  },
+  "attempt": 1,
+  "startedAt": "2026-05-03T20:06:24.701Z",
+  "createdAt": "2026-05-03T20:06:24.667Z",
+  "updatedAt": "2026-05-03T20:06:24.715Z",
+  "specVersion": 3,
+  "output": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bC0x"
+  },
+  "completedAt": "2026-05-03T20:06:24.715Z"
+}

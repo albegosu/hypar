@@ -1,0 +1,20 @@
+{
+  "runId": "wrun_01KQQQ3Z90EEHVPWTHG7PDJ50R",
+  "stepId": "step_01KQQQ3Z9D56GSWW4EVA0F11FN",
+  "stepName": "step//./server/workflows/ingest-document//markStatus",
+  "status": "completed",
+  "input": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bFt7ImFyZ3MiOjEsImNsb3N1cmVWYXJzIjotMSwidGhpc1ZhbCI6LTF9LFsyLDMsNCw1XSwiNWMyNWMyOTEtZDkxZC00OTFhLTg2MjItNWZiNTM3NjI5YTgzIiwicmVhZHkiLDUsbnVsbF0="
+  },
+  "attempt": 1,
+  "startedAt": "2026-05-03T20:05:19.438Z",
+  "createdAt": "2026-05-03T20:05:19.413Z",
+  "updatedAt": "2026-05-03T20:05:19.441Z",
+  "specVersion": 3,
+  "output": {
+    "__type": "Uint8Array",
+    "data": "ZGV2bC0x"
+  },
+  "completedAt": "2026-05-03T20:05:19.441Z"
+}
