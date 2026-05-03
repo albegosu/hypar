@@ -29,6 +29,8 @@ A production-ready full-stack application for **Retrieval-Augmented Generation (
 - **Reprocessing** — update embeddings on demand
 
 ### Retrieval quality
+- **Hybrid search** — pgvector cosine similarity combined with PostgreSQL BM25 (`ts_rank_cd`); names, codes, and literals embeddings often miss still surface via keywords
+- **HyDE (optional)** — hypothetical-document embedding: the LLM drafts a short answer, that text is embedded as the query, improving recall on factual Q&A (extra LLM call when enabled)
 - **MMR re-ranking** — over-fetch K×3 then diversify with Maximal Marginal Relevance
 - **Score threshold** — drop matches below 0.2 cosine similarity
 - **Source citations** — `[1]`, `[2]` aligned with returned passages, persisted on every assistant message
@@ -167,13 +169,13 @@ git clone https://github.com/albegosu/from-zero-rag.git
 cd from-zero-rag
 
 # 2. Configure
-cp .env.docker .env
+cp .env.example .env
 # Edit .env — set GOOGLE_API_KEY or OLLAMA_API_KEY + OLLAMA_URL at minimum
-# (.env.docker sets COMPOSE_PROFILES=full so profiled services start by default.)
+# Optional: uncomment COMPOSE_PROFILES=full in .env so `docker compose up -d --build`
+# starts app + postgres + ollama without passing --profile each time.
 
 # 3. Start (app + postgres + ollama)
 docker compose --profile full up -d --build
-# Equivalent after copying .env: docker compose up -d --build
 
 # 4. Open
 open http://localhost:3000
@@ -203,8 +205,8 @@ cd from-zero-rag
 pnpm install
 
 # 2. Configure
-cp .env.docker .env
-# Edit .env — set DATABASE_URL and at least GOOGLE_API_KEY
+cp .env.example .env
+# Edit .env — set DATABASE_URL (see comments in .env.example) and at least GOOGLE_API_KEY
 
 # 3. Run database migrations
 pnpm db:migrate
@@ -225,40 +227,22 @@ Open http://localhost:3000.
 | `pnpm db:migrate` | Run Prisma migrations (dev) |
 | `pnpm db:deploy` | Run migrations (production) |
 | `pnpm db:studio` | Open Prisma Studio |
+| `pnpm test` | Vitest (chunking, text utils, agent commands) |
+| `pnpm eval` | RAG eval harness (`evals/golden.jsonl`) |
 
 ---
 
-### Environment Variables
+### Environment variables
 
-Copy `.env.docker` to `.env` and fill in:
+Copy [`.env.example`](.env.example) to `.env` and follow the comments inside. It is the **single tracked template** for Docker and local dev. Common additions for `pnpm dev` against Docker Postgres:
 
 ```env
-# Database
 DATABASE_URL=postgresql://rag:rag_password@localhost:5432/rag_db
-
-# Embedding provider — pick one (Google is free)
-GOOGLE_API_KEY=your_key       # https://aistudio.google.com/app/apikey
-OPENAI_API_KEY=your_key       # fallback if Google not set
-
-# LLM (Ollama local or cloud)
-OLLAMA_URL=http://localhost:11434   # local
-# OLLAMA_URL=https://ollama.com    # cloud
-# OLLAMA_API_KEY=your_key          # cloud only
-OLLAMA_LLM_MODEL=tinyllama
-
-# Embedding model (used when Google/OpenAI not set)
-OLLAMA_MODEL=nomic-embed-text
-
-# Memory
-MEMORY_SCOPE=local_per_user   # local_per_user | global | disabled
-MEMORY_PROACTIVE=true
-
-# Workflow SDK — durable document ingestion
-WORKFLOW_LOCAL_DATA_DIR=./data/workflow   # file-based state store
-
-# Admin endpoints (optional — leave empty to keep open for local use)
-# ADMIN_API_KEY=change_me
+OLLAMA_URL=http://localhost:11434
+WORKFLOW_LOCAL_DATA_DIR=./data/workflow
 ```
+
+With **Docker**, the compose file injects `DATABASE_URL` into the app container; you mainly need an embedding key (`GOOGLE_API_KEY` or `OPENAI_API_KEY`) or Ollama configured. The app runs `prisma migrate deploy` on container startup — no manual migration step for the full stack in Docker.
 
 ---
 
@@ -357,6 +341,7 @@ from-zero-rag/
 
 ## Documentation
 
+- [Getting Started (VitePress)](docs/guide/getting-started.md) — same flow as this README; use `.env.example` as the env template
 - [Docker Guide](docs/DOCKER.md)
 - [Contributing](CONTRIBUTING.md)
 - [Architecture Notes](docs/architecture/core-rag-architecture.md)

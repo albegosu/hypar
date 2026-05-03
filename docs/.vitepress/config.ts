@@ -5,6 +5,9 @@ export default defineConfig({
   description: 'Production-ready Retrieval-Augmented Generation app built with Nuxt 3, pgvector and the Vercel AI SDK.',
   base: '/',
 
+  /** Localhost and legacy archive URLs are intentional in prose. */
+  ignoreDeadLinks: [/^http:\/\/localhost/, /^http:\/\/127\.0\.0\.1/],
+
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
   ],

@@ -19,9 +19,10 @@ Everything in one container — no separate frontend/backend split.
 ### 1. Configure
 
 ```bash
-cp .env.docker .env
+cp .env.example .env
 # Edit .env — set GOOGLE_API_KEY (or OLLAMA_API_KEY+OLLAMA_URL) at minimum
-# Template sets COMPOSE_PROFILES=full so `docker compose up -d --build` starts app + postgres + ollama.
+# Optional: uncomment COMPOSE_PROFILES=full in .env so `docker compose up -d --build`
+# starts app + postgres + ollama without passing --profile each time.
 ```
 
 ### 2. Start
@@ -75,7 +76,7 @@ docker compose --profile full down -v   # ⚠️ deletes volumes
 | `OLLAMA_URL` | http://ollama:11434 | Ollama endpoint |
 | `OLLAMA_API_KEY` | — | Ollama Cloud auth |
 | `OLLAMA_MODEL` | nomic-embed-text | Embedding model |
-| `OLLAMA_LLM_MODEL` | tinyllama | Chat model |
+| `OLLAMA_LLM_MODEL` | llama3.1:8b | Chat model (use a tool-calling model; `tinyllama` will skip KB search) |
 | `OLLAMA_CHAT_TIMEOUT_MS` | 180000 | LLM response timeout |
 | `OLLAMA_PLANNER_TIMEOUT_MS` | 60000 | Planner timeout |
 | `EMBEDDING_DIMENSIONS` | 768 | Must match pgvector column |

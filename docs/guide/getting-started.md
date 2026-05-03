@@ -2,6 +2,8 @@
 
 From Zero RAG runs as a **single Nuxt 3 process** — frontend, API routes and background workers all in one. There is no separate backend container to manage.
 
+**Environment template:** at the repository root run `cp .env.example .env` — that file is the single tracked template for Docker and local dev, and matches what the root `README.md` and `CONTRIBUTING.md` describe (there is no committed `.env.docker`; keep a private `.env` out of version control).
+
 ## Prerequisites
 
 - **Docker 20.10+** and **Docker Compose 2.0+** (recommended path)
@@ -72,7 +74,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `pnpm db:studio` | Open Prisma Studio |
 | `pnpm typecheck` | TypeScript type check |
 | `pnpm test` | Run Vitest suite |
-| `pnpm docs:dev` | Serve these docs locally |
+| `pnpm exec vitepress dev docs` | Serve these docs locally (VitePress) |
 
 ---
 
@@ -98,4 +100,4 @@ If you prefer cloud providers, set `GOOGLE_API_KEY` or `OPENAI_API_KEY` — they
 
 - [Configure Docker profiles →](./docker)
 - [Deploy to production with automatic TLS →](./production)
-- [Full environment variable reference →](./env)
+- [Environment variables →](./env)

@@ -25,8 +25,8 @@ pnpm install
 docker compose --profile api up -d
 
 # 4. Configure environment
-cp .env.docker .env
-# Edit .env — set DATABASE_URL, GOOGLE_API_KEY, OLLAMA_URL, OLLAMA_LLM_MODEL at minimum
+cp .env.example .env
+# Edit .env — for local `pnpm dev` set DATABASE_URL, OLLAMA_URL (localhost), GOOGLE_API_KEY or OpenAI, WORKFLOW_LOCAL_DATA_DIR (see comments in .env.example)
 # WORKFLOW_LOCAL_DATA_DIR=./data/workflow is created automatically on first run
 
 # 5. Run database migrations
@@ -61,8 +61,14 @@ from-zero-rag/
 4. **Verify** before pushing:
 
 ```bash
-# Type check
+# Production build (includes type checking via Nuxt build)
 pnpm build
+
+# Unit tests (chunking, text utils, agent commands)
+pnpm test
+
+# RAG eval harness — optional but run if you change retrieval / chunking
+pnpm eval
 
 # Database (if schema changed)
 pnpm db:migrate

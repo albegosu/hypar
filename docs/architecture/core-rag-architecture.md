@@ -1,5 +1,9 @@
 # Technical Architecture
 
+::: tip
+For a shorter overview and diagrams, start at the [Architecture landing](./index).
+:::
+
 From Zero RAG is a single Nuxt 3 application. The frontend (Vue 3) and the backend (Nitro/h3 server routes) run in the same process on port 3000. There is no separate API server.
 
 ---
@@ -52,12 +56,12 @@ Upload (text / PDF / MD)
   → Text extraction (pdf-parse for PDFs)
   → createDocumentShell() — Prisma document row created, returns immediately
   → Workflow SDK job starts: ingestDocument(documentId, content)
-       Step 1: Chunking — 800-char sliding window, 100-char overlap
+       Step 1: Chunking — tiktoken (cl100k_base), ~400 tokens per chunk, 60-token overlap
        Step 2: Embeddings — 768-dim via AI SDK embedMany()
                             priority: Google Gemini → OpenAI → Ollama
                             LRU cache (256 entries) prevents re-computation
-       Step 3: Persist — batch INSERT into Chunk table (pgvector)
-  → Client polls GET /api/documents/:id/ingest-status?runId=... until 'completed'
+       Step 3: Persist — transactional DELETE old chunks + INSERT new rows (pgvector)
+  → Client polls GET /api/documents/:id/ingest-status?runId=... until terminal status
 ```
 
 Upload returns `{ documentId, runId, status: 'processing' }` immediately.
@@ -71,8 +75,7 @@ User message
   → AI SDK streamText() with searchKnowledgeBase tool definition
   → Model decides: call tool or reply directly
        If tool called:
-         → rag(query) — embed query + pgvector cosine search
-              SELECT ... ORDER BY embedding <=> $query LIMIT k
+         → rag(query) — optional HyDE expansion, then hybrid vector + BM25 + MMR
          → Returns context + sources to model
        → Model streams answer token-by-token
   → UIMessageStream sent to browser (@ai-sdk/vue Chat class)
@@ -96,45 +99,16 @@ Memory commands (`/remember`, `/forget`, `/memory clear`) short-circuit before t
 
 ---
 
-## Database Schema
+## Database schema (Prisma)
 
-```sql
--- Documents
-CREATE TABLE documents (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title        TEXT NOT NULL,
-  content      TEXT NOT NULL,
-  source_type  VARCHAR(50),   -- 'text' | 'markdown' | 'pdf'
-  user_id      TEXT,
-  metadata     JSONB DEFAULT '{}',
-  created_at   TIMESTAMP DEFAULT NOW(),
-  updated_at   TIMESTAMP DEFAULT NOW()
-);
+The source of truth is `prisma/schema.prisma`. At a glance:
 
--- Chunks (with vectors)
-CREATE TABLE chunks (
-  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  document_id  UUID REFERENCES documents(id) ON DELETE CASCADE,
-  content      TEXT NOT NULL,
-  embedding    vector(768),
-  chunk_index  INT,
-  created_at   TIMESTAMP DEFAULT NOW()
-);
+- **`Document`** — `title`, `content`, `sourceType`, optional `userId`, `metadata`, `ingestStatus`, `ingestError`, `chunkCount`.  
+- **`Chunk`** — `documentId`, `content`, `embedding vector(768)`, `index`, `tokenCount`, `startChar`, `endChar` (+ generated `textsearch` for BM25 via migrations).  
+- **`Conversation`** / **`Message`** — persisted chat; assistant rows may store `sources` JSON.  
+- **`Query`** — audit log: `queryText`, `responseText`, `sources`, `latencyMs`, `userId`, `conversationId`, `toolCalled`.
 
-CREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops);
-
--- Query log
-CREATE TABLE queries (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  query_text    TEXT NOT NULL,
-  response_text TEXT,
-  results       JSONB,
-  latency_ms    INT,
-  created_at    TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX ON queries (created_at DESC);
-```
+See migrations under `prisma/migrations/` for HNSW and full-text indexes.
 
 ---
 

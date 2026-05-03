@@ -23,6 +23,12 @@ pnpm install
 # Type check + build
 pnpm build
 
+# Tests (chunking, text utils, agent commands)
+pnpm test
+
+# RAG eval harness (when retrieval / chunking changes)
+pnpm eval
+
 # Database migrations (if schema changed)
 pnpm db:migrate
 ```
@@ -62,7 +68,7 @@ See [Docker guide](../docs/DOCKER.md) for the full guide.
 
 1. Connect the GitHub repository
 2. Add a PostgreSQL database (Railway provides one)
-3. Set environment variables (see `.env.docker` for the full list)
+3. Set environment variables (see [`.env.example`](../.env.example) for the full list)
 4. Deploy — the entrypoint runs migrations automatically
 
 **Required env vars for cloud:**
