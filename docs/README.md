@@ -1,6 +1,6 @@
 # Documentation Index
 
-Technical and product documentation for From Zero RAG.
+Technical and product documentation for fragua.
 
 ## Core Docs
 

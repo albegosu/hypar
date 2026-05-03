@@ -28,9 +28,9 @@ export const step1: WizardStep = {
   configFields: [
     {
       id: 'embeddingProvider',
-      label: 'embedding_provider',
+      label: 'EMBEDDING_PROVIDER',
       type: 'select',
-      envKey: 'embedding_provider',
+      envKey: 'EMBEDDING_PROVIDER',
       defaultValue: 'openai',
       required: true,
       options: embeddingProviders.map((provider) => ({ value: provider.id, label: provider.id })),
@@ -38,9 +38,9 @@ export const step1: WizardStep = {
     ...embeddingProviders.flatMap((provider) => provider.fields),
     {
       id: 'llmProvider',
-      label: 'llm_provider',
+      label: 'LLM_PROVIDER',
       type: 'select',
-      envKey: 'llm_provider',
+      envKey: 'LLM_PROVIDER',
       defaultValue: 'anthropic',
       required: true,
       options: llmProviders.map((provider) => ({ value: provider.id, label: provider.id })),
@@ -49,13 +49,13 @@ export const step1: WizardStep = {
   ],
 
   envSnippet: (cfg) => {
-    const embeddingProvider = get(cfg, 'apis', 'embeddingProvider', 'gemini');
-    const llmProvider = get(cfg, 'apis', 'llmProvider', 'ollama-cloud');
+    const embeddingProvider = get(cfg, 'apis', 'embeddingProvider', 'openai');
+    const llmProvider = get(cfg, 'apis', 'llmProvider', 'anthropic');
 
     const lines: string[] = [
       '# AI services',
-      `embedding_provider=${embeddingProvider}`,
-      `llm_provider=${llmProvider}`,
+      `EMBEDDING_PROVIDER=${embeddingProvider}`,
+      `LLM_PROVIDER=${llmProvider}`,
     ];
     const activeEmbeddingProvider = embeddingProviderMap.get(embeddingProvider);
     const activeLlmProvider = llmProviderMap.get(llmProvider);
@@ -74,8 +74,8 @@ export const step1: WizardStep = {
   },
 
   canProceed: (cfg) => {
-    const embeddingProvider = get(cfg, 'apis', 'embeddingProvider', 'gemini');
-    const llmProvider = get(cfg, 'apis', 'llmProvider', 'ollama-cloud');
+    const embeddingProvider = get(cfg, 'apis', 'embeddingProvider', 'openai');
+    const llmProvider = get(cfg, 'apis', 'llmProvider', 'anthropic');
     const activeEmbeddingProvider = embeddingProviderMap.get(embeddingProvider);
     const activeLlmProvider = llmProviderMap.get(llmProvider);
     if (!activeEmbeddingProvider || !activeLlmProvider) return false;
@@ -85,6 +85,25 @@ export const step1: WizardStep = {
     return hasAllEmbeddingRequired && hasAllLlmRequired;
   },
 };
+
+function buildDatabaseUrl(cfg: WizardConfig): string {
+  const type = get(cfg, 'vectorDb', 'vectorDbType', 'pgvector');
+  if (type === 'supabase') {
+    const ref = get(cfg, 'vectorDb', 'supabaseProjectRef', '<project-ref>');
+    const password = get(cfg, 'vectorDb', 'supabaseDbPassword', '<password>');
+    const mode = get(cfg, 'vectorDb', 'supabasePoolMode', 'direct');
+    if (mode === 'transaction') {
+      return `postgresql://postgres.${ref}:${password}@aws-0-us-east-1.pooler.supabase.com:6543/postgres`;
+    }
+    return `postgresql://postgres:${password}@db.${ref}.supabase.co:5432/postgres`;
+  }
+  const host = get(cfg, 'vectorDb', 'dbHost', 'localhost');
+  const port = get(cfg, 'vectorDb', 'dbPort', 5432);
+  const name = get(cfg, 'vectorDb', 'dbName', 'rag_db');
+  const user = get(cfg, 'vectorDb', 'dbUser', 'postgres');
+  const password = get(cfg, 'vectorDb', 'dbPassword', 'postgres');
+  return `postgresql://${user}:${password}@${host}:${port}/${name}`;
+}
 
 export const step2: WizardStep = {
   id: 'vectorDb',
@@ -98,14 +117,65 @@ export const step2: WizardStep = {
   keyBenefits: ['wizard.steps.vectorDb.benefits.0', 'wizard.steps.vectorDb.benefits.1', 'wizard.steps.vectorDb.benefits.2', 'wizard.steps.vectorDb.benefits.3'],
 
   configFields: [
-    { id: 'dbHost', label: 'host', type: 'text', envKey: 'DB_HOST', defaultValue: 'localhost', required: true },
-    { id: 'dbPort', label: 'port', type: 'number', envKey: 'DB_PORT', defaultValue: 5432, min: 1, max: 65535, required: true },
-    { id: 'dbName', label: 'database', type: 'text', envKey: 'DB_NAME', defaultValue: 'rag_db', required: true },
-    { id: 'dbUser', label: 'user', type: 'text', envKey: 'DB_USER', advanced: true, defaultValue: 'postgres' },
-    { id: 'dbPassword', label: 'password', type: 'password', envKey: 'DB_PASSWORD', advanced: true, secret: true, defaultValue: 'postgres' },
+    {
+      id: 'vectorDbType',
+      label: 'db_type',
+      type: 'select',
+      envKey: 'VECTOR_DB_TYPE',
+      defaultValue: 'pgvector',
+      required: true,
+      options: [
+        { value: 'pgvector', label: 'Self-hosted pgvector' },
+        { value: 'supabase', label: 'Supabase Vector' },
+      ],
+    },
+    // pgvector fields
+    { id: 'dbHost', label: 'DB_HOST', type: 'text', envKey: 'DB_HOST', defaultValue: 'localhost', required: true, dependsOn: { field: 'vectorDbType', equals: 'pgvector' } },
+    { id: 'dbPort', label: 'DB_PORT', type: 'number', envKey: 'DB_PORT', defaultValue: 5432, min: 1, max: 65535, required: true, dependsOn: { field: 'vectorDbType', equals: 'pgvector' } },
+    { id: 'dbName', label: 'DB_NAME', type: 'text', envKey: 'DB_NAME', defaultValue: 'rag_db', required: true, dependsOn: { field: 'vectorDbType', equals: 'pgvector' } },
+    { id: 'dbUser', label: 'DB_USER', type: 'text', envKey: 'DB_USER', advanced: true, defaultValue: 'postgres', dependsOn: { field: 'vectorDbType', equals: 'pgvector' } },
+    { id: 'dbPassword', label: 'DB_PASSWORD', type: 'password', envKey: 'DB_PASSWORD', advanced: true, secret: true, defaultValue: 'postgres', dependsOn: { field: 'vectorDbType', equals: 'pgvector' } },
+    // Supabase fields
+    {
+      id: 'supabaseProjectRef',
+      label: 'project_ref',
+      type: 'text',
+      envKey: 'SUPABASE_PROJECT_REF',
+      placeholder: 'abcdefghijklmnopqrst',
+      required: true,
+      helpText: 'wizard.fields.supabaseProjectRef.helpText',
+      externalLink: { text: 'wizard.fields.external.dashboard', url: 'https://supabase.com/dashboard' },
+      dependsOn: { field: 'vectorDbType', equals: 'supabase' },
+    },
+    {
+      id: 'supabaseDbPassword',
+      label: 'db_password',
+      type: 'password',
+      envKey: 'SUPABASE_DB_PASSWORD',
+      placeholder: '...',
+      required: true,
+      secret: true,
+      helpText: 'wizard.fields.supabaseDbPassword.helpText',
+      dependsOn: { field: 'vectorDbType', equals: 'supabase' },
+    },
+    {
+      id: 'supabasePoolMode',
+      label: 'pool_mode',
+      type: 'select',
+      envKey: 'SUPABASE_POOL_MODE',
+      defaultValue: 'direct',
+      advanced: true,
+      helpText: 'wizard.fields.supabasePoolMode.helpText',
+      options: [
+        { value: 'direct', label: 'Direct (port 5432)' },
+        { value: 'transaction', label: 'Transaction pooler (port 6543)' },
+      ],
+      dependsOn: { field: 'vectorDbType', equals: 'supabase' },
+    },
+    // Shared advanced fields
     {
       id: 'distanceMetric',
-      label: 'distance',
+      label: 'VECTOR_DISTANCE',
       type: 'select',
       envKey: 'VECTOR_DISTANCE',
       advanced: true,
@@ -116,19 +186,33 @@ export const step2: WizardStep = {
         { value: 'ip', label: 'inner product (<#>)' },
       ],
     },
-    { id: 'hnswM', label: 'hnsw_m', type: 'number', envKey: 'HNSW_M', advanced: true, defaultValue: 16, min: 4, max: 64 },
-    { id: 'hnswEfConstruction', label: 'hnsw_ef', type: 'number', envKey: 'HNSW_EF_CONSTRUCTION', advanced: true, defaultValue: 64, min: 16, max: 512 },
+    { id: 'hnswM', label: 'HNSW_M', type: 'number', envKey: 'HNSW_M', advanced: true, defaultValue: 16, min: 4, max: 64 },
+    { id: 'hnswEfConstruction', label: 'HNSW_EF', type: 'number', envKey: 'HNSW_EF_CONSTRUCTION', advanced: true, defaultValue: 64, min: 16, max: 512 },
   ],
 
-  envSnippet: (cfg) => `# Vector database
-DB_HOST=${get(cfg, 'vectorDb', 'dbHost', 'localhost')}
-DB_PORT=${get(cfg, 'vectorDb', 'dbPort', 5432)}
-DB_NAME=${get(cfg, 'vectorDb', 'dbName', 'rag_db')}
-DB_USER=${get(cfg, 'vectorDb', 'dbUser', 'postgres')}
-DB_PASSWORD=${get(cfg, 'vectorDb', 'dbPassword', 'postgres')}
-VECTOR_DISTANCE=${get(cfg, 'vectorDb', 'distanceMetric', 'cosine')}
-HNSW_M=${get(cfg, 'vectorDb', 'hnswM', 16)}
-HNSW_EF_CONSTRUCTION=${get(cfg, 'vectorDb', 'hnswEfConstruction', 64)}`,
+  envSnippet: (cfg) => {
+    const type = get(cfg, 'vectorDb', 'vectorDbType', 'pgvector');
+    const databaseUrl = buildDatabaseUrl(cfg);
+    const commonVars = [
+      `DATABASE_URL=${databaseUrl}`,
+      `VECTOR_DB_TYPE=${type}`,
+      `VECTOR_DISTANCE=${get(cfg, 'vectorDb', 'distanceMetric', 'cosine')}`,
+      `HNSW_M=${get(cfg, 'vectorDb', 'hnswM', 16)}`,
+      `HNSW_EF_CONSTRUCTION=${get(cfg, 'vectorDb', 'hnswEfConstruction', 64)}`,
+    ];
+
+    if (type === 'pgvector') {
+      return `# Vector database (self-hosted pgvector)
+${commonVars.join('\n')}
+# PostgreSQL container config (docker-compose)
+POSTGRES_USER=${get(cfg, 'vectorDb', 'dbUser', 'postgres')}
+POSTGRES_PASSWORD=${get(cfg, 'vectorDb', 'dbPassword', 'postgres')}
+POSTGRES_DB=${get(cfg, 'vectorDb', 'dbName', 'rag_db')}`;
+    }
+
+    return `# Vector database (Supabase)
+${commonVars.join('\n')}`;
+  },
 
   hasCodePreview: true,
   codeSnippet: {
@@ -138,10 +222,10 @@ HNSW_EF_CONSTRUCTION=${get(cfg, 'vectorDb', 'hnswEfConstruction', 64)}`,
   postgres:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_PASSWORD: \${DB_PASSWORD}
-      POSTGRES_DB: \${DB_NAME}
+      POSTGRES_PASSWORD: \${POSTGRES_PASSWORD}
+      POSTGRES_DB: \${POSTGRES_DB}
     ports:
-      - "\${DB_PORT}:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -150,7 +234,13 @@ volumes:
     explanation: 'wizard.steps.vectorDb.codeExplanation',
   },
 
-  canProceed: () => true,
+  canProceed: (cfg) => {
+    const type = get(cfg, 'vectorDb', 'vectorDbType', 'pgvector');
+    if (type === 'supabase') {
+      return !!get(cfg, 'vectorDb', 'supabaseProjectRef') && !!get(cfg, 'vectorDb', 'supabaseDbPassword');
+    }
+    return true;
+  },
 };
 
 export const step3: WizardStep = {
@@ -165,10 +255,10 @@ export const step3: WizardStep = {
   keyBenefits: ['wizard.steps.embeddings.benefits.0', 'wizard.steps.embeddings.benefits.1', 'wizard.steps.embeddings.benefits.2', 'wizard.steps.embeddings.benefits.3'],
 
   configFields: [
-    { id: 'batchSize', label: 'batch_size', type: 'number', envKey: 'EMBEDDING_BATCH_SIZE', advanced: true, defaultValue: 32, min: 1, max: 256 },
+    { id: 'batchSize', label: 'EMBEDDING_BATCH_SIZE', type: 'number', envKey: 'EMBEDDING_BATCH_SIZE', advanced: true, defaultValue: 32, min: 1, max: 256 },
     { id: 'cacheEnabled', label: 'cache', type: 'checkbox', envKey: 'EMBEDDING_CACHE_ENABLED', advanced: true, defaultValue: true, helpText: 'cache repeated queries' },
-    { id: 'cacheTtlSeconds', label: 'cache_ttl', type: 'number', envKey: 'EMBEDDING_CACHE_TTL', advanced: true, defaultValue: 3600, min: 0, max: 604800, unit: 'sec', dependsOn: { field: 'cacheEnabled', equals: true } },
-    { id: 'retryAttempts', label: 'retry_attempts', type: 'number', envKey: 'EMBEDDING_RETRY_ATTEMPTS', advanced: true, defaultValue: 3, min: 0, max: 10 },
+    { id: 'cacheTtlSeconds', label: 'EMBEDDING_CACHE_TTL', type: 'number', envKey: 'EMBEDDING_CACHE_TTL', advanced: true, defaultValue: 3600, min: 0, max: 604800, unit: 'sec', dependsOn: { field: 'cacheEnabled', equals: true } },
+    { id: 'retryAttempts', label: 'EMBEDDING_RETRY_ATTEMPTS', type: 'number', envKey: 'EMBEDDING_RETRY_ATTEMPTS', advanced: true, defaultValue: 3, min: 0, max: 10 },
   ],
 
   envSnippet: (cfg) => `# Embedding service
@@ -218,7 +308,7 @@ export const step4: WizardStep = {
   configFields: [
     {
       id: 'chunkStrategy',
-      label: 'chunk_strategy',
+      label: 'CHUNK_STRATEGY',
       type: 'select',
       envKey: 'CHUNK_STRATEGY',
       defaultValue: 'sentence-aware',
@@ -229,12 +319,12 @@ export const step4: WizardStep = {
         { value: 'with-overlap', label: 'with-overlap' },
       ],
     },
-    { id: 'chunkSize', label: 'chunk_size', type: 'number', envKey: 'CHUNK_SIZE', defaultValue: 512, min: 128, max: 2048, step: 32, unit: 'chars', required: true },
-    { id: 'overlap', label: 'overlap', type: 'slider', envKey: 'CHUNK_OVERLAP', defaultValue: 50, min: 0, max: 200, unit: 'chars', dependsOn: { field: 'chunkStrategy', equals: 'with-overlap' } },
-    { id: 'maxDocSizeMb', label: 'max_doc_mb', type: 'number', envKey: 'MAX_DOC_SIZE_MB', advanced: true, defaultValue: 25, min: 1, max: 500, unit: 'MB' },
+    { id: 'chunkSize', label: 'CHUNK_SIZE', type: 'number', envKey: 'CHUNK_SIZE', defaultValue: 512, min: 128, max: 2048, step: 32, unit: 'chars', required: true },
+    { id: 'overlap', label: 'CHUNK_OVERLAP', type: 'slider', envKey: 'CHUNK_OVERLAP', defaultValue: 50, min: 0, max: 200, unit: 'chars', dependsOn: { field: 'chunkStrategy', equals: 'with-overlap' } },
+    { id: 'maxDocSizeMb', label: 'MAX_DOC_SIZE_MB', type: 'number', envKey: 'MAX_DOC_SIZE_MB', advanced: true, defaultValue: 25, min: 1, max: 500, unit: 'MB' },
     {
       id: 'allowedFormats',
-      label: 'allowed_formats',
+      label: 'ALLOWED_FORMATS',
       type: 'tags',
       envKey: 'ALLOWED_FORMATS',
       advanced: true,
@@ -282,10 +372,10 @@ export const step5: WizardStep = {
   keyBenefits: ['wizard.steps.search.benefits.0', 'wizard.steps.search.benefits.1', 'wizard.steps.search.benefits.2', 'wizard.steps.search.benefits.3'],
 
   configFields: [
-    { id: 'topK', label: 'top_k', type: 'number', envKey: 'SEARCH_TOP_K', defaultValue: 5, min: 1, max: 50, required: true },
-    { id: 'similarityThreshold', label: 'min_similarity', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.7, min: 0, max: 1, step: 0.05 },
-    { id: 'useHybridSearch', label: 'hybrid_search', type: 'checkbox', envKey: 'SEARCH_HYBRID', advanced: true, defaultValue: false, helpText: 'combine vector + keyword' },
-    { id: 'rerankResults', label: 'rerank', type: 'checkbox', envKey: 'SEARCH_RERANK', advanced: true, defaultValue: false, helpText: 'second-pass scoring' },
+    { id: 'topK', label: 'SEARCH_TOP_K', type: 'number', envKey: 'SEARCH_TOP_K', defaultValue: 5, min: 1, max: 50, required: true },
+    { id: 'similarityThreshold', label: 'SEARCH_THRESHOLD', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.7, min: 0, max: 1, step: 0.05 },
+    { id: 'useHybridSearch', label: 'SEARCH_HYBRID', type: 'checkbox', envKey: 'SEARCH_HYBRID', advanced: true, defaultValue: false, helpText: 'combine vector + keyword' },
+    { id: 'rerankResults', label: 'SEARCH_RERANK', type: 'checkbox', envKey: 'SEARCH_RERANK', advanced: true, defaultValue: false, helpText: 'second-pass scoring' },
   ],
 
   envSnippet: (cfg) => `# Similarity search
@@ -329,21 +419,21 @@ export const step6: WizardStep = {
   keyBenefits: ['wizard.steps.rag.benefits.0', 'wizard.steps.rag.benefits.1', 'wizard.steps.rag.benefits.2', 'wizard.steps.rag.benefits.3'],
 
   configFields: [
-    { id: 'temperature', label: 'temperature', type: 'slider', envKey: 'RAG_TEMPERATURE', defaultValue: 0.3, min: 0, max: 2, step: 0.1 },
-    { id: 'citationsEnabled', label: 'citations', type: 'checkbox', envKey: 'RAG_CITATIONS', defaultValue: true, helpText: 'attach sources to answer' },
+    { id: 'temperature', label: 'RAG_TEMPERATURE', type: 'slider', envKey: 'RAG_TEMPERATURE', defaultValue: 0.3, min: 0, max: 2, step: 0.1 },
+    { id: 'citationsEnabled', label: 'RAG_CITATIONS', type: 'checkbox', envKey: 'RAG_CITATIONS', defaultValue: true, helpText: 'attach sources to answer' },
     {
       id: 'systemPromptTemplate',
-      label: 'system_prompt',
+      label: 'RAG_SYSTEM_PROMPT',
       type: 'textarea',
       envKey: 'RAG_SYSTEM_PROMPT',
       advanced: true,
       rows: 5,
       defaultValue: 'You are a helpful assistant. Answer based ONLY on the provided context. If the context is insufficient, say so.',
     },
-    { id: 'maxContextTokens', label: 'max_context_tokens', type: 'number', envKey: 'RAG_MAX_CONTEXT', advanced: true, defaultValue: 4096, min: 512, max: 32000, step: 512 },
+    { id: 'maxContextTokens', label: 'RAG_MAX_CONTEXT', type: 'number', envKey: 'RAG_MAX_CONTEXT', advanced: true, defaultValue: 4096, min: 512, max: 32000, step: 512 },
     {
       id: 'responseLanguage',
-      label: 'response_language',
+      label: 'RAG_RESPONSE_LANG',
       type: 'select',
       envKey: 'RAG_RESPONSE_LANG',
       advanced: true,

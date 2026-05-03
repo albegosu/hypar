@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: "From Zero RAG"
+  name: "fragua"
   text: "Production-ready RAG in a single Nuxt 3 app"
   tagline: Vector search, hybrid BM25, HyDE, agentic chat, durable ingestion — all wired up and ready to deploy.
   actions:

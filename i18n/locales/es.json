@@ -165,16 +165,17 @@
       },
       "vectorDb": {
         "title": "Base de Datos Vectorial",
-        "subtitle": "Configura PostgreSQL con pgvector para almacenar embeddings",
-        "what": "Postgres con la extensión **pgvector** almacena y busca vectores por similitud semántica.",
+        "subtitle": "Configura tu almacén vectorial — pgvector propio o Supabase",
+        "what": "Postgres con la extensión **pgvector** almacena y busca vectores por similitud semántica.\nElige entre **auto-alojado** (Docker) o **Supabase** (pgvector gestionado — sin infra propia).",
         "why": "Las BBDD tradicionales buscan palabras exactas. Las vectoriales buscan **significado**:\n\"deployment\" puede encontrar \"hosting\" o \"production setup\".",
         "benefits": [
           "Búsqueda semántica",
           "Indexado HNSW (< 10ms)",
           "Escala a millones de docs",
-          "Open source"
+          "Propio o Supabase"
         ],
-        "codeExplanation": "Postgres con pgvector preinstalado. Puertos y credenciales salen del `.env`."
+        "codeExplanation": "Postgres con pgvector preinstalado. Puertos y credenciales salen del `.env`.",
+        "typeLabel": "Tipo de base de datos"
       },
       "embeddings": {
         "title": "Servicio de Embeddings",
@@ -231,7 +232,8 @@
     },
     "fields": {
       "external": {
-        "getKey": "obtener key"
+        "getKey": "obtener key",
+        "dashboard": "abrir dashboard"
       },
       "geminiApiKey": {
         "helpText": "Se usa para embeddings con Gemini"
@@ -253,6 +255,18 @@
       },
       "mistralApiKey": {
         "helpText": "Se usa para modelos de Mistral"
+      },
+      "supabaseProjectRef": {
+        "label": "Referencia del proyecto",
+        "helpText": "En el dashboard de Supabase → Project Settings → General (ej. abcdefghijklmnopqrst)"
+      },
+      "supabaseDbPassword": {
+        "label": "Contraseña de la base de datos",
+        "helpText": "En el dashboard de Supabase → Project Settings → Database → Database password"
+      },
+      "supabasePoolMode": {
+        "label": "Modo de conexión",
+        "helpText": "Usa 'Direct' para migraciones o baja concurrencia. Usa 'Transaction pooler' para serverless / alta concurrencia."
       }
     }
   }

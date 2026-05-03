@@ -1,6 +1,6 @@
 # RAG pipeline
 
-From Zero RAG implements **retrieval-augmented generation** as one Nuxt 3 app: Vue pages, Nitro `/api/*` routes, Prisma + pgvector, and the Vercel AI SDK for embeddings, tool-calling, and streaming chat.
+fragua implements **retrieval-augmented generation** as one Nuxt 3 app: Vue pages, Nitro `/api/*` routes, Prisma + pgvector, and the Vercel AI SDK for embeddings, tool-calling, and streaming chat.
 
 This page describes the **end-to-end flow** from documents to answers. For hybrid retrieval details, see [Hybrid search & HyDE](./search). For chat memory commands, see [Memory & commands](./memory).
 
@@ -37,13 +37,38 @@ Successful creation returns identifiers so the UI can **poll** ingest status (se
 
 State is stored under `WORKFLOW_LOCAL_DATA_DIR` (see [Environment variables](/guide/env)).
 
-### Embeddings provider order
+### Embeddings provider
 
-`server/utils/embedding.ts` picks the first configured provider (typically **Google Gemini** → **OpenAI** → **Ollama**). Vector dimension must match the DB (`768` by default, `EMBEDDING_DIMENSIONS`).
+`server/utils/embedding.ts` resolves the active provider using `EMBEDDING_PROVIDER` for explicit selection, or falls back to the first detected API key:
+
+| `EMBEDDING_PROVIDER` | Key required | Default model |
+|---|---|---|
+| `gemini` | `GOOGLE_API_KEY` | `gemini-embedding-001` |
+| `openai` | `OPENAI_API_KEY` | `text-embedding-3-small` |
+| `voyage` | `VOYAGE_API_KEY` | `voyage-3` (OpenAI-compatible endpoint) |
+| `ollama-local` | `OLLAMA_URL` | `OLLAMA_MODEL` (default: `nomic-embed-text`) |
+
+**Fallback order** (when `EMBEDDING_PROVIDER` is unset): Gemini → OpenAI → Voyage → Ollama.
+
+Override the model for any provider with `EMBEDDING_MODEL`. Vector dimension must match the DB column (`768` by default, controlled by `EMBEDDING_DIMENSIONS`).
 
 ---
 
 ## 2. Retrieval in chat (agent + tool)
+
+### LLM provider
+
+`server/utils/agent.service.ts` resolves the active chat model via `getLlmModel()`, using `LLM_PROVIDER` for explicit selection or the first detected API key:
+
+| `LLM_PROVIDER` | Key required | Default model |
+|---|---|---|
+| `anthropic` | `ANTHROPIC_API_KEY` | `ANTHROPIC_MODEL` (default: `claude-sonnet-4-6`) |
+| `openai` | `OPENAI_API_KEY` | `OPENAI_LLM_MODEL` (default: `gpt-4.1-mini`) |
+| `mistral` | `MISTRAL_API_KEY` | `MISTRAL_MODEL` (default: `mistral-medium-latest`) |
+| `ollama-cloud` | `OLLAMA_API_KEY` + `OLLAMA_URL` | `OLLAMA_LLM_MODEL` |
+| `ollama-local` | `OLLAMA_URL` | `OLLAMA_LLM_MODEL` (default: `tinyllama`) |
+
+**Fallback order** (when `LLM_PROVIDER` is unset): Anthropic → Mistral → OpenAI → Ollama.
 
 ### `POST /api/chat`
 
@@ -75,6 +100,50 @@ Retrieved chunks for the turn are collected in a **bucket** so the server can pe
 | Streaming | UIMessage stream for low time-to-first-token. |
 | Citations | Numeric labels aligned with the order of passages returned to the model. |
 | Ingest errors | Document moves to `failed` with `ingestError`; chunks are not left half-updated across the transaction. |
+
+---
+
+---
+
+## Next steps — wizard-runtime alignment
+
+The onboarding wizard (steps 3–6) generates env vars for chunking, search, embeddings tuning, and RAG generation. These variables are not yet read by the runtime — they are documented here as the planned wiring work.
+
+### Steps 5 & 6 — low effort, high value
+
+**Search defaults** (`search.service.ts`): swap the hardcoded constants for env-backed defaults.
+
+```ts
+// planned
+const DEFAULT_LIMIT   = Number(process.env.SEARCH_TOP_K)       || 5
+const DEFAULT_MIN_SCORE = Number(process.env.SEARCH_THRESHOLD) || 0.2
+// SEARCH_HYBRID  → pass as default hybridAlpha to rag()
+// SEARCH_RERANK  → toggle MMR on/off by default
+```
+
+**RAG generation** (`agent.service.ts`): read `RAG_TEMPERATURE`, `RAG_SYSTEM_PROMPT`, `RAG_MAX_CONTEXT`, `RAG_RESPONSE_LANG` from runtime config and pass them into `streamText`.
+
+### Step 4 — medium effort
+
+**Chunking** (`chunking.ts`, `documents/upload.post.ts`):
+
+| Env var | Where to wire |
+|---|---|
+| `CHUNK_SIZE` | Replace `DEFAULT_CHUNK_TOKENS` |
+| `CHUNK_OVERLAP` | Replace `DEFAULT_OVERLAP_TOKENS` |
+| `MAX_DOC_SIZE_MB` | Replace `TEN_MB` cap in upload handler |
+| `ALLOWED_FORMATS` | Replace hardcoded MIME allowlist |
+| `CHUNK_STRATEGY` | Add `fixed` / `with-overlap` branches alongside the existing sentence-aware logic |
+
+### Step 3 — higher effort
+
+**Embedding service** (`embedding.ts`):
+
+| Env var | Work needed |
+|---|---|
+| `EMBEDDING_BATCH_SIZE` | Slice the `texts` array into batches before calling `embedMany` |
+| `EMBEDDING_CACHE_TTL` | Add TTL tracking to `LruCache` (timestamp per entry) |
+| `EMBEDDING_RETRY_ATTEMPTS` | Wrap `embed` / `embedMany` calls in a retry loop with backoff |
 
 ---
 

@@ -165,16 +165,17 @@
       },
       "vectorDb": {
         "title": "Vector Database",
-        "subtitle": "Set up PostgreSQL with pgvector for storing embeddings",
-        "what": "Postgres with **pgvector** extension stores and searches vectors by semantic similarity.",
+        "subtitle": "Configure your vector store — self-hosted pgvector or Supabase",
+        "what": "Postgres with **pgvector** extension stores and searches vectors by semantic similarity.\nChoose between **self-hosted** (Docker) or **Supabase** (hosted pgvector — no infra needed).",
         "why": "Traditional databases match exact words. Vector databases match **meaning**:\n\"deployment\" can find \"hosting\" or \"production setup\".",
         "benefits": [
           "Semantic search",
           "HNSW indexing (< 10ms)",
           "Scales to millions of docs",
-          "Open source"
+          "Self-hosted or Supabase"
         ],
-        "codeExplanation": "Postgres with pgvector preinstalled. Ports and credentials come from `.env`."
+        "codeExplanation": "Postgres with pgvector preinstalled. Ports and credentials come from `.env`.",
+        "typeLabel": "Database type"
       },
       "embeddings": {
         "title": "Embedding Service",
@@ -231,7 +232,8 @@
     },
     "fields": {
       "external": {
-        "getKey": "get key"
+        "getKey": "get key",
+        "dashboard": "open dashboard"
       },
       "geminiApiKey": {
         "helpText": "Used for embeddings with Gemini"
@@ -253,6 +255,18 @@
       },
       "mistralApiKey": {
         "helpText": "Used for Mistral models"
+      },
+      "supabaseProjectRef": {
+        "label": "Project reference",
+        "helpText": "Found in Supabase dashboard → Project Settings → General (e.g. abcdefghijklmnopqrst)"
+      },
+      "supabaseDbPassword": {
+        "label": "Database password",
+        "helpText": "Found in Supabase dashboard → Project Settings → Database → Database password"
+      },
+      "supabasePoolMode": {
+        "label": "Connection mode",
+        "helpText": "Use 'Direct' for migrations and low-concurrency. Use 'Transaction pooler' for serverless / high-concurrency."
       }
     }
   }

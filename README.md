@@ -1,4 +1,4 @@
-# From Zero RAG
+# fragua
 
 A production-ready full-stack application for **Retrieval-Augmented Generation (RAG)** built as a single Nuxt 3 project. Includes a RAG chat interface, document management, and an interactive learning quest — all in one app.
 
