@@ -33,7 +33,7 @@ jobs:
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
           files: |
             docker-compose.yml
-            .env.docker
+            .env.example
             docs/DOCKER.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
