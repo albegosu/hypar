@@ -1,4 +1,4 @@
-import { ValidationResult, TestResult, Challenge } from '../types';
+import type { ValidationResult, TestResult, Challenge } from '../types';
 
 /**
  * Base Validator Class

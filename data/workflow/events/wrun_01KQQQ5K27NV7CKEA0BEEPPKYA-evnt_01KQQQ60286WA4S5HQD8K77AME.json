@@ -1,0 +1,12 @@
+{
+  "eventType": "step_failed",
+  "specVersion": 3,
+  "correlationId": "step_01KQQQ5K2S4J8Q4VSEPJW1M93E",
+  "eventData": {
+    "error": "Step \"step//./server/workflows/ingest-document//embedChunksWithRetry\" failed after 3 retries: Embedding failed: * BatchEmbedContentsRequest.requests: at most 100 requests can be in one batch\n",
+    "stack": "Error: Embedding failed: * BatchEmbedContentsRequest.requests: at most 100 requests can be in one batch\n\n    at createError (file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/h3@1.15.11/node_modules/h3/dist/index.mjs:71:15)\n    at generateEmbeddings (file:///Users/albertoglez/Desktop/from-zero-rag/.nuxt/dev/index.mjs:2780:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/.nuxt/dev/index.mjs:2828:18\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/@workflow+core@4.2.4_@opentelemetry+api@1.9.0/node_modules/@workflow/core/dist/runtime/step-handler.js:371:28\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/@workflow+core@4.2.4_@opentelemetry+api@1.9.0/node_modules/@workflow/core/dist/telemetry.js:79:28\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/@workflow+core@4.2.4_@opentelemetry+api@1.9.0/node_modules/@workflow/core/dist/runtime/step-handler.js:370:26\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/@workflow+core@4.2.4_@opentelemetry+api@1.9.0/node_modules/@workflow/core/dist/telemetry.js:79:28\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/@workflow+core@4.2.4_@opentelemetry+api@1.9.0/node_modules/@workflow/core/dist/telemetry.js:50:60\n    at async file:///Users/albertoglez/Desktop/from-zero-rag/node_modules/.pnpm/@workflow+core@4.2.4_@opentelemetry+api@1.9.0/node_modules/@workflow/core/dist/runtime/step-handler.js:83:12"
+  },
+  "runId": "wrun_01KQQQ5K27NV7CKEA0BEEPPKYA",
+  "eventId": "evnt_01KQQQ60286WA4S5HQD8K77AME",
+  "createdAt": "2026-05-03T20:06:24.584Z"
+}

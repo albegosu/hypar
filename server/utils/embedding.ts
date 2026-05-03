@@ -1,11 +1,14 @@
-import { createOllama, normalizeOllamaNativeHost } from './ollama'
-import OpenAI from 'openai'
+import { embed, embedMany, type EmbeddingModel } from 'ai'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createOpenAI } from '@ai-sdk/openai'
+import { normalizeOllamaNativeHost } from './ollama.ts'
 
 const DEFAULT_DIMENSIONS = 768
 
 class LruCache<V> {
   private readonly store = new Map<string, V>()
-  constructor(private readonly capacity: number) {}
+  private readonly capacity: number
+  constructor(capacity: number) { this.capacity = capacity }
 
   get(key: string): V | undefined {
     const value = this.store.get(key)
@@ -28,137 +31,119 @@ class LruCache<V> {
 
 const embeddingCache = new LruCache<number[]>(256)
 
-function getConfig() {
+interface ResolvedEmbedder {
+  model: EmbeddingModel
+  dimensions: number
+  cacheKeyPrefix: string
+  providerOptions?: Record<string, Record<string, unknown>>
+}
+
+function resolveEmbedder(): ResolvedEmbedder {
   const config = useRuntimeConfig()
   const dimensions =
-    Number.isFinite(config.embeddingDimensions) && config.embeddingDimensions > 0
+    Number.isFinite(config.embeddingDimensions) && (config.embeddingDimensions as number) > 0
       ? Number(config.embeddingDimensions)
       : DEFAULT_DIMENSIONS
+
+  const googleApiKey = config.googleApiKey as string
+  const openaiApiKey = config.openaiApiKey as string
+  const ollamaUrl = config.ollamaUrl as string
+  const ollamaApiKey = config.ollamaApiKey as string
+  const ollamaModel = config.ollamaModel as string
+
+  if (googleApiKey) {
+    const google = createGoogleGenerativeAI({ apiKey: googleApiKey })
+    return {
+      model: google.textEmbeddingModel('gemini-embedding-001'),
+      dimensions,
+      cacheKeyPrefix: `google:gemini-embedding-001:${dimensions}|`,
+      providerOptions: { google: { outputDimensionality: dimensions } },
+    }
+  }
+
+  if (openaiApiKey) {
+    const openai = createOpenAI({ apiKey: openaiApiKey })
+    return {
+      model: openai.textEmbeddingModel('text-embedding-3-small'),
+      dimensions,
+      cacheKeyPrefix: `openai:text-embedding-3-small:${dimensions}|`,
+      providerOptions: { openai: { dimensions } },
+    }
+  }
+
+  const baseURL = normalizeOllamaNativeHost(ollamaUrl).replace(/\/+$/, '') + '/v1'
+  const ollama = createOpenAI({
+    apiKey: ollamaApiKey || 'ollama',
+    baseURL,
+    name: 'ollama',
+  })
   return {
-    googleApiKey: config.googleApiKey as string,
-    openaiApiKey: config.openaiApiKey as string,
-    ollamaUrl: config.ollamaUrl as string,
-    ollamaApiKey: config.ollamaApiKey as string,
-    ollamaModel: config.ollamaModel as string,
+    model: ollama.textEmbeddingModel(ollamaModel),
     dimensions,
+    cacheKeyPrefix: `ollama:${ollamaModel}:${dimensions}|`,
   }
 }
 
-export async function generateEmbedding(text: string): Promise<number[]> {
-  const cfg = getConfig()
-
-  const prefix = cfg.googleApiKey
-    ? `google:gemini-embedding-001:${cfg.dimensions}|`
-    : cfg.openaiApiKey
-      ? `openai:text-embedding-3-small:${cfg.dimensions}|`
-      : `ollama:${cfg.ollamaModel}:${cfg.dimensions}|`
-
-  const key = prefix + text
-  const cached = embeddingCache.get(key)
-  if (cached) return cached
-
-  let vector: number[]
-  if (cfg.googleApiKey) {
-    vector = await generateGoogle(text, cfg.googleApiKey, cfg.dimensions)
-  } else if (cfg.openaiApiKey) {
-    vector = await generateOpenAI(text, cfg.openaiApiKey, cfg.dimensions)
-  } else {
-    vector = await generateOllama(text, cfg.ollamaUrl, cfg.ollamaApiKey, cfg.ollamaModel, cfg.dimensions)
-  }
-
-  if (vector.length !== cfg.dimensions) {
+function assertDimensions(vector: number[], expected: number): number[] {
+  if (vector.length !== expected) {
     throw createError({
       statusCode: 500,
-      statusMessage: `Embedding dimension mismatch: model returned ${vector.length}, expected ${cfg.dimensions}`,
+      statusMessage: `Embedding dimension mismatch: model returned ${vector.length}, expected ${expected}`,
     })
   }
-
-  embeddingCache.set(key, vector)
   return vector
 }
 
-async function generateGoogle(text: string, apiKey: string, dimensions: number): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${apiKey}`
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      content: { parts: [{ text }] },
-      outputDimensionality: dimensions,
-    }),
-  })
+export async function generateEmbedding(text: string): Promise<number[]> {
+  const { model, dimensions, cacheKeyPrefix, providerOptions } = resolveEmbedder()
+  const cacheKey = cacheKeyPrefix + text
 
-  if (!response.ok) {
-    const body = await response.text()
-    throw createError({ statusCode: 503, statusMessage: `Google embedding failed: ${body}` })
-  }
+  const cached = embeddingCache.get(cacheKey)
+  if (cached) return cached
 
-  const data = await response.json() as { embedding?: { values?: number[] } }
-  const embedding = data?.embedding?.values
-  if (!Array.isArray(embedding)) {
-    throw createError({ statusCode: 503, statusMessage: 'Invalid embedding response from Google API' })
-  }
-  return embedding
-}
-
-async function generateOpenAI(text: string, apiKey: string, dimensions: number): Promise<number[]> {
-  const openai = new OpenAI({ apiKey })
-  const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
-    input: text,
-    encoding_format: 'float',
-    dimensions,
-  })
-  return response.data[0].embedding
-}
-
-async function generateOllama(
-  text: string,
-  host: string,
-  apiKey: string,
-  model: string,
-  dimensions: number,
-): Promise<number[]> {
-  const ollama = createOllama(host, apiKey || undefined)
   try {
-    const response = await ollama.embeddings({ model, prompt: text })
-    return response.embedding
-  } catch (error: unknown) {
-    const message = String((error as Error)?.message || error)
-    if (message.includes('/api/embeddings') && message.includes('not found')) {
-      return generateOllamaV1Compatible(text, host, apiKey, model, dimensions)
-    }
-    throw createError({ statusCode: 503, statusMessage: `Ollama embedding failed: ${message}` })
+    const { embedding } = await embed({ model, value: text, providerOptions: providerOptions as never })
+    const vector = assertDimensions(embedding, dimensions)
+    embeddingCache.set(cacheKey, vector)
+    return vector
+  } catch (err: unknown) {
+    const message = (err as Error)?.message || String(err)
+    throw createError({ statusCode: 503, statusMessage: `Embedding failed: ${message}` })
   }
 }
 
-async function generateOllamaV1Compatible(
-  text: string,
-  host: string,
-  apiKey: string,
-  model: string,
-  _dimensions: number,
-): Promise<number[]> {
-  const nativeHost = normalizeOllamaNativeHost(host).replace(/\/+$/, '')
-  const url = `${nativeHost}/v1/embeddings`
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (apiKey) headers.Authorization = `Bearer ${apiKey}`
+export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+  if (!texts.length) return []
+  const { model, dimensions, cacheKeyPrefix, providerOptions } = resolveEmbedder()
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ model, input: text }),
-  })
+  const out: number[][] = new Array(texts.length)
+  const missingIdx: number[] = []
+  const missingTexts: string[] = []
 
-  if (!res.ok) {
-    const body = await res.text()
-    throw createError({ statusCode: 503, statusMessage: `Ollama v1 embedding failed: ${body}` })
+  for (let i = 0; i < texts.length; i++) {
+    const cached = embeddingCache.get(cacheKeyPrefix + texts[i])
+    if (cached) {
+      out[i] = cached
+    } else {
+      missingIdx.push(i)
+      missingTexts.push(texts[i])
+    }
   }
 
-  const json = await res.json() as { data?: Array<{ embedding?: number[] }> }
-  const embedding = json.data?.[0]?.embedding
-  if (!Array.isArray(embedding)) {
-    throw createError({ statusCode: 503, statusMessage: 'Ollama v1 embedding: invalid response' })
+  if (missingTexts.length) {
+    try {
+      const { embeddings } = await embedMany({ model, values: missingTexts, providerOptions: providerOptions as never })
+      for (let j = 0; j < missingTexts.length; j++) {
+        const vector = assertDimensions(embeddings[j], dimensions)
+        const idx = missingIdx[j]
+        out[idx] = vector
+        embeddingCache.set(cacheKeyPrefix + missingTexts[j], vector)
+      }
+    } catch (err: unknown) {
+      const message = (err as Error)?.message || String(err)
+      throw createError({ statusCode: 503, statusMessage: `Embedding failed: ${message}` })
+    }
   }
-  return embedding
+
+  return out
 }

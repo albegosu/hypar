@@ -1,0 +1,135 @@
+# Production docker-compose — uses Caddy for automatic TLS.
+# Requirements:
+#   1. Copy .env.example → .env and fill in all CHANGE_ME values.
+#   2. Set DOMAIN=rag.yourdomain.com in .env (must have DNS pointing to this server).
+#   3. Open ports 80 and 443 on your firewall.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml logs -f app
+#
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: rag-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3 QUIC
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - rag-network
+    depends_on:
+      - app
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      NUXT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      NUXT_OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
+      NUXT_OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b}
+      NUXT_OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b}
+      OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
+      NUXT_OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
+      OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
+      NUXT_OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
+      OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      NUXT_OLLAMA_API_KEY: ${OLLAMA_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      NUXT_GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NUXT_OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
+      NUXT_EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
+      MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
+      NUXT_MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      NUXT_ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      WORKFLOW_LOCAL_DATA_DIR: /app/data/workflow
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: 3000
+    expose:
+      - "3000"           # Not exposed to host — only accessible through Caddy
+    volumes:
+      - workflow_data:/app/data/workflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q '\"status\":\"ok\"' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: rag-postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # No ports: — database not exposed to host in production
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: rag-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: >
+      sh -c "
+        ollama serve &
+        sleep 5
+        ollama pull ${OLLAMA_MODEL:-nomic-embed-text}
+        ollama pull ${OLLAMA_LLM_MODEL:-llama3.1:8b}
+        tail -f /dev/null
+      "
+    expose:
+      - "11434"          # Not exposed to host — only reachable by app container
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 180s
+
+volumes:
+  postgres_data:
+  ollama_data:
+  workflow_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  rag-network:
+    driver: bridge
