@@ -11,6 +11,7 @@ node_modules/
 dist/
 /dist
 .output/
+docs/.vitepress/dist
 .nuxt/
 .turbo/
 

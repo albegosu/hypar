@@ -1,7 +1,5 @@
-# Deploy static Nuxt output to GitHub Pages (nuxt generate → .output/public).
-# Pages only serves static files: server API routes and DB-backed features will not work on the hosted site.
-# Full app: use Docker/SSH deploy (see deploy.yml).
-name: Deploy Nuxt site to Pages
+# GitHub Pages: VitePress guides only (`docs/`). The Nuxt app deploys via Docker/SSH (deploy.yml).
+name: Deploy guides to Pages
 
 on:
   push:
@@ -20,9 +18,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      # No .env in CI; Nitro prerender still loads Prisma. Placeholder is enough (no DB queries during generate).
-      DATABASE_URL: postgresql://pages:pages@127.0.0.1:5432/pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,7 +33,6 @@ jobs:
           node-version: '20'
           cache: pnpm
 
-      # Do not use static_site_generator: nuxt — it writes Nuxt 2-only keys into nuxt.config.js and breaks Nuxt 3 + nuxt.config.ts.
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
@@ -46,16 +40,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Static export (Nuxt generate)
+      - name: Build VitePress (docs)
         env:
-          # Project Pages URL is /repo-name/; empty base_path = site served at domain root.
-          NUXT_APP_BASE_URL: ${{ steps.pages.outputs.base_path }}/
-        run: pnpm run generate
+          VITEPRESS_BASE: ${{ steps.pages.outputs.base_path }}/
+        run: pnpm run docs:build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .output/public
+          path: docs/.vitepress/dist
 
   deploy:
     environment:
