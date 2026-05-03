@@ -1,5 +1,5 @@
 import { BaseValidator } from './base-validator';
-import { TestResult, TestCase } from '../types';
+import type { TestResult, TestCase } from '../types';
 
 /**
  * Validator for Challenge 2.1: Fixed-Size Chunking

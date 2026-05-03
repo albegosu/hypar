@@ -1,6 +1,6 @@
 {
   "app": {
-    "brand": "from-zero-rag",
+    "brand": "f[rag]ua",
     "subtitle": "retrieval-augmented chat console"
   },
   "nav": {
@@ -17,7 +17,14 @@
     "placeholder": "type your message…",
     "empty": "ask something about the documents you uploaded. follow-up questions keep context.",
     "thinking": "thinking…",
-    "kbHit": "kb search",
+    "searching": "searching knowledge base…",
+    "errorTitle": "agent error",
+    "errorGeneric": "An unexpected error occurred. Please try again.",
+    "errorUnreachable": "Cannot reach the model. Is Ollama running?",
+    "errorUnauthorized": "API key invalid or missing. Check your provider configuration.",
+    "errorRateLimit": "Rate limit reached. Please wait a moment and try again.",
+    "errorModel": "Model provider error",
+    "kbHit": "kb hit",
     "kbMiss": "no kb",
     "sources": "sources",
     "showRetrieval": "show retrieval",
@@ -29,6 +36,19 @@
     "recentDocs": "recent documents",
     "noDocs": "no documents yet.",
     "uploadCta": "upload",
+    "conversations": "conversations",
+    "newConversation": "+ new",
+    "noModelReply": "The model searched your knowledge base but did not return any reply text (common with very small local models). Try sending your message again, switch to a larger chat model, or open **show retrieval** below to read the passages that were retrieved.",
+    "untitled": "Untitled",
+    "noConversations": "no conversations yet",
+    "deleteTitle": "delete",
+    "commandsAvailable": "// available commands",
+    "commands": {
+      "remember": "save a piece of information to your local memory. E.g.: /remember my favorite color is orange",
+      "forget": "delete memories containing a text. E.g.: /forget favorite color",
+      "memoryClear": "clear all your local memory.",
+      "help": "show help about available commands."
+    },
     "errorReach": "could not reach the api at {url}. is the backend running?",
     "errorHint": "with docker: `docker compose up -d --build backend frontend` then hard-refresh."
   },
@@ -71,7 +91,11 @@
     "dropZone": "drag and drop files here, or click to browse",
     "supports": "supports: .txt, .md, .pdf",
     "selectFile": "select file",
-    "uploadFile": "upload file"
+    "uploadFile": "upload file",
+    "saving": "Saving…",
+    "uploading": "Uploading…",
+    "processing": "Processing…",
+    "errorIngestion": "Processing failed. Try re-chunking from the document page."
   },
   "common": {
     "loading": "loading…",

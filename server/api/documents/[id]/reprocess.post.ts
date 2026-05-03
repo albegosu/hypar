@@ -1,6 +1,7 @@
-import { reprocess } from '../../../utils/documents.service'
+import { reprocessDocument } from '../../../utils/documents.service'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')!
-  return reprocess(id)
+  const { runId } = await reprocessDocument(id)
+  return { documentId: id, runId, status: 'processing' }
 })

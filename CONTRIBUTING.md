@@ -26,7 +26,8 @@ docker compose --profile api up -d
 
 # 4. Configure environment
 cp .env.docker .env
-# Edit .env — set DATABASE_URL, GOOGLE_API_KEY, OLLAMA_LLM_MODEL at minimum
+# Edit .env — set DATABASE_URL, GOOGLE_API_KEY, OLLAMA_URL, OLLAMA_LLM_MODEL at minimum
+# WORKFLOW_LOCAL_DATA_DIR=./data/workflow is created automatically on first run
 
 # 5. Run database migrations
 pnpm db:migrate

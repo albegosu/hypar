@@ -9,6 +9,8 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@vueuse/nuxt',
     'nuxt-monaco-editor',
+    'workflow/nuxt',
+    './modules/copy-workflow-bundles',
   ],
 
   css: ['~/assets/css/main.css'],
@@ -37,6 +39,10 @@ export default defineNuxtConfig({
     },
   },
 
+  workflow: {
+    typescriptPlugin: true,
+  },
+
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL ?? '',
     googleApiKey: process.env.GOOGLE_API_KEY ?? '',
@@ -50,6 +56,7 @@ export default defineNuxtConfig({
     embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS ?? 768),
     memoryScope: process.env.MEMORY_SCOPE ?? 'local_per_user',
     memoryProactive: process.env.MEMORY_PROACTIVE === 'true',
+    adminApiKey: process.env.ADMIN_API_KEY ?? '',
     public: {},
   },
 
