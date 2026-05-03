@@ -2,7 +2,7 @@
 
 A production-ready full-stack application for **Retrieval-Augmented Generation (RAG)** built as a single Nuxt 3 project. Includes a RAG chat interface, document management, and an interactive learning quest — all in one app.
 
-![Banner](<img width="1799" height="950" alt="Screenshot 2026-05-03 at 23 48 15" src="https://github.com/user-attachments/assets/a2125d39-9f24-498c-b84e-b19ca6fbe45d"/>)
+![Banner](https://github.com/user-attachments/assets/a2125d39-9f24-498c-b84e-b19ca6fbe45d)
 <br>
 [![Docker Build](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
