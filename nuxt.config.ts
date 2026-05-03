@@ -21,7 +21,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'From Zero RAG',
+      title: 'fragua',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' },
@@ -45,15 +45,27 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     databaseUrl: process.env.DATABASE_URL ?? '',
+    // Embedding
+    embeddingProvider: process.env.EMBEDDING_PROVIDER ?? '',
+    embeddingModel: process.env.EMBEDDING_MODEL ?? '',
+    embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS ?? 768),
     googleApiKey: process.env.GOOGLE_API_KEY ?? '',
     openaiApiKey: process.env.OPENAI_API_KEY ?? '',
+    voyageApiKey: process.env.VOYAGE_API_KEY ?? '',
+    // LLM
+    llmProvider: process.env.LLM_PROVIDER ?? '',
     ollamaUrl: process.env.OLLAMA_URL ?? 'http://localhost:11434',
     ollamaApiKey: process.env.OLLAMA_API_KEY ?? '',
     ollamaModel: process.env.OLLAMA_MODEL ?? 'nomic-embed-text',
     ollamaLlmModel: process.env.OLLAMA_LLM_MODEL ?? 'tinyllama',
     ollamaChatTimeoutMs: Number(process.env.OLLAMA_CHAT_TIMEOUT_MS ?? 180000),
     ollamaPlannerTimeoutMs: Number(process.env.OLLAMA_PLANNER_TIMEOUT_MS ?? 60000),
-    embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS ?? 768),
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? '',
+    anthropicModel: process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-6',
+    mistralApiKey: process.env.MISTRAL_API_KEY ?? '',
+    mistralModel: process.env.MISTRAL_MODEL ?? 'mistral-medium-latest',
+    openaiLlmModel: process.env.OPENAI_LLM_MODEL ?? 'gpt-4.1-mini',
+    // App
     memoryScope: process.env.MEMORY_SCOPE ?? 'local_per_user',
     memoryProactive: process.env.MEMORY_PROACTIVE === 'true',
     adminApiKey: process.env.ADMIN_API_KEY ?? '',

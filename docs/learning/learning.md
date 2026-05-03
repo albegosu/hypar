@@ -1,6 +1,6 @@
 # RAG Learning Quest
 
-An interactive, gamified learning platform built into From Zero RAG. Accessible at `/learn` — no separate app or port needed.
+An interactive, gamified learning platform built into fragua. Accessible at `/learn` — no separate app or port needed.
 
 ---
 

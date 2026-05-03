@@ -24,9 +24,9 @@ export const embeddingProviders: ProviderDefinition[] = [
       [
         {
           id: 'geminiApiKey',
-          label: 'gemini_api_key',
+          label: 'GOOGLE_API_KEY',
           type: 'password',
-          envKey: 'embedding_api_key',
+          envKey: 'GOOGLE_API_KEY',
           placeholder: 'AIza...',
           required: true,
           secret: true,
@@ -35,9 +35,9 @@ export const embeddingProviders: ProviderDefinition[] = [
         },
         {
           id: 'geminiEmbeddingModel',
-          label: 'gemini_embedding_model',
+          label: 'EMBEDDING_MODEL',
           type: 'select',
-          envKey: 'embedding_model',
+          envKey: 'EMBEDDING_MODEL',
           defaultValue: 'gemini-embedding-001',
           options: [
             { value: 'gemini-embedding-001', label: 'gemini-embedding-001' },
@@ -49,8 +49,8 @@ export const embeddingProviders: ProviderDefinition[] = [
       'gemini',
     ),
     envLines: (cfg) => [
-      `embedding_model=${getApi(cfg, 'geminiEmbeddingModel', 'gemini-embedding-001')}`,
-      `embedding_api_key=${getApi(cfg, 'geminiApiKey', '<your-embedding-key>')}`,
+      `GOOGLE_API_KEY=${getApi(cfg, 'geminiApiKey', '<your-google-api-key>')}`,
+      `EMBEDDING_MODEL=${getApi(cfg, 'geminiEmbeddingModel', 'gemini-embedding-001')}`,
     ],
   },
   {
@@ -60,9 +60,9 @@ export const embeddingProviders: ProviderDefinition[] = [
       [
         {
           id: 'openaiEmbeddingModel',
-          label: 'openai_embedding_model',
+          label: 'EMBEDDING_MODEL',
           type: 'select',
-          envKey: 'embedding_model',
+          envKey: 'EMBEDDING_MODEL',
           defaultValue: 'text-embedding-3-small',
           options: [
             { value: 'text-embedding-3-small', label: 'text-embedding-3-small' },
@@ -71,9 +71,9 @@ export const embeddingProviders: ProviderDefinition[] = [
         },
         {
           id: 'openaiEmbeddingApiKey',
-          label: 'openai_api_key',
+          label: 'OPENAI_API_KEY',
           type: 'password',
-          envKey: 'embedding_api_key',
+          envKey: 'OPENAI_API_KEY',
           placeholder: 'sk-proj-...',
           required: true,
           secret: true,
@@ -85,8 +85,8 @@ export const embeddingProviders: ProviderDefinition[] = [
       'openai',
     ),
     envLines: (cfg) => [
-      `embedding_model=${getApi(cfg, 'openaiEmbeddingModel', 'text-embedding-3-small')}`,
-      `embedding_api_key=${getApi(cfg, 'openaiEmbeddingApiKey', '<your-embedding-key>')}`,
+      `OPENAI_API_KEY=${getApi(cfg, 'openaiEmbeddingApiKey', '<your-openai-api-key>')}`,
+      `EMBEDDING_MODEL=${getApi(cfg, 'openaiEmbeddingModel', 'text-embedding-3-small')}`,
     ],
   },
   {
@@ -96,9 +96,9 @@ export const embeddingProviders: ProviderDefinition[] = [
       [
         {
           id: 'voyageApiKey',
-          label: 'voyage_api_key',
+          label: 'VOYAGE_API_KEY',
           type: 'password',
-          envKey: 'embedding_api_key',
+          envKey: 'VOYAGE_API_KEY',
           placeholder: 'pa-...',
           required: true,
           secret: true,
@@ -107,9 +107,9 @@ export const embeddingProviders: ProviderDefinition[] = [
         },
         {
           id: 'voyageModel',
-          label: 'voyage_embedding_model',
+          label: 'EMBEDDING_MODEL',
           type: 'select',
-          envKey: 'embedding_model',
+          envKey: 'EMBEDDING_MODEL',
           defaultValue: 'voyage-3',
           options: [
             { value: 'voyage-3', label: 'voyage-3' },
@@ -121,8 +121,8 @@ export const embeddingProviders: ProviderDefinition[] = [
       'voyage',
     ),
     envLines: (cfg) => [
-      `embedding_model=${getApi(cfg, 'voyageModel', 'voyage-3')}`,
-      `embedding_api_key=${getApi(cfg, 'voyageApiKey', '<your-embedding-key>')}`,
+      `VOYAGE_API_KEY=${getApi(cfg, 'voyageApiKey', '<your-voyage-api-key>')}`,
+      `EMBEDDING_MODEL=${getApi(cfg, 'voyageModel', 'voyage-3')}`,
     ],
   },
   {
@@ -132,18 +132,18 @@ export const embeddingProviders: ProviderDefinition[] = [
       [
         {
           id: 'ollamaEmbeddingBaseUrl',
-          label: 'ollama_base_url',
+          label: 'OLLAMA_URL',
           type: 'text',
-          envKey: 'embedding_base_url',
+          envKey: 'OLLAMA_URL',
           placeholder: 'http://localhost:11434',
           required: true,
           helpText: 'wizard.fields.ollamaBaseUrl.helpText',
         },
         {
           id: 'ollamaEmbeddingModel',
-          label: 'ollama_embedding_model',
+          label: 'OLLAMA_MODEL',
           type: 'text',
-          envKey: 'embedding_model',
+          envKey: 'OLLAMA_MODEL',
           defaultValue: 'nomic-embed-text',
         },
       ],
@@ -151,8 +151,8 @@ export const embeddingProviders: ProviderDefinition[] = [
       'ollama-local',
     ),
     envLines: (cfg) => [
-      `embedding_model=${getApi(cfg, 'ollamaEmbeddingModel', 'nomic-embed-text')}`,
-      `embedding_base_url=${getApi(cfg, 'ollamaEmbeddingBaseUrl', 'http://localhost:11434')}`,
+      `OLLAMA_URL=${getApi(cfg, 'ollamaEmbeddingBaseUrl', 'http://localhost:11434')}`,
+      `OLLAMA_MODEL=${getApi(cfg, 'ollamaEmbeddingModel', 'nomic-embed-text')}`,
     ],
   },
 ];
@@ -165,9 +165,9 @@ export const llmProviders: ProviderDefinition[] = [
       [
         {
           id: 'ollamaApiKey',
-          label: 'ollama_api_key',
+          label: 'OLLAMA_API_KEY',
           type: 'password',
-          envKey: 'llm_api_key',
+          envKey: 'OLLAMA_API_KEY',
           placeholder: 'sk-...',
           required: true,
           secret: true,
@@ -176,9 +176,9 @@ export const llmProviders: ProviderDefinition[] = [
         },
         {
           id: 'ollamaModel',
-          label: 'ollama_chat_model',
+          label: 'OLLAMA_LLM_MODEL',
           type: 'select',
-          envKey: 'llm_model',
+          envKey: 'OLLAMA_LLM_MODEL',
           defaultValue: 'kimi-k2.5:cloud',
           options: [
             { value: 'kimi-k2.5:cloud', label: 'kimi-k2.5:cloud' },
@@ -191,8 +191,9 @@ export const llmProviders: ProviderDefinition[] = [
       'ollama-cloud',
     ),
     envLines: (cfg) => [
-      `llm_model=${getApi(cfg, 'ollamaModel', 'kimi-k2.5:cloud')}`,
-      `llm_api_key=${getApi(cfg, 'ollamaApiKey', '<your-llm-key>')}`,
+      `OLLAMA_URL=https://api.ollama.com`,
+      `OLLAMA_API_KEY=${getApi(cfg, 'ollamaApiKey', '<your-ollama-api-key>')}`,
+      `OLLAMA_LLM_MODEL=${getApi(cfg, 'ollamaModel', 'kimi-k2.5:cloud')}`,
     ],
   },
   {
@@ -202,9 +203,9 @@ export const llmProviders: ProviderDefinition[] = [
       [
         {
           id: 'openaiChatModel',
-          label: 'openai_chat_model',
+          label: 'OPENAI_LLM_MODEL',
           type: 'select',
-          envKey: 'llm_model',
+          envKey: 'OPENAI_LLM_MODEL',
           defaultValue: 'gpt-4.1-mini',
           options: [
             { value: 'gpt-4.1-mini', label: 'gpt-4.1-mini' },
@@ -214,9 +215,9 @@ export const llmProviders: ProviderDefinition[] = [
         },
         {
           id: 'openaiLlmApiKey',
-          label: 'openai_api_key',
+          label: 'OPENAI_API_KEY',
           type: 'password',
-          envKey: 'llm_api_key',
+          envKey: 'OPENAI_API_KEY',
           placeholder: 'sk-proj-...',
           required: true,
           secret: true,
@@ -228,8 +229,8 @@ export const llmProviders: ProviderDefinition[] = [
       'openai',
     ),
     envLines: (cfg) => [
-      `llm_model=${getApi(cfg, 'openaiChatModel', 'gpt-4.1-mini')}`,
-      `llm_api_key=${getApi(cfg, 'openaiLlmApiKey', '<your-llm-key>')}`,
+      `OPENAI_API_KEY=${getApi(cfg, 'openaiLlmApiKey', '<your-openai-api-key>')}`,
+      `OPENAI_LLM_MODEL=${getApi(cfg, 'openaiChatModel', 'gpt-4.1-mini')}`,
     ],
   },
   {
@@ -239,9 +240,9 @@ export const llmProviders: ProviderDefinition[] = [
       [
         {
           id: 'anthropicModel',
-          label: 'anthropic_model',
+          label: 'ANTHROPIC_MODEL',
           type: 'select',
-          envKey: 'llm_model',
+          envKey: 'ANTHROPIC_MODEL',
           defaultValue: 'claude-sonnet-4-6',
           options: [
             { value: 'claude-opus-4-7', label: 'claude-opus-4-7' },
@@ -251,9 +252,9 @@ export const llmProviders: ProviderDefinition[] = [
         },
         {
           id: 'anthropicApiKey',
-          label: 'anthropic_api_key',
+          label: 'ANTHROPIC_API_KEY',
           type: 'password',
-          envKey: 'llm_api_key',
+          envKey: 'ANTHROPIC_API_KEY',
           placeholder: 'sk-ant-...',
           required: true,
           secret: true,
@@ -265,8 +266,8 @@ export const llmProviders: ProviderDefinition[] = [
       'anthropic',
     ),
     envLines: (cfg) => [
-      `llm_model=${getApi(cfg, 'anthropicModel', 'claude-sonnet-4-6')}`,
-      `llm_api_key=${getApi(cfg, 'anthropicApiKey', '<your-llm-key>')}`,
+      `ANTHROPIC_API_KEY=${getApi(cfg, 'anthropicApiKey', '<your-anthropic-api-key>')}`,
+      `ANTHROPIC_MODEL=${getApi(cfg, 'anthropicModel', 'claude-sonnet-4-6')}`,
     ],
   },
   {
@@ -276,9 +277,9 @@ export const llmProviders: ProviderDefinition[] = [
       [
         {
           id: 'mistralApiKey',
-          label: 'mistral_api_key',
+          label: 'MISTRAL_API_KEY',
           type: 'password',
-          envKey: 'llm_api_key',
+          envKey: 'MISTRAL_API_KEY',
           placeholder: '...',
           required: true,
           secret: true,
@@ -287,9 +288,9 @@ export const llmProviders: ProviderDefinition[] = [
         },
         {
           id: 'mistralModel',
-          label: 'mistral_model',
+          label: 'MISTRAL_MODEL',
           type: 'select',
-          envKey: 'llm_model',
+          envKey: 'MISTRAL_MODEL',
           defaultValue: 'mistral-medium-latest',
           options: [
             { value: 'mistral-small-latest', label: 'mistral-small-latest' },
@@ -302,8 +303,8 @@ export const llmProviders: ProviderDefinition[] = [
       'mistral',
     ),
     envLines: (cfg) => [
-      `llm_model=${getApi(cfg, 'mistralModel', 'mistral-medium-latest')}`,
-      `llm_api_key=${getApi(cfg, 'mistralApiKey', '<your-llm-key>')}`,
+      `MISTRAL_API_KEY=${getApi(cfg, 'mistralApiKey', '<your-mistral-api-key>')}`,
+      `MISTRAL_MODEL=${getApi(cfg, 'mistralModel', 'mistral-medium-latest')}`,
     ],
   },
   {
@@ -313,18 +314,18 @@ export const llmProviders: ProviderDefinition[] = [
       [
         {
           id: 'ollamaLlmBaseUrl',
-          label: 'ollama_base_url',
+          label: 'OLLAMA_URL',
           type: 'text',
-          envKey: 'llm_base_url',
+          envKey: 'OLLAMA_URL',
           placeholder: 'http://localhost:11434',
           required: true,
           helpText: 'wizard.fields.ollamaBaseUrl.helpText',
         },
         {
           id: 'ollamaLocalChatModel',
-          label: 'ollama_chat_model',
+          label: 'OLLAMA_LLM_MODEL',
           type: 'text',
-          envKey: 'llm_model',
+          envKey: 'OLLAMA_LLM_MODEL',
           defaultValue: 'llama3.1',
         },
       ],
@@ -332,8 +333,8 @@ export const llmProviders: ProviderDefinition[] = [
       'ollama-local',
     ),
     envLines: (cfg) => [
-      `llm_model=${getApi(cfg, 'ollamaLocalChatModel', 'llama3.1')}`,
-      `llm_base_url=${getApi(cfg, 'ollamaLlmBaseUrl', 'http://localhost:11434')}`,
+      `OLLAMA_URL=${getApi(cfg, 'ollamaLlmBaseUrl', 'http://localhost:11434')}`,
+      `OLLAMA_LLM_MODEL=${getApi(cfg, 'ollamaLocalChatModel', 'llama3.1')}`,
     ],
   },
 ];

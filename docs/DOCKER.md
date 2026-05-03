@@ -63,23 +63,55 @@ docker compose --profile full down -v   # ⚠️ deletes volumes
 
 ## Environment Variables
 
+For the full variable reference including all provider options, see [Environment variables guide](./guide/env.md).
+
+### Minimum required
+
 | Variable | Default | Description |
 |---|---|---|
 | `PORT` | 3000 | App port |
-| `DATABASE_URL` | — | Full Postgres connection string |
+| `DATABASE_URL` | — | Full Postgres connection string (pgvector or Supabase) |
+
+### PostgreSQL container (docker-compose only)
+
+| Variable | Default | Description |
+|---|---|---|
 | `POSTGRES_USER` | rag | DB user |
 | `POSTGRES_PASSWORD` | rag_password | DB password |
 | `POSTGRES_DB` | rag_db | DB name |
 | `POSTGRES_PORT` | 5432 | Postgres port |
-| `GOOGLE_API_KEY` | — | Embedding provider (free, recommended) |
-| `OPENAI_API_KEY` | — | Embedding fallback |
-| `OLLAMA_URL` | http://ollama:11434 | Ollama endpoint |
+
+### Provider selection
+
+| Variable | Default | Description |
+|---|---|---|
+| `EMBEDDING_PROVIDER` | auto-detect | `gemini` / `openai` / `voyage` / `ollama-local` |
+| `LLM_PROVIDER` | auto-detect | `anthropic` / `openai` / `mistral` / `ollama-cloud` / `ollama-local` |
+
+### AI providers (set at least one pair)
+
+| Variable | Default | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | — | Gemini embedding |
+| `OPENAI_API_KEY` | — | OpenAI embedding or chat |
+| `OPENAI_LLM_MODEL` | gpt-4.1-mini | OpenAI chat model |
+| `VOYAGE_API_KEY` | — | Voyage AI embedding |
+| `ANTHROPIC_API_KEY` | — | Anthropic chat (Claude) |
+| `ANTHROPIC_MODEL` | claude-sonnet-4-6 | Anthropic model |
+| `MISTRAL_API_KEY` | — | Mistral chat |
+| `MISTRAL_MODEL` | mistral-medium-latest | Mistral model |
+| `OLLAMA_URL` | http://ollama:11434 | Ollama endpoint (embedding + chat) |
 | `OLLAMA_API_KEY` | — | Ollama Cloud auth |
-| `OLLAMA_MODEL` | nomic-embed-text | Embedding model |
-| `OLLAMA_LLM_MODEL` | llama3.1:8b | Chat model (use a tool-calling model; `tinyllama` will skip KB search) |
-| `OLLAMA_CHAT_TIMEOUT_MS` | 180000 | LLM response timeout |
-| `OLLAMA_PLANNER_TIMEOUT_MS` | 60000 | Planner timeout |
+| `OLLAMA_MODEL` | nomic-embed-text | Ollama embedding model |
+| `OLLAMA_LLM_MODEL` | llama3.1:8b | Ollama chat model (use a tool-calling model; `tinyllama` will skip KB search) |
+| `OLLAMA_CHAT_TIMEOUT_MS` | 180000 | LLM response timeout ms |
+| `OLLAMA_PLANNER_TIMEOUT_MS` | 60000 | Planner timeout ms |
 | `EMBEDDING_DIMENSIONS` | 768 | Must match pgvector column |
+
+### Application
+
+| Variable | Default | Description |
+|---|---|---|
 | `MEMORY_SCOPE` | local_per_user | `local_per_user` / `global` / `disabled` |
 | `MEMORY_PROACTIVE` | true | Auto-save user facts |
 

@@ -9,6 +9,8 @@ import {
   type LanguageModel,
 } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createMistral } from '@ai-sdk/mistral'
 import { z } from 'zod'
 import { normalizeOllamaNativeHost } from './ollama'
 import { rag, logRagQuery, type SearchResult } from './search.service'
@@ -22,15 +24,46 @@ import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-
 function getRuntimeCfg() {
   const config = useRuntimeConfig()
   return {
+    llmProvider: (config.llmProvider as string) || '',
     ollamaUrl: config.ollamaUrl as string,
     ollamaApiKey: config.ollamaApiKey as string,
     ollamaLlmModel: config.ollamaLlmModel as string,
+    openaiApiKey: config.openaiApiKey as string,
+    openaiLlmModel: (config.openaiLlmModel as string) || 'gpt-4.1-mini',
+    anthropicApiKey: config.anthropicApiKey as string,
+    anthropicModel: (config.anthropicModel as string) || 'claude-sonnet-4-6',
+    mistralApiKey: config.mistralApiKey as string,
+    mistralModel: (config.mistralModel as string) || 'mistral-medium-latest',
     memoryScope: (config.memoryScope as string) || 'local_per_user',
   }
 }
 
-export function getOllamaChatModel() {
+export function getLlmModel(): LanguageModel {
   const cfg = getRuntimeCfg()
+
+  // Explicit provider via LLM_PROVIDER env var; fall back to API key presence
+  const provider = cfg.llmProvider
+    || (cfg.anthropicApiKey ? 'anthropic' : '')
+    || (cfg.mistralApiKey ? 'mistral' : '')
+    || (cfg.openaiApiKey ? 'openai' : '')
+    || 'ollama'
+
+  if (provider === 'anthropic') {
+    const anthropic = createAnthropic({ apiKey: cfg.anthropicApiKey })
+    return anthropic(cfg.anthropicModel)
+  }
+
+  if (provider === 'openai') {
+    const openai = createOpenAI({ apiKey: cfg.openaiApiKey })
+    return openai.chat(cfg.openaiLlmModel)
+  }
+
+  if (provider === 'mistral') {
+    const mistral = createMistral({ apiKey: cfg.mistralApiKey })
+    return mistral(cfg.mistralModel)
+  }
+
+  // ollama-cloud, ollama-local, or default
   const baseURL = normalizeOllamaNativeHost(cfg.ollamaUrl).replace(/\/+$/, '') + '/v1'
   const ollama = createOpenAI({
     apiKey: cfg.ollamaApiKey || 'ollama',
@@ -116,12 +149,13 @@ export async function agentStreamText(
   })
 
   const modelMessages = await convertToModelMessages(validMessages)
+  const model = getLlmModel()
 
   return streamText({
-    model: getOllamaChatModel(),
+    model,
     system,
     messages: modelMessages,
-    tools: buildKbTools(userId, limit, retrievedChunks, getOllamaChatModel()),
+    tools: buildKbTools(userId, limit, retrievedChunks, model),
     stopWhen: stepCountIs(5),
     onError: ({ error }) => {
       console.error('[agent] streamText error:', error)

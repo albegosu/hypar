@@ -8,7 +8,88 @@ cp .env.example .env
 
 Edit `.env` for your machine; never commit real secrets.
 
-- **Docker Compose:** defaults for Postgres and the app are set in `docker-compose.yml`; you typically only need embedding keys (`GOOGLE_API_KEY` or `OPENAI_API_KEY`) or Ollama settings. Optional: uncomment `COMPOSE_PROFILES=full` in `.env` so `docker compose up` starts the full stack without `--profile full` each time.
-- **Local `pnpm dev`:** uncomment and set `DATABASE_URL`, `OLLAMA_URL` (often `http://localhost:11434`), and `WORKFLOW_LOCAL_DATA_DIR` as described in `.env.example`.
+- **Docker Compose:** defaults for Postgres and the app are set in `docker-compose.yml`. See [Docker guide](../DOCKER.md) for container-specific usage.
+- **Local `pnpm dev`:** set `DATABASE_URL`, `OLLAMA_URL` (often `http://localhost:11434`), and `WORKFLOW_LOCAL_DATA_DIR` as described in `.env.example`.
+- **Onboarding wizard:** the guided setup at `/learn/onboarding` generates a ready-to-use `.env` file based on your provider choices.
 
-For a variable-by-variable table focused on containers, see [Docker guide — Environment variables](../DOCKER.md#environment-variables).
+---
+
+## Provider selection
+
+Two variables control which AI providers are active. If omitted, the runtime falls back to detecting the first present API key.
+
+| Variable | Values | Description |
+|---|---|---|
+| `EMBEDDING_PROVIDER` | `gemini` `openai` `voyage` `ollama-local` | Explicit embedding provider. Overrides key-presence detection. |
+| `LLM_PROVIDER` | `anthropic` `openai` `mistral` `ollama-cloud` `ollama-local` | Explicit chat/LLM provider. Overrides key-presence detection. |
+
+---
+
+## Embedding providers
+
+| Variable | Provider | Description |
+|---|---|---|
+| `GOOGLE_API_KEY` | Gemini | API key from [Google AI Studio](https://aistudio.google.com/app/apikey). Uses `gemini-embedding-001` by default. |
+| `OPENAI_API_KEY` | OpenAI | API key from [OpenAI](https://platform.openai.com/api-keys). Shared with OpenAI LLM if both are configured. |
+| `VOYAGE_API_KEY` | Voyage AI | API key from [Voyage AI](https://dashboard.voyageai.com/api-keys). Uses `voyage-3` by default. |
+| `OLLAMA_URL` | Ollama | Base URL, e.g. `http://localhost:11434`. Used for both embedding and LLM. |
+| `OLLAMA_MODEL` | Ollama | Embedding model name (default: `nomic-embed-text`). |
+| `EMBEDDING_MODEL` | all | Override the model for the active embedding provider. |
+| `EMBEDDING_DIMENSIONS` | all | Vector size — must match the `pgvector` column (default: `768`). |
+
+**Fallback order** (when `EMBEDDING_PROVIDER` is not set): Gemini → OpenAI → Voyage → Ollama.
+
+---
+
+## LLM / chat providers
+
+| Variable | Provider | Description |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Anthropic | API key from [Anthropic console](https://console.anthropic.com/settings/keys). |
+| `ANTHROPIC_MODEL` | Anthropic | Model name (default: `claude-sonnet-4-6`). |
+| `OPENAI_API_KEY` | OpenAI | Shared with embedding if both are configured. |
+| `OPENAI_LLM_MODEL` | OpenAI | Chat model name (default: `gpt-4.1-mini`). |
+| `MISTRAL_API_KEY` | Mistral | API key from [Mistral console](https://console.mistral.ai/api-keys/). |
+| `MISTRAL_MODEL` | Mistral | Model name (default: `mistral-medium-latest`). |
+| `OLLAMA_API_KEY` | Ollama Cloud | Auth key for [Ollama Cloud](https://ollama.com/settings/keys). |
+| `OLLAMA_LLM_MODEL` | Ollama | Chat model (default: `tinyllama` local / `kimi-k2.5:cloud` cloud). |
+| `OLLAMA_CHAT_TIMEOUT_MS` | Ollama | LLM response timeout in ms (default: `180000`). |
+| `OLLAMA_PLANNER_TIMEOUT_MS` | Ollama | Planner/tool step timeout in ms (default: `60000`). |
+
+**Fallback order** (when `LLM_PROVIDER` is not set): Anthropic → Mistral → OpenAI → Ollama.
+
+---
+
+## Database
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Full Postgres connection string. Required. |
+
+**Self-hosted pgvector example:**
+```
+DATABASE_URL=postgresql://postgres:password@localhost:5432/rag_db
+```
+
+**Supabase Vector example (direct):**
+```
+DATABASE_URL=postgresql://postgres:password@db.<project-ref>.supabase.co:5432/postgres
+```
+
+**Supabase Vector example (transaction pooler — recommended for serverless):**
+```
+DATABASE_URL=postgresql://postgres.<project-ref>:password@aws-0-<region>.pooler.supabase.com:6543/postgres
+```
+
+The onboarding wizard (step 2) generates the correct `DATABASE_URL` for either option.
+
+---
+
+## Application
+
+| Variable | Default | Description |
+|---|---|---|
+| `MEMORY_SCOPE` | `local_per_user` | `local_per_user` / `global` / `disabled` |
+| `MEMORY_PROACTIVE` | `true` | Auto-save user facts to memory |
+| `ADMIN_API_KEY` | — | Optional key to protect admin endpoints |
+| `WORKFLOW_LOCAL_DATA_DIR` | `./data/workflow` | Durable workflow state directory |

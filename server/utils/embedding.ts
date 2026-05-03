@@ -45,32 +45,54 @@ function resolveEmbedder(): ResolvedEmbedder {
       ? Number(config.embeddingDimensions)
       : DEFAULT_DIMENSIONS
 
+  const embeddingProvider = (config.embeddingProvider as string) || ''
+  const embeddingModel = (config.embeddingModel as string) || ''
   const googleApiKey = config.googleApiKey as string
   const openaiApiKey = config.openaiApiKey as string
+  const voyageApiKey = config.voyageApiKey as string
   const ollamaUrl = config.ollamaUrl as string
   const ollamaApiKey = config.ollamaApiKey as string
   const ollamaModel = config.ollamaModel as string
 
-  if (googleApiKey) {
+  // Explicit provider selection via EMBEDDING_PROVIDER env var
+  if (embeddingProvider === 'gemini' || (!embeddingProvider && googleApiKey)) {
+    const model = embeddingModel || 'gemini-embedding-001'
     const google = createGoogleGenerativeAI({ apiKey: googleApiKey })
     return {
-      model: google.textEmbeddingModel('gemini-embedding-001'),
+      model: google.textEmbeddingModel(model),
       dimensions,
-      cacheKeyPrefix: `google:gemini-embedding-001:${dimensions}|`,
+      cacheKeyPrefix: `google:${model}:${dimensions}|`,
       providerOptions: { google: { outputDimensionality: dimensions } },
     }
   }
 
-  if (openaiApiKey) {
+  if (embeddingProvider === 'openai' || (!embeddingProvider && openaiApiKey)) {
+    const model = embeddingModel || 'text-embedding-3-small'
     const openai = createOpenAI({ apiKey: openaiApiKey })
     return {
-      model: openai.textEmbeddingModel('text-embedding-3-small'),
+      model: openai.textEmbeddingModel(model),
       dimensions,
-      cacheKeyPrefix: `openai:text-embedding-3-small:${dimensions}|`,
+      cacheKeyPrefix: `openai:${model}:${dimensions}|`,
       providerOptions: { openai: { dimensions } },
     }
   }
 
+  if (embeddingProvider === 'voyage' || (!embeddingProvider && voyageApiKey)) {
+    const model = embeddingModel || 'voyage-3'
+    const voyage = createOpenAI({
+      apiKey: voyageApiKey,
+      baseURL: 'https://api.voyageai.com/v1',
+      name: 'voyage',
+    })
+    return {
+      model: voyage.textEmbeddingModel(model),
+      dimensions,
+      cacheKeyPrefix: `voyage:${model}:${dimensions}|`,
+    }
+  }
+
+  // Default: Ollama (local or cloud)
+  const model = embeddingModel || ollamaModel
   const baseURL = normalizeOllamaNativeHost(ollamaUrl).replace(/\/+$/, '') + '/v1'
   const ollama = createOpenAI({
     apiKey: ollamaApiKey || 'ollama',
@@ -78,9 +100,9 @@ function resolveEmbedder(): ResolvedEmbedder {
     name: 'ollama',
   })
   return {
-    model: ollama.textEmbeddingModel(ollamaModel),
+    model: ollama.textEmbeddingModel(model),
     dimensions,
-    cacheKeyPrefix: `ollama:${ollamaModel}:${dimensions}|`,
+    cacheKeyPrefix: `ollama:${model}:${dimensions}|`,
   }
 }
 
