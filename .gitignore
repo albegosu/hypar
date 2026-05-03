@@ -7,8 +7,9 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Build outputs (Nuxt 3 uses .output/; dist/ is legacy; /dist catches a root symlink named dist)
 dist/
+/dist
 .output/
 .nuxt/
 .turbo/
