@@ -20,6 +20,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # No .env in CI; Nitro prerender still loads Prisma. Placeholder is enough (no DB queries during generate).
+      DATABASE_URL: postgresql://pages:pages@127.0.0.1:5432/pages
     steps:
       - name: Checkout
         uses: actions/checkout@v4
