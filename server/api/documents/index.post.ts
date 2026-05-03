@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { createFromText } from '../../utils/documents.service'
+import { ingestFromText } from '../../utils/documents.service'
 
 const schema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1).max(500),
   content: z.string().min(1),
   sourceType: z.enum(['text', 'markdown']),
   userId: z.string().optional(),
@@ -11,5 +11,5 @@ const schema = z.object({
 
 export default defineEventHandler(async (event) => {
   const body = await readValidatedBody(event, schema.parse)
-  return createFromText(body)
+  return ingestFromText(body)
 })

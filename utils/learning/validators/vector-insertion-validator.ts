@@ -1,5 +1,5 @@
 import { BaseValidator } from './base-validator';
-import { TestResult, TestCase } from '../types';
+import type { TestResult, TestCase } from '../types';
 
 /**
  * Validator for Challenge 3.2: Vector Insertion & Queries

@@ -1,142 +1,226 @@
 import { Prisma } from '@prisma/client'
+import { generateText, type LanguageModel } from 'ai'
 import { prisma } from './prisma'
 import { generateEmbedding } from './embedding'
-import { createOllama } from './ollama'
+import { truncate } from './text'
 
 export interface SearchResult {
   chunkId: string
   content: string
   documentId: string
   documentTitle: string
-  score: number
+  score: number          // hybrid similarity in [0, 1] (higher = more relevant)
   startChar: number
   endChar: number
+  embedding?: number[]   // attached for in-process MMR; stripped before returning to client
 }
 
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-}
-
-export interface ConverseInput {
-  messages: ChatMessage[]
-  userId?: string
+export interface SearchOptions {
   limit?: number
+  userId?: string
+  /** Similarity floor; results below are dropped. Default 0.2. */
+  minScore?: number
+  /** Over-fetch factor for MMR diversification. Default 3. */
+  overFetch?: number
+  /** MMR lambda (0 = max diversity, 1 = pure relevance). Default 0.7. */
+  mmrLambda?: number
+  /** Restrict search to a specific document. */
+  documentId?: string
+  /** Weight of vector score vs BM25 (0–1). Default 0.7 → 70% vector, 30% BM25. */
+  hybridAlpha?: number
+  /**
+   * If provided, use HyDE: generate a hypothetical answer to the query and
+   * embed that instead of the raw query string. Improves recall ~15–30% for
+   * factual Q&A at the cost of one extra LLM call.
+   */
+  hydeModel?: LanguageModel
 }
 
-function getConfig() {
+const DEFAULT_LIMIT = 5
+const DEFAULT_MIN_SCORE = 0.2
+const DEFAULT_OVERFETCH = 3
+const DEFAULT_MMR_LAMBDA = 0.7
+const DEFAULT_HYBRID_ALPHA = 0.7
+const QUERY_MAX_CHARS = 512
+
+function getMemoryScope(): string {
   const config = useRuntimeConfig()
-  return {
-    ollamaUrl: config.ollamaUrl as string,
-    ollamaApiKey: config.ollamaApiKey as string,
-    ollamaLlmModel: config.ollamaLlmModel as string,
-    ollamaChatTimeoutMs: Number(config.ollamaChatTimeoutMs ?? 180_000),
-    memoryScope: config.memoryScope as string,
+  return (config.memoryScope as string) || 'local_per_user'
+}
+
+async function expandQueryHyDE(query: string, model: LanguageModel): Promise<string> {
+  try {
+    const { text } = await generateText({
+      model,
+      prompt:
+        `Write a short paragraph (2–3 sentences) that directly answers the following question. ` +
+        `Be factual and specific. Do not begin with "Based on" or similar hedging.\n\nQuestion: ${query}\n\nAnswer:`,
+      maxOutputTokens: 150,
+    })
+    return text.trim() || query
+  } catch {
+    return query
   }
 }
 
-export async function search(query: string, limit = 5, userId?: string): Promise<SearchResult[]> {
-  const queryEmbedding = await generateEmbedding(query)
-  const embeddingString = `[${queryEmbedding.join(',')}]`
+export async function search(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
+  const limit = options.limit ?? DEFAULT_LIMIT
+  const minScore = options.minScore ?? DEFAULT_MIN_SCORE
+  const overFetch = options.overFetch ?? DEFAULT_OVERFETCH
+  const mmrLambda = options.mmrLambda ?? DEFAULT_MMR_LAMBDA
+  const alpha = options.hybridAlpha ?? DEFAULT_HYBRID_ALPHA
+  const beta = 1 - alpha
 
-  const cfg = getConfig()
-  const memoryScope = (cfg.memoryScope || 'local_per_user').trim()
+  const safeQuery = truncate(query.trim(), QUERY_MAX_CHARS)
+  if (!safeQuery) return []
+
+  // HyDE: optionally embed a hypothetical answer instead of the raw query
+  const queryToEmbed = options.hydeModel
+    ? await expandQueryHyDE(safeQuery, options.hydeModel)
+    : safeQuery
+
+  const queryEmbedding = await generateEmbedding(queryToEmbed)
+  const embeddingStr = `[${queryEmbedding.join(',')}]`
+  const fetchLimit = Math.max(limit * overFetch, limit + 5)
+
+  const memoryScope = getMemoryScope().trim()
   const conditions: Prisma.Sql[] = []
 
-  if (memoryScope === 'local_per_user' && userId?.trim()) {
-    conditions.push(Prisma.sql`(d."userId" = ${userId.trim()} OR d."userId" IS NULL)`)
+  if (options.documentId) {
+    conditions.push(Prisma.sql`d.id = ${options.documentId}`)
+  } else {
+    if (memoryScope === 'local_per_user' && options.userId?.trim()) {
+      conditions.push(
+        Prisma.sql`(d."userId" = ${options.userId.trim()} OR d."userId" IS NULL)`,
+      )
+    }
+    if (memoryScope === 'disabled') {
+      conditions.push(
+        Prisma.sql`(d.metadata->>'kind' IS NULL OR d.metadata->>'kind' <> 'chat_memory')`,
+      )
+    }
   }
-  if (memoryScope === 'disabled') {
-    conditions.push(Prisma.sql`(d.metadata->>'kind' IS NULL OR d.metadata->>'kind' <> 'chat_memory')`)
-  }
+  conditions.push(Prisma.sql`d."ingestStatus" = 'ready'`)
 
-  const where = conditions.length
-    ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
-    : Prisma.sql``
+  const where = Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
 
-  const results = await prisma.$queryRaw`
+  // Hybrid CTE: combine cosine-vector score and BM25 (ts_rank_cd) score.
+  // Both scores are in [0, 1]; the combined score is a weighted average.
+  const rows = await prisma.$queryRaw<Array<Record<string, unknown>>>(Prisma.sql`
+    WITH vector_scores AS (
+      SELECT
+        c.id,
+        1 - (c.embedding <=> ${embeddingStr}::vector) AS vscore
+      FROM "Chunk" c
+      JOIN "Document" d ON c."documentId" = d.id
+      ${where}
+      ORDER BY vscore DESC
+      LIMIT ${fetchLimit}
+    ),
+    bm25_scores AS (
+      SELECT
+        c.id,
+        ts_rank_cd(c.textsearch, plainto_tsquery('simple', ${safeQuery})) AS bscore
+      FROM "Chunk" c
+      JOIN "Document" d ON c."documentId" = d.id
+      ${where}
+      AND c.textsearch @@ plainto_tsquery('simple', ${safeQuery})
+      LIMIT ${fetchLimit}
+    ),
+    combined AS (
+      SELECT
+        COALESCE(v.id, b.id) AS id,
+        ${alpha}::float * COALESCE(v.vscore, 0::float)
+          + ${beta}::float * COALESCE(b.bscore, 0::float) AS score
+      FROM vector_scores v
+      FULL OUTER JOIN bm25_scores b ON v.id = b.id
+    )
     SELECT
-      c.id as "chunkId",
+      c.id              AS "chunkId",
       c.content,
       c."documentId",
-      d.title as "documentTitle",
+      d.title           AS "documentTitle",
       c."startChar",
       c."endChar",
-      c.embedding <=> ${embeddingString}::vector as score
-    FROM "Chunk" c
+      c.embedding::text AS "embeddingText",
+      combined.score    AS score
+    FROM combined
+    JOIN "Chunk" c    ON c.id = combined.id
     JOIN "Document" d ON c."documentId" = d.id
-    ${where}
-    ORDER BY score ASC
-    LIMIT ${limit}
-  `
+    ORDER BY combined.score DESC
+    LIMIT ${fetchLimit}
+  `)
 
-  return (results as Array<Record<string, unknown>>).map((r) => ({
+  const candidates: SearchResult[] = rows.map((r) => ({
     chunkId: r.chunkId as string,
     content: r.content as string,
     documentId: r.documentId as string,
     documentTitle: r.documentTitle as string,
-    score: 1 - parseFloat(String(r.score)),
+    score: parseFloat(String(r.score)),
     startChar: (r.startChar as number) || 0,
     endChar: (r.endChar as number) || 0,
+    embedding: parsePgVector(r.embeddingText as string),
   }))
+
+  const filtered = candidates.filter((c) => c.score >= minScore)
+  if (filtered.length <= limit) return filtered.map(stripEmbedding)
+
+  return mmrRank(queryEmbedding, filtered, limit, mmrLambda).map(stripEmbedding)
 }
 
-export async function rag(query: string, limit = 5, userId?: string) {
-  const results = await search(query, limit, userId)
+/** Distinct documents in a retrieval set (same shape as chat `ConverseSource` citations). */
+export type RagSource = Pick<SearchResult, 'chunkId' | 'documentId' | 'documentTitle' | 'score'>
+
+export async function rag(
+  query: string,
+  limit = DEFAULT_LIMIT,
+  userId?: string,
+  hydeModel?: LanguageModel,
+): Promise<{
+  query: string
+  results: SearchResult[]
+  context: string
+  sources: RagSource[]
+}> {
+  const results = await search(query, { limit, userId, hydeModel })
   const context = results.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n')
-  const sources = [
+  const sources: RagSource[] = [
     ...new Map(
-      results.map((r) => [r.documentId, { title: r.documentTitle, id: r.documentId }]),
+      results.map((r) => [
+        r.documentId,
+        {
+          chunkId: r.chunkId,
+          documentId: r.documentId,
+          documentTitle: r.documentTitle,
+          score: r.score,
+        } satisfies RagSource,
+      ]),
     ).values(),
   ]
   return { query, results, context, sources }
 }
 
-export async function inspect(query: string, limit = 5) {
+export async function inspect(query: string, limit = DEFAULT_LIMIT) {
   const t0 = Date.now()
-  const queryEmbedding = await generateEmbedding(query)
+  const queryEmbedding = await generateEmbedding(truncate(query, QUERY_MAX_CHARS))
   const tEmbed = Date.now()
-  const embeddingString = `[${queryEmbedding.join(',')}]`
-
-  const rows = await prisma.$queryRaw`
-    SELECT
-      c.id as "chunkId",
-      c.content,
-      c."documentId",
-      d.title as "documentTitle",
-      c."startChar",
-      c."endChar",
-      c.embedding <=> ${embeddingString}::vector as score
-    FROM "Chunk" c
-    JOIN "Document" d ON c."documentId" = d.id
-    ORDER BY score ASC
-    LIMIT ${limit}
-  `
+  const results = await search(query, { limit })
   const tRetrieve = Date.now()
 
-  const results: SearchResult[] = (rows as Array<Record<string, unknown>>).map((r) => ({
-    chunkId: r.chunkId as string,
-    content: r.content as string,
-    documentId: r.documentId as string,
-    documentTitle: r.documentTitle as string,
-    score: 1 - parseFloat(String(r.score)),
-    startChar: (r.startChar as number) || 0,
-    endChar: (r.endChar as number) || 0,
-  }))
-
   const context = results.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n')
-  const sources = [
+  const sources: RagSource[] = [
     ...new Map(
-      results.map((r) => [r.documentId, { title: r.documentTitle, id: r.documentId }]),
+      results.map((r) => [
+        r.documentId,
+        {
+          chunkId: r.chunkId,
+          documentId: r.documentId,
+          documentTitle: r.documentTitle,
+          score: r.score,
+        } satisfies RagSource,
+      ]),
     ).values(),
   ]
-
-  const systemPrompt = `You are a helpful assistant for the user's document knowledge base.
-Use ONLY the CONTEXT below to answer. If the context is empty or does not contain the answer, say clearly that the information was not found in their documents.
-Be concise. Match the language of the user's last message.
-
-CONTEXT:
-${context || '(no matching passages found)'}`
 
   return {
     query,
@@ -144,58 +228,7 @@ ${context || '(no matching passages found)'}`
     results,
     context,
     sources,
-    systemPrompt,
     latencyMs: { embed: tEmbed - t0, retrieve: tRetrieve - tEmbed, total: tRetrieve - t0 },
-  }
-}
-
-export async function generateChatReply(
-  systemPrompt: string,
-  history: { role: 'user' | 'assistant'; content: string }[],
-  timeoutMs?: number,
-): Promise<string> {
-  const cfg = getConfig()
-  const ms = Math.max(30_000, timeoutMs ?? cfg.ollamaChatTimeoutMs)
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), ms)
-  const ollama = createOllama(cfg.ollamaUrl, cfg.ollamaApiKey || undefined, controller.signal)
-
-  try {
-    const baseMessages = [{ role: 'system' as const, content: systemPrompt }, ...history]
-    const chat = await ollama.chat({
-      model: cfg.ollamaLlmModel,
-      messages: baseMessages,
-      options: { num_predict: 384 },
-    })
-    const first = chat.message?.content?.trim()
-    if (first) return first
-
-    const retry = await ollama.chat({
-      model: cfg.ollamaLlmModel,
-      messages: [
-        ...baseMessages,
-        { role: 'user' as const, content: 'Respond with at least one concise sentence. If context is insufficient, say so clearly.' },
-      ],
-      options: { num_predict: 256 },
-    })
-    const second = retry.message?.content?.trim()
-    if (second) return second
-
-    return 'No pude generar una respuesta en este intento. Intenta de nuevo.'
-  } catch (err: unknown) {
-    const e = err as Error & { name?: string }
-    if (e?.name === 'AbortError') {
-      throw createError({
-        statusCode: 503,
-        statusMessage: `The model took longer than ${Math.round(ms / 1000)}s (timeout). Increase OLLAMA_CHAT_TIMEOUT_MS or use a smaller/faster model.`,
-      })
-    }
-    throw createError({
-      statusCode: 503,
-      statusMessage: `Could not reach the language model (${cfg.ollamaLlmModel}). Is Ollama running and is the model pulled?`,
-    })
-  } finally {
-    clearTimeout(timer)
   }
 }
 
@@ -204,6 +237,9 @@ export async function logRagQuery(input: {
   responseText: string | null
   results: SearchResult[]
   latencyMs: number
+  userId?: string
+  conversationId?: string
+  toolCalled?: boolean
 }): Promise<void> {
   try {
     const sources: Prisma.InputJsonValue = input.results.map((r) => ({
@@ -218,47 +254,71 @@ export async function logRagQuery(input: {
         responseText: input.responseText,
         sources,
         latencyMs: input.latencyMs,
+        userId: input.userId ?? null,
+        conversationId: input.conversationId ?? null,
+        toolCalled: input.toolCalled ?? false,
       },
     })
   } catch {
-    /* telemetry must not break user flow */
+    /* telemetry must never break user flow */
   }
 }
 
-export async function converse(input: ConverseInput) {
-  const { messages, limit = 8 } = input
-  if (!messages?.length) throw createError({ statusCode: 400, statusMessage: 'messages is required' })
+// ─── helpers ────────────────────────────────────────────────────────────────
 
-  const lastUser = [...messages].reverse().find((m) => m.role === 'user')
-  if (!lastUser?.content?.trim()) {
-    throw createError({ statusCode: 400, statusMessage: 'At least one user message with content is required' })
+function stripEmbedding(r: SearchResult): SearchResult {
+  const { embedding: _e, ...rest } = r
+  return rest
+}
+
+function parsePgVector(text: string): number[] {
+  if (!text) return []
+  const trimmed = text.trim().replace(/^\[/, '').replace(/\]$/, '')
+  if (!trimmed) return []
+  const out: number[] = []
+  for (const piece of trimmed.split(',')) {
+    const n = parseFloat(piece)
+    if (Number.isFinite(n)) out.push(n)
   }
+  return out
+}
 
-  const startedAt = Date.now()
-  const queryText = lastUser.content.trim()
-  const { context, sources, results } = await rag(queryText, limit, input.userId)
+function cosineSim(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) return 0
+  let dot = 0, na = 0, nb = 0
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i]
+    na  += a[i] * a[i]
+    nb  += b[i] * b[i]
+  }
+  const denom = Math.sqrt(na) * Math.sqrt(nb)
+  return denom === 0 ? 0 : dot / denom
+}
 
-  const rawContext = context || '(no matching passages found)'
-  const ctxBlock =
-    rawContext.length > 20_000
-      ? `${rawContext.slice(0, 20_000)}\n…[context truncated]`
-      : rawContext
-
-  const system = `You are a helpful assistant for the user's document knowledge base.
-Use ONLY the CONTEXT below to answer. If the context is empty or does not contain the answer, say clearly that the information was not found in their documents.
-Be concise. Match the language of the user's last message.
-
-CONTEXT:
-${ctxBlock}`
-
-  const history = messages
-    .filter((m) => m.role === 'user' || m.role === 'assistant')
-    .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
-
-  const reply = await generateChatReply(system, history)
-  const finalReply = reply || '(empty response)'
-
-  await logRagQuery({ queryText, responseText: finalReply, results, latencyMs: Date.now() - startedAt })
-
-  return { reply: finalReply, sources, results }
+function mmrRank(
+  queryVec: number[],
+  candidates: SearchResult[],
+  k: number,
+  lambda: number,
+): SearchResult[] {
+  const picked: SearchResult[] = []
+  const remaining = [...candidates]
+  while (picked.length < k && remaining.length > 0) {
+    let bestIdx = 0
+    let bestScore = -Infinity
+    for (let i = 0; i < remaining.length; i++) {
+      const r = remaining[i]
+      const rel = r.embedding ? cosineSim(queryVec, r.embedding) : r.score
+      let maxSimToPicked = 0
+      for (const p of picked) {
+        if (!r.embedding || !p.embedding) continue
+        const s = cosineSim(r.embedding, p.embedding)
+        if (s > maxSimToPicked) maxSimToPicked = s
+      }
+      const mmr = lambda * rel - (1 - lambda) * maxSimToPicked
+      if (mmr > bestScore) { bestScore = mmr; bestIdx = i }
+    }
+    picked.push(remaining.splice(bestIdx, 1)[0])
+  }
+  return picked
 }

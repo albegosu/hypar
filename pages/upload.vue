@@ -69,6 +69,12 @@
         </select>
       </div>
 
+      <div v-if="uploadError" class="wz-panel px-3 py-2 text-xs flex items-start gap-2" style="border-color: var(--term-error, #f87171);">
+        <span style="color: var(--term-error, #f87171);">⚠</span>
+        <span class="wz-muted flex-1">{{ uploadError }}</span>
+        <button type="button" class="wz-btn-ghost text-[10px]" @click="uploadError = null">✕</button>
+      </div>
+
       <button
         type="button"
         class="wz-btn-primary w-full justify-center"
@@ -126,6 +132,12 @@
         </button>
       </div>
 
+      <div v-if="uploadError" class="wz-panel px-3 py-2 text-xs flex items-start gap-2" style="border-color: var(--term-error, #f87171);">
+        <span style="color: var(--term-error, #f87171);">⚠</span>
+        <span class="wz-muted flex-1">{{ uploadError }}</span>
+        <button type="button" class="wz-btn-ghost text-[10px]" @click="uploadError = null">✕</button>
+      </div>
+
       <button
         v-if="selectedFile"
         type="button"
@@ -133,13 +145,13 @@
         :disabled="uploading"
         @click="submitFile"
       >
-        {{ uploading ? '…' : `${t('upload.uploadFile')} ▶` }}
+        {{ uploadStatus || `${t('upload.uploadFile')} ▶` }}
       </button>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -148,8 +160,19 @@ const router = useRouter()
 
 const activeTab = ref(0)
 const uploading = ref(false)
-const selectedFile = ref(null)
-const fileInput = ref(null)
+const uploadStatus = ref('')
+const uploadError = ref<string | null>(null)
+const selectedFile = ref<File | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+function extractErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>
+    if (typeof e.statusMessage === 'string') return e.statusMessage
+    if (typeof e.message === 'string') return e.message
+  }
+  return String(err) || 'Unknown error'
+}
 
 const form = reactive({
   title: '',
@@ -157,37 +180,73 @@ const form = reactive({
   sourceType: 'text',
 })
 
-function handleFileChange(event) {
-  const file = event.target.files[0]
+function handleFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
   if (file) selectedFile.value = file
 }
 
 async function submitText() {
   uploading.value = true
+  uploadStatus.value = t('upload.saving')
+  uploadError.value = null
   try {
-    await store.createDocument({
+    const { documentId, runId } = await store.createDocument({
       title: form.title,
       content: form.content,
       sourceType: form.sourceType,
     })
+    uploadStatus.value = t('upload.processing')
+    let status = 'processing'
+    while (status !== 'ready' && status !== 'completed' && status !== 'failed') {
+      await new Promise((r) => setTimeout(r, 1500))
+      const poll = await $fetch<{ status: string }>(
+        `/api/documents/${documentId}/ingest-status?runId=${encodeURIComponent(runId)}`,
+      )
+      status = poll.status
+    }
+    if (status === 'failed') {
+      uploadError.value = t('upload.errorIngestion')
+      return
+    }
     router.push('/documents')
+  } catch (err) {
+    uploadError.value = extractErrorMessage(err)
   } finally {
     uploading.value = false
+    uploadStatus.value = ''
   }
 }
 
 async function submitFile() {
   if (!selectedFile.value) return
   uploading.value = true
+    uploadStatus.value = t('upload.uploading')
+  uploadError.value = null
   try {
-    await store.uploadFile(selectedFile.value)
+    const { documentId, runId } = await store.uploadFile(selectedFile.value)
+    uploadStatus.value = t('upload.processing')
+    let status = 'processing'
+    // API uses ingestStatus 'ready' on success (not 'completed').
+    while (status !== 'ready' && status !== 'completed' && status !== 'failed') {
+      await new Promise(r => setTimeout(r, 1500))
+      const poll = await $fetch<{ status: string }>(`/api/documents/${documentId}/ingest-status?runId=${encodeURIComponent(runId)}`)
+      status = poll.status
+    }
+    if (status === 'failed') {
+      uploadError.value = t('upload.errorIngestion')
+      return
+    }
     router.push('/documents')
+  } catch (err) {
+    uploadError.value = extractErrorMessage(err)
   } finally {
     uploading.value = false
+    uploadStatus.value = ''
   }
 }
 
-function formatFileSize(bytes) {
+function formatFileSize(bytes: number) {
   if (bytes === 0) return '0 Bytes'
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']

@@ -1,4 +1,4 @@
-import { Level, Challenge } from '../types';
+import type { Level, Challenge } from '../types';
 
 /**
  * LEVEL 2: Text Chunking Strategies

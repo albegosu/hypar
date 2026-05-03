@@ -35,7 +35,7 @@ services:
         ollama serve &
         sleep 5
         ollama pull ${OLLAMA_MODEL:-nomic-embed-text}
-        ollama pull ${OLLAMA_LLM_MODEL:-tinyllama}
+        ollama pull ${OLLAMA_LLM_MODEL:-llama3.1:8b}
         tail -f /dev/null
       "
     healthcheck:
@@ -62,8 +62,8 @@ services:
       NUXT_OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
       NUXT_OLLAMA_MODEL: ${OLLAMA_MODEL:-nomic-embed-text}
-      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-tinyllama}
-      NUXT_OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-tinyllama}
+      OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b}
+      NUXT_OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-llama3.1:8b}
       OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
       NUXT_OLLAMA_CHAT_TIMEOUT_MS: ${OLLAMA_CHAT_TIMEOUT_MS:-180000}
       OLLAMA_PLANNER_TIMEOUT_MS: ${OLLAMA_PLANNER_TIMEOUT_MS:-60000}
@@ -80,21 +80,33 @@ services:
       NUXT_MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
       MEMORY_PROACTIVE: ${MEMORY_PROACTIVE:-true}
       NUXT_MEMORY_PROACTIVE: ${MEMORY_PROACTIVE:-true}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      NUXT_ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      WORKFLOW_LOCAL_DATA_DIR: /app/data/workflow
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: 3000
     ports:
       - "${PORT:-3000}:3000"
+    volumes:
+      - workflow_data:/app/data/workflow
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - rag-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q '\"status\":\"ok\"' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     profiles: ["full", "all"]
 
 volumes:
   postgres_data:
   ollama_data:
+  workflow_data:
 
 networks:
   rag-network:

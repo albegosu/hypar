@@ -17,14 +17,33 @@ A production-ready full-stack application for **Retrieval-Augmented Generation (
 - **Semantic Search** — vector similarity search with pgvector
 - **RAG Mode** — context-aware AI responses with source citations
 - **Conversational AI** — multi-turn dialogue with per-user memory
-- **Agent Planner** — automatically routes queries to KB or direct reply
+- **Agentic Chat** — AI SDK tool-calling routes queries to KB or replies directly; token-by-token streaming
 - **Memory Commands** — `/remember`, `/forget`, `/memory clear`
 
 ### Document Management
-- **Multi-format** — Text, Markdown, PDF upload
-- **Smart Chunking** — 800-char chunks with 100-char overlap
+- **Multi-format** — Text, Markdown, PDF upload (MIME-validated, 10 MB limit)
+- **Token-aware Chunking** — ~400 tokens per chunk, 60-token overlap (`js-tiktoken` cl100k_base)
 - **Multi-provider Embeddings** — Google Gemini (free) > OpenAI > Ollama
+- **Async ingestion** — durable workflow + transactional persistence + retries on embed failures
+- **Visible status** — every document has `pending`/`processing`/`ready`/`failed` + `chunkCount`
 - **Reprocessing** — update embeddings on demand
+
+### Retrieval quality
+- **MMR re-ranking** — over-fetch K×3 then diversify with Maximal Marginal Relevance
+- **Score threshold** — drop matches below 0.2 cosine similarity
+- **Source citations** — `[1]`, `[2]` aligned with returned passages, persisted on every assistant message
+- **Per-user memory scope** — chat memories are user-scoped; uploads are global
+
+### Persistence & history
+- **Conversations + Messages tables** — chat history survives reloads, browser closes, devices
+- **Audit trail** — every query logs which chunks were retrieved (`Query.sources`, `Query.toolCalled`)
+
+### Safety & ops
+- **Rate-limit middleware** — chat 30/min, upload 10/min per (IP+userId)
+- **Admin auth** — endpoints return 401 unconditionally if `ADMIN_API_KEY` is not set
+- **Strict input validation** — Zod schemas + 64KB/part chat message cap
+- **Eval harness** — `pnpm eval` reports hit-rate, MRR, p50/p95 latency over `evals/golden.jsonl`
+- **Tests** — `pnpm test` (vitest) covers chunking, text utils, agent commands
 
 ### RAG Learning Quest (`/learn`)
 - **3 Levels** — Embeddings, Chunking, Vector Database
@@ -43,18 +62,21 @@ Everything runs as a **single Nuxt 3 app** on port 3000. The frontend and backen
 │            Nuxt 3  (port 3000)           │
 │                                          │
 │  pages/          server/api/             │
-│  ├── /           ├── documents/          │
-│  ├── /documents  ├── search/             │
-│  ├── /upload     ├── agent/              │
+│  ├── /           ├── chat.post.ts        │
+│  ├── /documents  ├── documents/          │
+│  ├── /upload     ├── search/             │
 │  └── /learn/*    └── admin/              │
 │                                          │
 │  server/utils/                           │
 │  ├── prisma.ts (pgvector)                │
-│  ├── embedding.ts (Gemini/OpenAI/Ollama) │
+│  ├── embedding.ts (AI SDK providers)     │
 │  ├── chunking.ts                         │
 │  ├── documents.service.ts                │
 │  ├── search.service.ts                   │
-│  └── agent.service.ts                    │
+│  └── agent.service.ts (AI SDK tools)     │
+│                                          │
+│  server/workflows/                       │
+│  └── ingest-document.ts (Workflow SDK)   │
 └──────────────────────────────────────────┘
          │                    │
          ▼                    ▼
@@ -64,15 +86,47 @@ Everything runs as a **single Nuxt 3 app** on port 3000. The frontend and backen
 ### RAG Pipeline
 
 ```
-INGESTION
-  Upload → Chunk (800 chars) → Embed (768 dims) → Store (pgvector)
+INGESTION (async, durable, transactional)
+  Upload → Workflow SDK job:
+    parseChunks (≈400 tokens, 60 overlap)
+    → embedChunks (3 retries, exp. backoff)
+    → persistChunks (one transaction, cascades on failure)
+    → markStatus (Document.ingestStatus = ready | failed)
+  Returns runId immediately; poll /api/documents/:id/ingest-status
 
 RETRIEVAL
-  Query → Embed → Cosine Search → Top-K Chunks
+  Query → embed → pgvector cosine ANN (HNSW) → fetch K×3
+        → drop < minScore (0.2)
+        → MMR diversify (λ=0.7)
+        → top K
 
-GENERATION
-  Chunks + Query → LLM (Ollama) → Response + Sources
+GENERATION (streaming)
+  AI SDK tool call: searchKnowledgeBase →
+    chunks accumulated in a per-request bucket →
+    streamText with citation instructions →
+    onFinish: persist Message + Query.sources for audit
 ```
+
+### Recommended models
+
+The default (`OLLAMA_LLM_MODEL=tinyllama`) keeps the stack runnable on a laptop
+but **does not reliably tool-call** — the agent will often answer without ever
+querying the knowledge base. For a useful experience switch to a model that
+supports tool calling:
+
+```bash
+# In .env
+OLLAMA_LLM_MODEL=qwen2.5:7b-instruct  # or llama3.1:8b
+```
+
+Embeddings (`nomic-embed-text`, 768 dims) work well as-is.
+
+### Admin endpoints
+
+`/api/admin/stats` and `/api/admin/queries` are **disabled by default**. To
+enable them set `ADMIN_API_KEY` in `.env` and pass it as
+`Authorization: Bearer <key>` (or `x-admin-key: <key>`). With the key unset
+both endpoints return 401 — they will never be silently public.
 
 ---
 
@@ -86,7 +140,9 @@ GENERATION
 | ORM | Prisma 7 + `@prisma/adapter-pg` |
 | Database | PostgreSQL 16 + pgvector |
 | Embeddings | Google Gemini / OpenAI / Ollama |
-| LLM | Ollama (local or cloud) |
+| LLM | Ollama (local or cloud) — via OpenAI-compat endpoint |
+| LLM / Chat SDK | Vercel AI SDK (`ai`, `@ai-sdk/vue`, `@ai-sdk/google`, `@ai-sdk/openai`) |
+| Ingestion | Vercel Workflow SDK (`workflow`) — durable, per-step retries |
 | Code Editor | Monaco Editor (learning only) |
 | Runtime | Node.js 20 |
 
@@ -196,6 +252,12 @@ OLLAMA_MODEL=nomic-embed-text
 # Memory
 MEMORY_SCOPE=local_per_user   # local_per_user | global | disabled
 MEMORY_PROACTIVE=true
+
+# Workflow SDK — durable document ingestion
+WORKFLOW_LOCAL_DATA_DIR=./data/workflow   # file-based state store
+
+# Admin endpoints (optional — leave empty to keep open for local use)
+# ADMIN_API_KEY=change_me
 ```
 
 ---
@@ -207,27 +269,29 @@ All endpoints are under `/api/` (same origin, no CORS needed).
 ### Documents
 
 ```http
-GET    /api/documents               # list documents
-POST   /api/documents               # create from text/markdown
-POST   /api/documents/upload        # upload PDF/TXT/MD (multipart, max 10MB)
-GET    /api/documents/:id           # get document + chunks
-DELETE /api/documents/:id           # delete document
-POST   /api/documents/:id/reprocess # re-embed document
+GET    /api/documents                         # list documents
+POST   /api/documents                         # create from text/markdown
+POST   /api/documents/upload                  # upload PDF/TXT/MD (multipart, max 10MB)
+                                              # returns { documentId, runId, status: 'processing' }
+GET    /api/documents/:id                     # get document + chunks
+DELETE /api/documents/:id                     # delete document
+POST   /api/documents/:id/reprocess           # re-embed (async) — returns { runId, status: 'processing' }
+GET    /api/documents/:id/ingest-status?runId # poll workflow run status
+```
+
+### Chat (streaming)
+
+```http
+POST /api/chat           # streaming agentic chat (AI SDK UIMessageStream)
+                         # body: { messages, userId?, limit? }
 ```
 
 ### Search
 
 ```http
 POST /api/search         # semantic vector search
-POST /api/search/rag     # RAG query (search + LLM response)
-POST /api/search/converse  # multi-turn chat with history
-POST /api/search/inspect   # embedding debug + latency info
-```
-
-### Agent
-
-```http
-POST /api/agent/chat     # agentic chat with planner + memory
+POST /api/search/rag     # RAG query (search only, no LLM)
+POST /api/search/inspect # embedding debug + latency info
 ```
 
 ### Admin
@@ -270,20 +334,23 @@ from-zero-rag/
 │   └── wizard/
 └── server/
     ├── api/                # h3 route handlers
+    │   ├── chat.post.ts    # streaming agentic chat (AI SDK)
     │   ├── documents/
     │   ├── search/
-    │   ├── agent/
     │   └── admin/
+    ├── workflows/
+    │   └── ingest-document.ts  # durable ingest (Workflow SDK)
     ├── utils/              # services + singletons
     │   ├── prisma.ts
-    │   ├── embedding.ts
+    │   ├── embedding.ts    # AI SDK embed/embedMany (Google/OpenAI/Ollama)
     │   ├── chunking.ts
-    │   ├── ollama.ts
+    │   ├── ollama.ts       # URL normalisation helper
     │   ├── documents.service.ts
     │   ├── search.service.ts
-    │   └── agent.service.ts
+    │   └── agent.service.ts    # AI SDK streamText + tool definitions
     └── plugins/
-        └── prisma.ts       # disconnect on shutdown
+        ├── prisma.ts       # disconnect on shutdown
+        └── workflow-init.ts # mkdir WORKFLOW_LOCAL_DATA_DIR on boot
 ```
 
 ---
