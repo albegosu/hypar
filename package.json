@@ -9,6 +9,7 @@
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
+    "docs:build": "vitepress build docs",
     "postinstall": "nuxt prepare && prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",

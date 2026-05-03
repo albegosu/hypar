@@ -1,9 +1,17 @@
 import { defineConfig } from 'vitepress'
 
+/** GitHub Pages project site: set in CI (e.g. `/from-zero-rag/`). Local dev: omit or `/`. */
+function vitepressBase(): string {
+  const raw = process.env.VITEPRESS_BASE?.trim()
+  if (!raw || raw === '/') return '/'
+  const withLeading = raw.startsWith('/') ? raw : `/${raw}`
+  return withLeading.endsWith('/') ? withLeading : `${withLeading}/`
+}
+
 export default defineConfig({
   title: 'fragua',
   description: 'Production-ready Retrieval-Augmented Generation app built with Nuxt 3, pgvector and the Vercel AI SDK.',
-  base: '/',
+  base: vitepressBase(),
 
   /** Localhost and legacy archive URLs are intentional in prose. */
   ignoreDeadLinks: [/^http:\/\/localhost/, /^http:\/\/127\.0\.0\.1/],
