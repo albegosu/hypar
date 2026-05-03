@@ -38,15 +38,18 @@ jobs:
           node-version: '20'
           cache: pnpm
 
+      # Do not use static_site_generator: nuxt — it writes Nuxt 2-only keys into nuxt.config.js and breaks Nuxt 3 + nuxt.config.ts.
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v5
-        with:
-          static_site_generator: nuxt
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Static export (Nuxt generate)
+        env:
+          # Project Pages URL is /repo-name/; empty base_path = site served at domain root.
+          NUXT_APP_BASE_URL: ${{ steps.pages.outputs.base_path }}/
         run: pnpm run generate
 
       - name: Upload artifact

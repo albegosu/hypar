@@ -1,7 +1,17 @@
 import 'dotenv/config'
 
+/** GitHub Pages project sites use a subpath; NUXT_APP_BASE_URL is set in CI (see .github/workflows/pages.yml). */
+const pagesSubpath =
+  Boolean(process.env.NUXT_APP_BASE_URL?.trim()) &&
+  process.env.NUXT_APP_BASE_URL !== '/' &&
+  process.env.NUXT_APP_BASE_URL !== ''
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
+  experimental: {
+    // Subpath static hosting: prerender can 404 on app manifest paths (nuxt/nuxt#30367).
+    ...(pagesSubpath ? { appManifest: false as const } : {}),
+  },
   devtools: { enabled: true },
 
   modules: [
