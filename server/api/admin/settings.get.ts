@@ -1,7 +1,7 @@
 import { requireAdmin } from '../../utils/admin-auth'
 import { getSettings } from '../../utils/settings.service'
 
-const VALID_CATEGORIES = ['embeddings', 'chunking', 'search', 'rag', 'general']
+const VALID_CATEGORIES = ['apis', 'vectorDb', 'embeddings', 'chunking', 'search', 'rag', 'general']
 
 export default defineEventHandler(async (event) => {
   requireAdmin(event)

@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { step3, step4, step5, step6 } from '~/utils/learning/wizard/wizard-steps'
+import { step1, step2, step3, step4, step5, step6 } from '~/utils/learning/wizard/wizard-steps'
 
 const { t } = useI18n()
 
@@ -87,7 +87,7 @@ const authError = ref('')
 const authed = ref(false)
 const adminToken = ref('')
 
-const activeTab = ref('embeddings')
+const activeTab = ref('apis')
 const saving = ref(false)
 const saveStatus = ref<{ ok: boolean; message: string } | null>(null)
 
@@ -98,6 +98,8 @@ const formValues = ref<Record<string, unknown>>({})
 const loadedValues = ref<Record<string, Record<string, unknown>>>({})
 
 const tabs = [
+  { id: 'apis', step: step1 },
+  { id: 'vectorDb', step: step2 },
   { id: 'embeddings', step: step3 },
   { id: 'chunking', step: step4 },
   { id: 'search', step: step5 },

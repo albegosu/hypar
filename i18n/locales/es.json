@@ -111,6 +111,8 @@
     "save": "[ guardar ]",
     "saving": "[ guardando… ]",
     "tabs": {
+      "apis": "[ apis ]",
+      "vectorDb": "[ vector db ]",
       "embeddings": "[ embeddings ]",
       "chunking": "[ chunking ]",
       "search": "[ búsqueda ]",
