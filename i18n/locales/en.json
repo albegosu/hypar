@@ -9,7 +9,8 @@
     "upload": "upload",
     "add": "add",
     "back": "back",
-    "learn": "learn"
+    "learn": "learn",
+    "settings": "settings"
   },
   "chat": {
     "title": "chat with your knowledge base",
@@ -96,6 +97,29 @@
     "uploading": "Uploading…",
     "processing": "Processing…",
     "errorIngestion": "Processing failed. Try re-chunking from the document page."
+  },
+  "settings": {
+    "title": "// runtime settings",
+    "subtitle": "Overrides .env values without restart. Priority: DB > .env > default.",
+    "authTitle": "// ADMIN_API_KEY required",
+    "tokenPlaceholder": "Enter ADMIN_API_KEY…",
+    "unlock": "[ unlock ]",
+    "lock": "[ lock ]",
+    "errorEmpty": "Token cannot be empty.",
+    "errorInvalid": "Invalid token or server error.",
+    "reset": "[ reset to .env ]",
+    "save": "[ save ]",
+    "saving": "[ saving… ]",
+    "tabs": {
+      "embeddings": "[ embeddings ]",
+      "chunking": "[ chunking ]",
+      "search": "[ search ]",
+      "rag": "[ rag ]"
+    },
+    "savedOk": "✓ {tab} saved — active immediately",
+    "savedFail": "✗ Save failed. Check your token and try again.",
+    "resetOk": "✓ Reset to .env — DB overrides cleared",
+    "resetFail": "✗ Reset failed."
   },
   "common": {
     "loading": "loading…",

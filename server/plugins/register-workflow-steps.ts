@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { registerStepFunction } from 'workflow/internal/private'
 import type { Chunk } from '../utils/chunking'
-import { splitIntoChunks } from '../utils/chunking'
+import { splitIntoChunks, getChunkConfig } from '../utils/chunking'
 import { generateEmbeddings } from '../utils/embedding'
 import { prisma } from '../utils/prisma'
 import { stripNul } from '../utils/text'
@@ -11,7 +11,7 @@ const NS = 'step//./server/workflows/ingest-document'
 
 export default defineNitroPlugin(() => {
   registerStepFunction(`${NS}//parseChunks`, async (content: string): Promise<Chunk[]> => {
-    return splitIntoChunks(content)
+    return splitIntoChunks(content, await getChunkConfig())
   })
 
   registerStepFunction(

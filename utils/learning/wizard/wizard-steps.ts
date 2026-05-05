@@ -373,14 +373,14 @@ export const step5: WizardStep = {
 
   configFields: [
     { id: 'topK', label: 'SEARCH_TOP_K', type: 'number', envKey: 'SEARCH_TOP_K', defaultValue: 5, min: 1, max: 50, required: true },
-    { id: 'similarityThreshold', label: 'SEARCH_THRESHOLD', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.7, min: 0, max: 1, step: 0.05 },
+    { id: 'similarityThreshold', label: 'SEARCH_THRESHOLD', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.2, min: 0, max: 1, step: 0.05 },
     { id: 'useHybridSearch', label: 'SEARCH_HYBRID', type: 'checkbox', envKey: 'SEARCH_HYBRID', advanced: true, defaultValue: false, helpText: 'combine vector + keyword' },
     { id: 'rerankResults', label: 'SEARCH_RERANK', type: 'checkbox', envKey: 'SEARCH_RERANK', advanced: true, defaultValue: false, helpText: 'second-pass scoring' },
   ],
 
   envSnippet: (cfg) => `# Similarity search
 SEARCH_TOP_K=${get(cfg, 'search', 'topK', 5)}
-SEARCH_THRESHOLD=${get(cfg, 'search', 'similarityThreshold', 0.7)}
+SEARCH_THRESHOLD=${get(cfg, 'search', 'similarityThreshold', 0.2)}
 SEARCH_HYBRID=${get(cfg, 'search', 'useHybridSearch', false)}
 SEARCH_RERANK=${get(cfg, 'search', 'rerankResults', false)}`,
 
