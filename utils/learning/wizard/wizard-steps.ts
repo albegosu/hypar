@@ -255,8 +255,8 @@ export const step3: WizardStep = {
   keyBenefits: ['wizard.steps.embeddings.benefits.0', 'wizard.steps.embeddings.benefits.1', 'wizard.steps.embeddings.benefits.2', 'wizard.steps.embeddings.benefits.3'],
 
   configFields: [
-    { id: 'batchSize', label: 'EMBEDDING_BATCH_SIZE', type: 'number', envKey: 'EMBEDDING_BATCH_SIZE', advanced: true, defaultValue: 32, min: 1, max: 256 },
-    { id: 'cacheEnabled', label: 'cache', type: 'checkbox', envKey: 'EMBEDDING_CACHE_ENABLED', advanced: true, defaultValue: true, helpText: 'cache repeated queries' },
+    { id: 'batchSize', label: 'EMBEDDING_BATCH_SIZE', type: 'number', envKey: 'EMBEDDING_BATCH_SIZE', defaultValue: 32, min: 1, max: 256 },
+    { id: 'cacheEnabled', label: 'cache', type: 'checkbox', envKey: 'EMBEDDING_CACHE_ENABLED', defaultValue: true, helpText: 'cache repeated queries' },
     { id: 'cacheTtlSeconds', label: 'EMBEDDING_CACHE_TTL', type: 'number', envKey: 'EMBEDDING_CACHE_TTL', advanced: true, defaultValue: 3600, min: 0, max: 604800, unit: 'sec', dependsOn: { field: 'cacheEnabled', equals: true } },
     { id: 'retryAttempts', label: 'EMBEDDING_RETRY_ATTEMPTS', type: 'number', envKey: 'EMBEDDING_RETRY_ATTEMPTS', advanced: true, defaultValue: 3, min: 0, max: 10 },
   ],
