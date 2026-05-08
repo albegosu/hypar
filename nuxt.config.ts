@@ -65,6 +65,28 @@ export default defineNuxtConfig({
     mistralApiKey: process.env.MISTRAL_API_KEY ?? '',
     mistralModel: process.env.MISTRAL_MODEL ?? 'mistral-medium-latest',
     openaiLlmModel: process.env.OPENAI_LLM_MODEL ?? 'gpt-4.1-mini',
+    // Step 3 - Embeddings
+    embeddingBatchSize: Number(process.env.EMBEDDING_BATCH_SIZE ?? 32),
+    embeddingCacheEnabled: process.env.EMBEDDING_CACHE_ENABLED !== 'false',
+    embeddingCacheTtl: Number(process.env.EMBEDDING_CACHE_TTL ?? 3600),
+    embeddingRetryAttempts: Number(process.env.EMBEDDING_RETRY_ATTEMPTS ?? 3),
+    // Step 4 - Chunking
+    chunkSize: Number(process.env.CHUNK_SIZE ?? 400),
+    chunkOverlap: Number(process.env.CHUNK_OVERLAP ?? 60),
+    chunkStrategy: process.env.CHUNK_STRATEGY ?? 'sentence-aware',
+    maxDocSizeMb: Number(process.env.MAX_DOC_SIZE_MB ?? 10),
+    allowedFormats: process.env.ALLOWED_FORMATS ?? 'pdf,md,txt',
+    // Step 5 - Search
+    searchTopK: Number(process.env.SEARCH_TOP_K ?? 5),
+    searchThreshold: Number(process.env.SEARCH_THRESHOLD ?? 0.2),
+    searchHybrid: process.env.SEARCH_HYBRID === 'true',
+    searchRerank: process.env.SEARCH_RERANK === 'true',
+    // Step 6 - RAG
+    ragTemperature: Number(process.env.RAG_TEMPERATURE ?? 0.3),
+    ragCitations: process.env.RAG_CITATIONS !== 'false',
+    ragMaxContext: Number(process.env.RAG_MAX_CONTEXT ?? 4096),
+    ragResponseLang: process.env.RAG_RESPONSE_LANG ?? 'auto',
+    ragSystemPrompt: process.env.RAG_SYSTEM_PROMPT ?? '',
     // App
     memoryScope: process.env.MEMORY_SCOPE ?? 'local_per_user',
     memoryProactive: process.env.MEMORY_PROACTIVE === 'true',

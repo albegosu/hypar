@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../utils/prisma'
-import { splitIntoChunks, type Chunk } from '../utils/chunking'
+import { splitIntoChunks, getChunkConfig, type Chunk } from '../utils/chunking'
 import { generateEmbeddings } from '../utils/embedding'
 import { stripNul } from '../utils/text'
 
@@ -35,7 +35,7 @@ export async function ingestDocument(documentId: string, content: string): Promi
 
 export async function parseChunks(content: string): Promise<Chunk[]> {
   'use step'
-  return splitIntoChunks(content)
+  return splitIntoChunks(content, await getChunkConfig())
 }
 
 export async function embedChunksWithRetry(texts: string[]): Promise<number[][]> {

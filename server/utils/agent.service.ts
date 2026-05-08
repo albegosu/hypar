@@ -14,6 +14,7 @@ import { createMistral } from '@ai-sdk/mistral'
 import { z } from 'zod'
 import { normalizeOllamaNativeHost } from './ollama'
 import { rag, logRagQuery, type SearchResult } from './search.service'
+import { getSetting, getNumericSetting, getBoolSetting } from './settings.service'
 import {
   createChatMemory,
   deleteChatMemories,
@@ -21,7 +22,7 @@ import {
 import { truncate } from './text'
 import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-commands'
 
-function getRuntimeCfg() {
+function getLlmCfg() {
   const config = useRuntimeConfig()
   return {
     llmProvider: (config.llmProvider as string) || '',
@@ -38,8 +39,26 @@ function getRuntimeCfg() {
   }
 }
 
+async function getRagCfg() {
+  const config = useRuntimeConfig()
+  const [tempStr, citationsStr, maxCtxStr, langStr, promptStr] = await Promise.all([
+    getSetting('RAG_TEMPERATURE', String(config.ragTemperature ?? 0.3)),
+    getSetting('RAG_CITATIONS', String(config.ragCitations ?? true)),
+    getSetting('RAG_MAX_CONTEXT', String(config.ragMaxContext ?? 4096)),
+    getSetting('RAG_RESPONSE_LANG', String(config.ragResponseLang ?? 'auto')),
+    getSetting('RAG_SYSTEM_PROMPT', String(config.ragSystemPrompt ?? '')),
+  ])
+  return {
+    ragTemperature: getNumericSetting(tempStr, 0.3),
+    ragCitations: getBoolSetting(citationsStr, true),
+    ragMaxContext: Math.max(512, getNumericSetting(maxCtxStr, 4096)),
+    ragResponseLang: langStr || 'auto',
+    ragSystemPrompt: promptStr,
+  }
+}
+
 export function getLlmModel(): LanguageModel {
-  const cfg = getRuntimeCfg()
+  const cfg = getLlmCfg()
 
   // Explicit provider via LLM_PROVIDER env var; fall back to API key presence
   const provider = cfg.llmProvider
@@ -81,8 +100,10 @@ function buildKbTools(
   userId: string | undefined,
   limit: number,
   bucket: SearchResult[],
-  hydeModel?: LanguageModel,
+  hydeModel: LanguageModel | undefined,
+  ragCfg: Awaited<ReturnType<typeof getRagCfg>>,
 ): ToolSet {
+  const cfg = ragCfg
   return {
     searchKnowledgeBase: tool({
       description:
@@ -96,9 +117,10 @@ function buildKbTools(
         const safeQuery = truncate(query.trim(), 512)
         const { results, sources, context } = await rag(safeQuery, limit, userId, hydeModel)
         for (const r of results) bucket.push(r)
+        const truncatedContext = truncate(context || '(no matching passages found)', cfg.ragMaxContext)
         return {
-          context: context || '(no matching passages found)',
-          sources,
+          context: truncatedContext,
+          sources: cfg.ragCitations ? sources : [],
           results,
           count: results.length,
         }
@@ -120,14 +142,19 @@ export async function agentStreamText(
 ): Promise<StreamTextResult<ToolSet, never>> {
   const { messages, userId, retrievedChunks } = input
   const limit = input.limit ?? 8
+  const cfg = await getRagCfg()
 
-  const system = `You are a helpful assistant for a personal RAG application.
+  const defaultSystem = `You are a helpful assistant for a personal RAG application.
 - Identity: You are only this app's RAG helper over the user's own documents and memories. Do not say you are Claude, ChatGPT, Gemini, Copilot, or any other vendor product, and do not claim you were created by Anthropic, OpenAI, Google, etc. If asked who you are or which model you are, answer briefly that you are the local assistant for this knowledge base and that you do not expose vendor or SDK branding; if you truly do not know the underlying weights, say so briefly instead of inventing a name.
 - The user has uploaded documents and may have stored personal memories.
 - When the user asks anything that could depend on their documents, notes, or remembered facts, call the searchKnowledgeBase tool with a concise query in their language.
 - For greetings, thanks, or generic small talk you do NOT need to search — answer directly.
 - After EVERY tool call you MUST write at least one short paragraph in natural language for the user. Never finish your turn with only a tool invocation: always follow with a visible answer grounded in the tool's returned context. Cite using [1], [2], … matching the order of the passages. If the context is empty, say clearly that nothing relevant was found.
 - Be concise. Match the language of the user's last message.`
+
+  let system = cfg.ragSystemPrompt || defaultSystem
+  if (cfg.ragResponseLang === 'es') system += '\n- Responde siempre en español.'
+  else if (cfg.ragResponseLang === 'en') system += '\n- Respond always in English.'
 
   const validMessages = messages.filter((m) => {
     if (m.role !== 'assistant') return true
@@ -155,8 +182,9 @@ export async function agentStreamText(
     model,
     system,
     messages: modelMessages,
-    tools: buildKbTools(userId, limit, retrievedChunks, model),
+    tools: buildKbTools(userId, limit, retrievedChunks, model, cfg),
     stopWhen: stepCountIs(5),
+    temperature: cfg.ragTemperature,
     onError: ({ error }) => {
       console.error('[agent] streamText error:', error)
     },

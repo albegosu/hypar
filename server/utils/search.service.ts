@@ -3,6 +3,7 @@ import { generateText, type LanguageModel } from 'ai'
 import { prisma } from './prisma'
 import { generateEmbedding } from './embedding'
 import { truncate } from './text'
+import { getSetting, getNumericSetting, getBoolSetting } from './settings.service'
 
 export interface SearchResult {
   chunkId: string
@@ -43,6 +44,23 @@ const DEFAULT_MMR_LAMBDA = 0.7
 const DEFAULT_HYBRID_ALPHA = 0.7
 const QUERY_MAX_CHARS = 512
 
+async function getSearchConfig() {
+  const config = useRuntimeConfig()
+  const [topKStr, thresholdStr, hybridStr, rerankStr] = await Promise.all([
+    getSetting('SEARCH_TOP_K', String(config.searchTopK ?? DEFAULT_LIMIT)),
+    getSetting('SEARCH_THRESHOLD', String(config.searchThreshold ?? DEFAULT_MIN_SCORE)),
+    getSetting('SEARCH_HYBRID', String(config.searchHybrid ?? false)),
+    getSetting('SEARCH_RERANK', String(config.searchRerank ?? false)),
+  ])
+  const topK = Math.max(1, getNumericSetting(topKStr, DEFAULT_LIMIT))
+  const minScore = getNumericSetting(thresholdStr, DEFAULT_MIN_SCORE)
+  const hybrid = getBoolSetting(hybridStr, false)
+  const rerank = getBoolSetting(rerankStr, false)
+  // If hybrid search is disabled, alpha=1 → pure vector (BM25 beta=0)
+  const hybridAlpha = hybrid ? DEFAULT_HYBRID_ALPHA : 1.0
+  return { topK, minScore, hybridAlpha, rerank }
+}
+
 function getMemoryScope(): string {
   const config = useRuntimeConfig()
   return (config.memoryScope as string) || 'local_per_user'
@@ -64,11 +82,13 @@ async function expandQueryHyDE(query: string, model: LanguageModel): Promise<str
 }
 
 export async function search(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
-  const limit = options.limit ?? DEFAULT_LIMIT
-  const minScore = options.minScore ?? DEFAULT_MIN_SCORE
+  const cfg = await getSearchConfig()
+  const limit = options.limit ?? cfg.topK
+  const minScore = options.minScore ?? cfg.minScore
   const overFetch = options.overFetch ?? DEFAULT_OVERFETCH
   const mmrLambda = options.mmrLambda ?? DEFAULT_MMR_LAMBDA
-  const alpha = options.hybridAlpha ?? DEFAULT_HYBRID_ALPHA
+  const alpha = options.hybridAlpha ?? cfg.hybridAlpha
+  const skipMmr = !cfg.rerank
   const beta = 1 - alpha
 
   const safeQuery = truncate(query.trim(), QUERY_MAX_CHARS)
@@ -163,7 +183,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   }))
 
   const filtered = candidates.filter((c) => c.score >= minScore)
-  if (filtered.length <= limit) return filtered.map(stripEmbedding)
+  if (filtered.length <= limit || skipMmr) return filtered.slice(0, limit).map(stripEmbedding)
 
   return mmrRank(queryEmbedding, filtered, limit, mmrLambda).map(stripEmbedding)
 }
