@@ -9,7 +9,8 @@
     "upload": "subir",
     "add": "añadir",
     "back": "volver",
-    "learn": "aprender"
+    "learn": "aprender",
+    "settings": "config"
   },
   "chat": {
     "title": "chatea con tu base de conocimiento",
@@ -96,6 +97,31 @@
     "uploading": "Subiendo…",
     "processing": "Procesando…",
     "errorIngestion": "El procesamiento falló. Prueba a re-chunkear desde la página del documento."
+  },
+  "settings": {
+    "title": "// config en runtime",
+    "subtitle": "Sobreescribe valores de .env sin reiniciar. Prioridad: DB > .env > defecto.",
+    "authTitle": "// se requiere ADMIN_API_KEY",
+    "tokenPlaceholder": "Introduce ADMIN_API_KEY…",
+    "unlock": "[ desbloquear ]",
+    "lock": "[ bloquear ]",
+    "errorEmpty": "El token no puede estar vacío.",
+    "errorInvalid": "Token inválido o error del servidor.",
+    "reset": "[ restaurar .env ]",
+    "save": "[ guardar ]",
+    "saving": "[ guardando… ]",
+    "tabs": {
+      "apis": "[ apis ]",
+      "vectorDb": "[ vector db ]",
+      "embeddings": "[ embeddings ]",
+      "chunking": "[ chunking ]",
+      "search": "[ búsqueda ]",
+      "rag": "[ rag ]"
+    },
+    "savedOk": "✓ {tab} guardado — activo de inmediato",
+    "savedFail": "✗ Error al guardar. Comprueba el token e inténtalo de nuevo.",
+    "resetOk": "✓ Restaurado a .env — sobreescrituras en DB eliminadas",
+    "resetFail": "✗ Error al restaurar."
   },
   "common": {
     "loading": "cargando…",

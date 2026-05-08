@@ -255,8 +255,8 @@ export const step3: WizardStep = {
   keyBenefits: ['wizard.steps.embeddings.benefits.0', 'wizard.steps.embeddings.benefits.1', 'wizard.steps.embeddings.benefits.2', 'wizard.steps.embeddings.benefits.3'],
 
   configFields: [
-    { id: 'batchSize', label: 'EMBEDDING_BATCH_SIZE', type: 'number', envKey: 'EMBEDDING_BATCH_SIZE', advanced: true, defaultValue: 32, min: 1, max: 256 },
-    { id: 'cacheEnabled', label: 'cache', type: 'checkbox', envKey: 'EMBEDDING_CACHE_ENABLED', advanced: true, defaultValue: true, helpText: 'cache repeated queries' },
+    { id: 'batchSize', label: 'EMBEDDING_BATCH_SIZE', type: 'number', envKey: 'EMBEDDING_BATCH_SIZE', defaultValue: 32, min: 1, max: 256 },
+    { id: 'cacheEnabled', label: 'cache', type: 'checkbox', envKey: 'EMBEDDING_CACHE_ENABLED', defaultValue: true, helpText: 'cache repeated queries' },
     { id: 'cacheTtlSeconds', label: 'EMBEDDING_CACHE_TTL', type: 'number', envKey: 'EMBEDDING_CACHE_TTL', advanced: true, defaultValue: 3600, min: 0, max: 604800, unit: 'sec', dependsOn: { field: 'cacheEnabled', equals: true } },
     { id: 'retryAttempts', label: 'EMBEDDING_RETRY_ATTEMPTS', type: 'number', envKey: 'EMBEDDING_RETRY_ATTEMPTS', advanced: true, defaultValue: 3, min: 0, max: 10 },
   ],
@@ -373,14 +373,14 @@ export const step5: WizardStep = {
 
   configFields: [
     { id: 'topK', label: 'SEARCH_TOP_K', type: 'number', envKey: 'SEARCH_TOP_K', defaultValue: 5, min: 1, max: 50, required: true },
-    { id: 'similarityThreshold', label: 'SEARCH_THRESHOLD', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.7, min: 0, max: 1, step: 0.05 },
+    { id: 'similarityThreshold', label: 'SEARCH_THRESHOLD', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.2, min: 0, max: 1, step: 0.05 },
     { id: 'useHybridSearch', label: 'SEARCH_HYBRID', type: 'checkbox', envKey: 'SEARCH_HYBRID', advanced: true, defaultValue: false, helpText: 'combine vector + keyword' },
     { id: 'rerankResults', label: 'SEARCH_RERANK', type: 'checkbox', envKey: 'SEARCH_RERANK', advanced: true, defaultValue: false, helpText: 'second-pass scoring' },
   ],
 
   envSnippet: (cfg) => `# Similarity search
 SEARCH_TOP_K=${get(cfg, 'search', 'topK', 5)}
-SEARCH_THRESHOLD=${get(cfg, 'search', 'similarityThreshold', 0.7)}
+SEARCH_THRESHOLD=${get(cfg, 'search', 'similarityThreshold', 0.2)}
 SEARCH_HYBRID=${get(cfg, 'search', 'useHybridSearch', false)}
 SEARCH_RERANK=${get(cfg, 'search', 'rerankResults', false)}`,
 

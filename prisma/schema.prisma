@@ -83,6 +83,17 @@ model Message {
   @@index([conversationId, createdAt])
 }
 
+// Runtime-editable configuration. Overrides env vars when set.
+// category is one of: embeddings | chunking | search | rag
+model Setting {
+  key       String   @id
+  value     String
+  category  String   @default("general")
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
 // Query history for analytics
 model Query {
   id             String   @id @default(uuid())

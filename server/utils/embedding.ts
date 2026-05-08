@@ -2,34 +2,63 @@ import { embed, embedMany, type EmbeddingModel } from 'ai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { normalizeOllamaNativeHost } from './ollama.ts'
+import { getSetting, getNumericSetting, getBoolSetting } from './settings.service'
 
 const DEFAULT_DIMENSIONS = 768
 
-class LruCache<V> {
-  private readonly store = new Map<string, V>()
-  private readonly capacity: number
-  constructor(capacity: number) { this.capacity = capacity }
+interface CacheEntry<V> {
+  value: V
+  expiresAt: number
+}
 
-  get(key: string): V | undefined {
-    const value = this.store.get(key)
-    if (value === undefined) return undefined
-    this.store.delete(key)
-    this.store.set(key, value)
-    return value
+class LruCache<V> {
+  private readonly store = new Map<string, CacheEntry<V>>()
+  private readonly capacity: number
+
+  constructor(capacity: number) {
+    this.capacity = capacity
   }
 
-  set(key: string, value: V): void {
+  get(key: string): V | undefined {
+    const entry = this.store.get(key)
+    if (entry === undefined) return undefined
+    if (Date.now() > entry.expiresAt) {
+      this.store.delete(key)
+      return undefined
+    }
+    this.store.delete(key)
+    this.store.set(key, entry)
+    return entry.value
+  }
+
+  set(key: string, value: V, ttlMs = Infinity): void {
     if (this.store.has(key)) {
       this.store.delete(key)
     } else if (this.store.size >= this.capacity) {
       const oldest = this.store.keys().next().value
       if (oldest !== undefined) this.store.delete(oldest)
     }
-    this.store.set(key, value)
+    this.store.set(key, { value, expiresAt: ttlMs === Infinity ? Infinity : Date.now() + ttlMs })
   }
 }
 
 const embeddingCache = new LruCache<number[]>(256)
+
+async function getEmbeddingSettings() {
+  const config = useRuntimeConfig()
+  const [cacheEnabledStr, cacheTtlStr, retryStr, batchStr] = await Promise.all([
+    getSetting('EMBEDDING_CACHE_ENABLED', String(config.embeddingCacheEnabled ?? true)),
+    getSetting('EMBEDDING_CACHE_TTL', String(config.embeddingCacheTtl ?? 3600)),
+    getSetting('EMBEDDING_RETRY_ATTEMPTS', String(config.embeddingRetryAttempts ?? 3)),
+    getSetting('EMBEDDING_BATCH_SIZE', String(config.embeddingBatchSize ?? 32)),
+  ])
+  return {
+    cacheEnabled: getBoolSetting(cacheEnabledStr, true),
+    cacheTtlMs: getNumericSetting(cacheTtlStr, 3600) * 1000,
+    retryAttempts: Math.max(1, getNumericSetting(retryStr, 3)),
+    batchSize: Math.max(1, getNumericSetting(batchStr, 32)),
+  }
+}
 
 interface ResolvedEmbedder {
   model: EmbeddingModel
@@ -54,7 +83,6 @@ function resolveEmbedder(): ResolvedEmbedder {
   const ollamaApiKey = config.ollamaApiKey as string
   const ollamaModel = config.ollamaModel as string
 
-  // Explicit provider selection via EMBEDDING_PROVIDER env var
   if (embeddingProvider === 'gemini' || (!embeddingProvider && googleApiKey)) {
     const model = embeddingModel || 'gemini-embedding-001'
     const google = createGoogleGenerativeAI({ apiKey: googleApiKey })
@@ -91,7 +119,6 @@ function resolveEmbedder(): ResolvedEmbedder {
     }
   }
 
-  // Default: Ollama (local or cloud)
   const model = embeddingModel || ollamaModel
   const baseURL = normalizeOllamaNativeHost(ollamaUrl).replace(/\/+$/, '') + '/v1'
   const ollama = createOpenAI({
@@ -116,17 +143,35 @@ function assertDimensions(vector: number[], expected: number): number[] {
   return vector
 }
 
+async function withRetry<T>(fn: () => Promise<T>, attempts: number): Promise<T> {
+  let lastErr: unknown
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn()
+    } catch (err) {
+      lastErr = err
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, (i + 1) * 300))
+    }
+  }
+  throw lastErr
+}
+
 export async function generateEmbedding(text: string): Promise<number[]> {
   const { model, dimensions, cacheKeyPrefix, providerOptions } = resolveEmbedder()
+  const { cacheEnabled, cacheTtlMs, retryAttempts } = await getEmbeddingSettings()
   const cacheKey = cacheKeyPrefix + text
 
-  const cached = embeddingCache.get(cacheKey)
-  if (cached) return cached
+  if (cacheEnabled) {
+    const cached = embeddingCache.get(cacheKey)
+    if (cached) return cached
+  }
 
   try {
-    const { embedding } = await embed({ model, value: text, providerOptions: providerOptions as never })
-    const vector = assertDimensions(embedding, dimensions)
-    embeddingCache.set(cacheKey, vector)
+    const vector = await withRetry(async () => {
+      const { embedding } = await embed({ model, value: text, providerOptions: providerOptions as never })
+      return assertDimensions(embedding, dimensions)
+    }, retryAttempts)
+    if (cacheEnabled) embeddingCache.set(cacheKey, vector, cacheTtlMs)
     return vector
   } catch (err: unknown) {
     const message = (err as Error)?.message || String(err)
@@ -137,15 +182,16 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   if (!texts.length) return []
   const { model, dimensions, cacheKeyPrefix, providerOptions } = resolveEmbedder()
+  const { cacheEnabled, cacheTtlMs, retryAttempts, batchSize } = await getEmbeddingSettings()
 
   const out: number[][] = new Array(texts.length)
   const missingIdx: number[] = []
   const missingTexts: string[] = []
 
   for (let i = 0; i < texts.length; i++) {
-    const cached = embeddingCache.get(cacheKeyPrefix + texts[i])
-    if (cached) {
-      out[i] = cached
+    const cacheHit = cacheEnabled ? embeddingCache.get(cacheKeyPrefix + texts[i]) : undefined
+    if (cacheHit) {
+      out[i] = cacheHit
     } else {
       missingIdx.push(i)
       missingTexts.push(texts[i])
@@ -154,12 +200,21 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 
   if (missingTexts.length) {
     try {
-      const { embeddings } = await embedMany({ model, values: missingTexts, providerOptions: providerOptions as never })
-      for (let j = 0; j < missingTexts.length; j++) {
-        const vector = assertDimensions(embeddings[j], dimensions)
-        const idx = missingIdx[j]
-        out[idx] = vector
-        embeddingCache.set(cacheKeyPrefix + missingTexts[j], vector)
+      for (let start = 0; start < missingTexts.length; start += batchSize) {
+        const batchTexts = missingTexts.slice(start, start + batchSize)
+        const batchIdx = missingIdx.slice(start, start + batchSize)
+
+        const embeddings = await withRetry(async () => {
+          const { embeddings: result } = await embedMany({ model, values: batchTexts, providerOptions: providerOptions as never })
+          return result
+        }, retryAttempts)
+
+        for (let j = 0; j < batchTexts.length; j++) {
+          const vector = assertDimensions(embeddings[j], dimensions)
+          const idx = batchIdx[j]
+          out[idx] = vector
+          if (cacheEnabled) embeddingCache.set(cacheKeyPrefix + batchTexts[j], vector, cacheTtlMs)
+        }
       }
     } catch (err: unknown) {
       const message = (err as Error)?.message || String(err)
