@@ -1,0 +1,10 @@
+/* Small overrides on the default VitePress home hero so the three CTAs breathe */
+.VPHomeHero .actions {
+  gap: 12px;
+}
+
+/* Tighten the gap between the native features grid and the home-features-after slot
+   content so the page reads as one composition, not two stacked sections. */
+.VPHome .VPFeatures + div > section[class^='hfx'] {
+  margin-top: -32px;
+}
