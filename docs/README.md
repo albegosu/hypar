@@ -1,6 +1,6 @@
 # Documentation Index
 
-Technical and product documentation for fragua.
+Technical and product documentation for hypar.
 
 ## Core Docs
 

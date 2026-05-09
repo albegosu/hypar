@@ -1,6 +1,6 @@
 # Getting Started
 
-fragua runs as a **single Nuxt 3 process** — frontend, API routes and background workers all in one. There is no separate backend container to manage.
+hypar runs as a **single Nuxt 3 process** — frontend, API routes and background workers all in one. There is no separate backend container to manage.
 
 **Environment template:** at the repository root run `cp .env.example .env` — that file is the single tracked template for Docker and local dev, and matches what the root `README.md` and `CONTRIBUTING.md` describe (there is no committed `.env.docker`; keep a private `.env` out of version control).
 

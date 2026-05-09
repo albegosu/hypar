@@ -1,6 +1,6 @@
 # Architecture
 
-fragua is a **single Nuxt 3 application**: Vue 3 on the client, **Nitro** (`h3`) server routes on the same port, **Prisma** + **PostgreSQL/pgvector** for persistence, and the **Vercel AI SDK** for embeddings, streaming chat, and tool execution.
+hypar is a **single Nuxt 3 application**: Vue 3 on the client, **Nitro** (`h3`) server routes on the same port, **Prisma** + **PostgreSQL/pgvector** for persistence, and the **Vercel AI SDK** for embeddings, streaming chat, and tool execution.
 
 There is **no separate Node API repo** and no CORS split — the UI calls relative `/api/*` routes.
 

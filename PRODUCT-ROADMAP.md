@@ -1,14 +1,14 @@
-# fragua — Product vision
+# hypar — Product vision
 
-> Not a calendar. A map of how far fragua can go if the work continues with care, and of what gets learned at each step. Stages are ordered by **technical and conceptual dependency**, not by dates. You move forward when you're ready, skip when it doesn't pay off, and walk back if what you promised doesn't hold up under measurement.
+> Not a calendar. A map of how far hypar can go if the work continues with care, and of what gets learned at each step. Stages are ordered by **technical and conceptual dependency**, not by dates. You move forward when you're ready, skip when it doesn't pay off, and walk back if what you promised doesn't hold up under measurement.
 
-The question that drives this document is not *"what do I build in May?"* but *"what version of itself can fragua grow into before it hits the next ceiling, and what do I understand by the time it gets there?"*.
+The question that drives this document is not *"what do I build in May?"* but *"what version of itself can hypar grow into before it hits the next ceiling, and what do I understand by the time it gets there?"*.
 
 ---
 
 ## Starting point
 
-Today fragua is a complete single-user RAG application against a single knowledge base, built on Nuxt 3 + pgvector. The retrieval pipeline already does the non-trivial work: hybrid cosine + BM25 search, MMR diversification, optional HyDE, persisted citations, durable ingestion with retries, and an evaluation harness reporting hit-rate, MRR and latency. There is a Monaco-based learning quest, a VitePress documentation site, and Docker. **What's missing is not a foundation — the foundation is there — but the layers that distinguish a decent technical project from an open-source product with a life of its own.**
+Today hypar is a complete single-user RAG application against a single knowledge base, built on Nuxt 3 + pgvector. The retrieval pipeline already does the non-trivial work: hybrid cosine + BM25 search, MMR diversification, optional HyDE, persisted citations, durable ingestion with retries, and an evaluation harness reporting hit-rate, MRR and latency. There is a Monaco-based learning quest, a VitePress documentation site, and Docker. **What's missing is not a foundation — the foundation is there — but the layers that distinguish a decent technical project from an open-source product with a life of its own.**
 
 Three constraints define the current ceiling and therefore shape the first stages.
 
@@ -32,7 +32,7 @@ After this stage, everything that follows can be honest: any improvement can be 
 
 Hit-rate and MRR are *retrieval* metrics. A response can have the right chunk in context and still hallucinate, ignore it, or answer something true but irrelevant. RAGAS popularised four metrics that cover those gaps: **faithfulness** (does the answer hold up against the context?), **answer relevance** (does it answer the question?), **context precision** (were the retrieved chunks actually useful?) and **context recall** (was a critical chunk missing?).
 
-Implementing them in TypeScript inside fragua, rather than wrapping the Python library, turns a quality improvement into a teaching asset: each metric is a small function, evaluated with an LLM-judge, easy to explain.
+Implementing them in TypeScript inside hypar, rather than wrapping the Python library, turns a quality improvement into a teaching asset: each metric is a small function, evaluated with an LLM-judge, easy to explain.
 
 The natural next step is wiring those metrics into CI: every PR runs a subset of the golden set and posts a comment with the delta vs. `main`. From here on, **regressing the RAG's quality is as visible as breaking a test**.
 
@@ -50,7 +50,7 @@ What you learn: the actual state of the art in information retrieval applied to 
 
 ### Stage 4 — Robustness against hostile input
 
-The moment fragua is exposed to real users (even a public demo), the threat model changes. The OWASP LLM Top 10 exists as a checklist; applying it to fragua is a coherent stage, not a generic security sprint.
+The moment hypar is exposed to real users (even a public demo), the threat model changes. The OWASP LLM Top 10 exists as a checklist; applying it to hypar is a coherent stage, not a generic security sprint.
 
 The three defences with the best effort/impact ratio: **clear delimitation between system instructions and retrieved content** (chunks arrive wrapped in markers the model is trained to treat as data, not instructions); **PII redaction at ingest** (configurable, with a clear example); and **per-document ACLs** — an `ownerId` field on `Document` and a filter on every query, so the system stops assuming a single universe of information.
 
@@ -72,7 +72,7 @@ Up to this point, the entire corpus is text. The reality is that important docum
 
 **Tables in PDFs** — extracted with a dedicated parser and represented as structured text with headers, not flattened into a paragraph. **Images** — multimodal embeddings (CLIP-like) or, more simply, captioning with a VLM at ingest time and embedding the caption. **Source code** — syntactic chunking (functions, classes) instead of token-based, with metadata about language and file.
 
-A more advanced variant is **routing**: when the question has the shape of a structured filter (*"invoices for client Acme in Q2"*), a classifier sends it to SQL instead of semantic search. Hybrid text-to-SQL + RAG, with the final answer unifying both. This turns fragua into something qualitatively different from a manual-Q&A RAG: into an assistant that knows when *not* to use embeddings.
+A more advanced variant is **routing**: when the question has the shape of a structured filter (*"invoices for client Acme in Q2"*), a classifier sends it to SQL instead of semantic search. Hybrid text-to-SQL + RAG, with the final answer unifying both. This turns hypar into something qualitatively different from a manual-Q&A RAG: into an assistant that knows when *not* to use embeddings.
 
 What you learn: that representation matters more than the model. A good parser and good routing are worth more, in many real domains, than any reranker.
 
@@ -80,7 +80,7 @@ What you learn: that representation matters more than the model. A good parser a
 
 Today there is `/remember` and `/forget`. It works as a demo, not as production memory. Serious memory distinguishes between **user-fact memory** (preferences, personal context, valid until the user updates them), **conversation memory** (incremental summary when history exceeds a threshold), and **episodic memory** (what the system learned in past interactions and should recall the next time).
 
-The parallel piece is the **agentic loop**: instead of a single tool-call to `searchKnowledgeBase`, the model plans several steps — search, reformulate, search again, synthesise, cite — following ReAct or plan-execute patterns. fragua already uses the AI SDK, which supports this; the difference is in exposing it as an observable flow, with an explicit step limit and a per-turn cost budget.
+The parallel piece is the **agentic loop**: instead of a single tool-call to `searchKnowledgeBase`, the model plans several steps — search, reformulate, search again, synthesise, cite — following ReAct or plan-execute patterns. hypar already uses the AI SDK, which supports this; the difference is in exposing it as an observable flow, with an explicit step limit and a per-turn cost budget.
 
 What you learn: the spectrum between deterministic chains and free agents, and when each is appropriate — more freedom almost always costs more latency, more tokens, and more rare errors, so the question is how much determinism you're willing to trade for capability.
 
@@ -88,13 +88,13 @@ What you learn: the spectrum between deterministic chains and free agents, and w
 
 Some domains (legal, medical, technical) live better as a **graph** than as a bag of chunks. Extracting entities and relationships at ingest time, materialising them in a graph layer (Neo4j or, more simply, relational tables in the same Postgres), and combining vector retrieval with graph traversal — that's what Microsoft popularised as *GraphRAG*.
 
-It's an ambitious stage because extraction has a real cost and quality depends heavily on the chosen entity schema. But it opens questions a flat RAG cannot answer well: *"what case law does this ruling cite?"*, *"which function calls this one and from where?"*. If fragua reaches this stage, it becomes something very few projects in the TypeScript ecosystem are building.
+It's an ambitious stage because extraction has a real cost and quality depends heavily on the chosen entity schema. But it opens questions a flat RAG cannot answer well: *"what case law does this ruling cite?"*, *"which function calls this one and from where?"*. If hypar reaches this stage, it becomes something very few projects in the TypeScript ecosystem are building.
 
 What you learn: knowledge representation, applied NER, when a structure is worth the cost vs. when it's overengineering.
 
 ### Stage 9 — Self-hosted and cheap
 
-Most tutorials assume the user calls a paid provider. The final stage of the technical axis is to demonstrate that fragua can run entirely locally, with sufficient quality, on consumer hardware.
+Most tutorials assume the user calls a paid provider. The final stage of the technical axis is to demonstrate that hypar can run entirely locally, with sufficient quality, on consumer hardware.
 
 This includes **quantised embeddings** served via Ollama, **a small LLM with stable tool-calling** (Qwen, Llama 3.x, the Phi family as it matures), and, optionally, **lightweight fine-tuning of the embedder on your own corpus** — a technique that multiplies quality in specialised domains without changing provider.
 
@@ -102,9 +102,9 @@ What you learn: that the cloud is a convenience, not a necessity, and that under
 
 ### Stage 10 — A live product, not a repo
 
-At this stage fragua stops being code and starts being a service people use.
+At this stage hypar stops being code and starts being a service people use.
 
-Three pieces define it: a **public demo** ingesting a distinctive corpus (the Spanish constitution and key legal codes; or all of Cervantes with semantic search across Golden Age Spanish; or the Nuxt documentation, for an obvious developer audience) — the chosen corpus defines the narrative. A **public benchmark dashboard** where anyone can see hit-rate, MRR, faithfulness, and cost per query updated with every release. And a **scaffolding CLI** (`pnpm create fragua-app`) that takes a stance: how much of the state of the art should the default template ship with.
+Three pieces define it: a **public demo** ingesting a distinctive corpus (the Spanish constitution and key legal codes; or all of Cervantes with semantic search across Golden Age Spanish; or the Nuxt documentation, for an obvious developer audience) — the chosen corpus defines the narrative. A **public benchmark dashboard** where anyone can see hit-rate, MRR, faithfulness, and cost per query updated with every release. And a **scaffolding CLI** (`pnpm create hypar-app`) that takes a stance: how much of the state of the art should the default template ship with.
 
 What you learn: what separates a technical project from a product. The answer is usually that the first lives on GitHub and the second lives in people's heads.
 
@@ -116,9 +116,9 @@ Up to here the document has talked about the **product** axis, but a serious ope
 
 **Community axis.** An external user opens the repo and understands it. That requires issue and PR templates, `good first issue` labels with well-scoped tickets, a lightweight RFC process (a one-page document per significant change, under `docs/rfcs/`), Changesets for automated release notes, and eventually CODEOWNERS and a code of conduct. The honest success metric for this axis is not stars — it's **closed PRs from people who aren't you**. The first one of those is worth more than the first hundred stars.
 
-**Learning axis (yours).** Each product stage leaves a sediment of understanding that only sets if you write it down. The natural way to capture it in fragua already exists: the VitePress site and the `/learn` quest. The heuristic is that a chapter written about what you just implemented teaches you more than the implementation itself — because explaining surfaces the parts you didn't actually understand. When English and Spanish advance together, you also turn a perceived limitation (smaller Spanish-speaking audience) into a real differentiator (most RAG content lives only in English).
+**Learning axis (yours).** Each product stage leaves a sediment of understanding that only sets if you write it down. The natural way to capture it in hypar already exists: the VitePress site and the `/learn` quest. The heuristic is that a chapter written about what you just implemented teaches you more than the implementation itself — because explaining surfaces the parts you didn't actually understand. When English and Spanish advance together, you also turn a perceived limitation (smaller Spanish-speaking audience) into a real differentiator (most RAG content lives only in English).
 
-**Portfolio axis.** This isn't vanity — it's honesty about why you're putting in the time. Each stage produces a shareable artefact: a five-minute screencast, a blog post, a published benchmark number, a meetup talk. The difference between *having* fragua on the CV and *demonstrating* fragua in an interview is decided by the count of those artefacts.
+**Portfolio axis.** This isn't vanity — it's honesty about why you're putting in the time. Each stage produces a shareable artefact: a five-minute screencast, a blog post, a published benchmark number, a meetup talk. The difference between *having* hypar on the CV and *demonstrating* hypar in an interview is decided by the count of those artefacts.
 
 The three axes reinforce each other. A new technique (product) becomes a chapter (learning), which an external contributor can improve (community), generating a PR you add as evidence of a living project (portfolio). When all three feed each other, the project moves faster than the time invested. When you only work one axis (only product, say) for too long, the rest rots and motivation falls off.
 
@@ -138,7 +138,7 @@ And there's a useful exit test when a stage seems done: **could an external user
 
 ## The destination, in one sentence
 
-If every stage is completed: fragua becomes *the reference RAG implementation in TypeScript* — observable, evaluable, secure, pluggable, multi-modal, conversational, optionally self-hosted, with a public demo on a distinctive corpus and a bilingual tutorial that doesn't exist anywhere else.
+If every stage is completed: hypar becomes *the reference RAG implementation in TypeScript* — observable, evaluable, secure, pluggable, multi-modal, conversational, optionally self-hosted, with a public demo on a distinctive corpus and a EN/ES tutorial that doesn't exist anywhere else.
 
 If only part of it is completed: each intermediate stage is already a project worth being proud of. The stages are not mandatory steps to a summit, they are **stable plateaus**: stopping at any of them leaves a coherent product and a complete understanding of that layer.
 
