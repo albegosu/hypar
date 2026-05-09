@@ -2,24 +2,25 @@ name: CI - Test Learning
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'utils/learning/**'
       - 'pages/learn/**'
       - 'components/learn/**'
       - 'stores/progress.ts'
-      - 'pnpm-lock.yaml'
       - 'package.json'
+      - 'pnpm-lock.yaml'
       - '.github/workflows/test-learning.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'utils/learning/**'
       - 'pages/learn/**'
       - 'components/learn/**'
       - 'stores/progress.ts'
-      - 'pnpm-lock.yaml'
       - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/test-learning.yml'
 
 jobs:
   test:
@@ -43,5 +44,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build app (learning routes smoke)
+      - name: Typecheck
+        run: pnpm exec vue-tsc --noEmit
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Build (learning routes smoke)
         run: pnpm build

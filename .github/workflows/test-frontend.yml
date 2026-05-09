@@ -2,7 +2,7 @@ name: CI - Test Frontend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'pages/**'
       - 'components/**'
@@ -18,7 +18,7 @@ on:
       - 'pnpm-lock.yaml'
       - '.github/workflows/test-frontend.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'pages/**'
       - 'components/**'
@@ -32,6 +32,7 @@ on:
       - 'nuxt.config.ts'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - '.github/workflows/test-frontend.yml'
 
 jobs:
   test:
@@ -54,6 +55,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm exec vue-tsc --noEmit
+
+      - name: Run unit tests
+        run: pnpm test
 
       - name: Build
         run: pnpm build
