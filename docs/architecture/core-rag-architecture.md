@@ -4,7 +4,7 @@
 For a shorter overview and diagrams, start at the [Architecture landing](./index).
 :::
 
-fragua is a single Nuxt 3 application. The frontend (Vue 3) and the backend (Nitro/h3 server routes) run in the same process on port 3000. There is no separate API server.
+hypar is a single Nuxt 3 application. The frontend (Vue 3) and the backend (Nitro/h3 server routes) run in the same process on port 3000. There is no separate API server.
 
 ---
 

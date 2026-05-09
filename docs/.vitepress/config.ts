@@ -9,7 +9,7 @@ function vitepressBase(): string {
 }
 
 export default defineConfig({
-  title: 'fragua',
+  title: 'hypar',
   description: 'Production-ready Retrieval-Augmented Generation app built with Nuxt 3, pgvector and the Vercel AI SDK.',
   base: vitepressBase(),
 
@@ -18,6 +18,23 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,600;0,700;1,550&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&display=swap',
+      },
+    ],
+    ['link', { rel: 'preconnect', href: 'https://api.fontshare.com' }],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap',
+      },
+    ],
   ],
 
   themeConfig: {
@@ -26,6 +43,7 @@ export default defineConfig({
       { text: 'Features', link: '/features/rag-pipeline' },
       { text: 'API', link: '/api/reference' },
       { text: 'Architecture', link: '/architecture' },
+      { text: 'Roadmap', link: '/roadmap' },
       {
         text: 'GitHub',
         link: 'https://github.com/albegosu/from-zero-rag',
@@ -57,6 +75,7 @@ export default defineConfig({
         items: [
           { text: 'API Reference', link: '/api/reference' },
           { text: 'Architecture', link: '/architecture' },
+          { text: 'Roadmap', link: '/roadmap' },
           { text: 'Contributing', link: '/contributing' },
         ],
       },
@@ -69,8 +88,8 @@ export default defineConfig({
     search: { provider: 'local' },
 
     footer: {
-      message: 'Released under the MIT License.',
-      copyright: 'Built by Alberto González to learn RAG from scratch.',
+      message: 'MIT License.',
+      copyright: 'Powered by Resizes to learn.',
     },
 
     editLink: {
