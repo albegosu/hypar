@@ -2,22 +2,25 @@ name: CI - Test Backend
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'server/**'
       - 'prisma/**'
       - 'init-scripts/**'
+      - 'tests/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - '.github/workflows/test-backend.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - 'server/**'
       - 'prisma/**'
       - 'init-scripts/**'
+      - 'tests/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - '.github/workflows/test-backend.yml'
 
 jobs:
   test:
@@ -37,6 +40,9 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
 
     steps:
       - name: Checkout code
@@ -60,11 +66,13 @@ jobs:
         run: pnpm exec prisma generate
 
       - name: Run migrations
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
         run: pnpm exec prisma migrate deploy
 
-      - name: Build app (backend smoke via Nitro server build)
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
+      - name: Typecheck
+        run: pnpm exec vue-tsc --noEmit
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Build (Nitro server smoke)
         run: pnpm build
