@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MicroGlyph from '../../../components/micro/MicroGlyph.vue'
+
 // Demo placeholder. Replace `kind` with `'screencast'` and add a video src
 // when the public hosted demo is ready (Stage 10 of PRODUCT-ROADMAP.md).
 const kind: 'placeholder' | 'screencast' = 'placeholder'
@@ -8,19 +10,12 @@ const kind: 'placeholder' | 'screencast' = 'placeholder'
   <section class="home-demo">
     <div class="home-demo__inner">
       <div v-if="kind === 'placeholder'" class="home-demo__placeholder">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="home-demo__icon"
-        >
-          <path d="M7 4v16l13 -8z" />
-        </svg>
-        <p>Demo screenshot or 30-second screencast</p>
+        <MicroGlyph name="bracketBl" decorative class="home-demo__corner home-demo__corner--bl" />
+        <MicroGlyph name="bracketTr" decorative class="home-demo__corner home-demo__corner--tr" />
+        <div class="home-demo__center">
+          <MicroGlyph name="play" decorative class="home-demo__play" />
+          <p>Demo screenshot or 30-second screencast</p>
+        </div>
       </div>
     </div>
   </section>
@@ -39,6 +34,7 @@ const kind: 'placeholder' | 'screencast' = 'placeholder'
   margin: 8px 0 0;
 }
 .home-demo__placeholder {
+  position: relative;
   height: 240px;
   border-radius: 12px;
   background: var(--vp-c-bg-soft);
@@ -46,12 +42,35 @@ const kind: 'placeholder' | 'screencast' = 'placeholder'
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   color: var(--vp-c-text-2);
+  overflow: hidden;
 }
-.home-demo__icon {
+.home-demo__corner {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  color: color-mix(in srgb, var(--vp-c-text-3) 55%, transparent);
+  pointer-events: none;
+}
+.home-demo__corner--bl {
+  left: 12px;
+  bottom: 12px;
+}
+.home-demo__corner--tr {
+  right: 12px;
+  top: 12px;
+}
+.home-demo__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+}
+.home-demo__play {
   width: 32px;
   height: 32px;
+  color: color-mix(in srgb, var(--vp-c-text-2) 90%, transparent);
 }
 .home-demo__placeholder p {
   font-size: 13px;

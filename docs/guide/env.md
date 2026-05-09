@@ -1,3 +1,5 @@
+<DocMicroLead />
+
 # Environment variables
 
 The **canonical template** is `.env.example` at the repository root. After cloning:
