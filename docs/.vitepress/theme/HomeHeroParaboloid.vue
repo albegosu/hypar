@@ -39,21 +39,51 @@ function attachParaboloid(
     })
   }
 
+  let cssW = 0
+  let cssH = 0
+  let ro: ResizeObserver | undefined
+
   function resize() {
     positionLayer()
-    surface.width = surface.offsetWidth
-    surface.height = surface.offsetHeight
+    cssW = surface.offsetWidth
+    cssH = surface.offsetHeight
+    const dpr = Math.min(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1, 2)
+    surface.width = Math.max(1, Math.floor(cssW * dpr))
+    surface.height = Math.max(1, Math.floor(cssH * dpr))
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0)
   }
 
   resize()
-  window.addEventListener('resize', resize)
 
-  const onMouseMove = (e: MouseEvent) => {
+  /** Double rAF catches first paint before layout settles (often zero-sized canvas on iOS otherwise). */
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => resize())
+  })
+
+  window.addEventListener('resize', resize)
+  const vv = typeof window !== 'undefined' ? window.visualViewport : null
+  if (vv) {
+    vv.addEventListener('resize', resize)
+    vv.addEventListener('scroll', resize)
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    ro = new ResizeObserver(() => resize())
+    ro.observe(surface)
+    ro.observe(layer)
+  }
+
+  /** Pointer covers mouse + pen + passive touch-drag (mousemove alone is dead on phones). */
+  const onPointerMove = (e: PointerEvent) => {
     const r = surface.getBoundingClientRect()
+    if (r.width < 1 || r.height < 1) return
     targetMx = ((e.clientX - r.left) / r.width - 0.5) * 2
     targetMy = ((e.clientY - r.top) / r.height - 0.5) * 2
   }
-  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('pointermove', onPointerMove, { passive: true })
+
+  /** Subtle idle drift on coarse pointers so the mesh still feels alive without touch-drag. */
+  let idleAmp = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches ? 1 : 0
 
   function isDarkTheme() {
     return document.documentElement.classList.contains('dark')
@@ -67,16 +97,18 @@ function attachParaboloid(
   }
 
   function project(x: number, y: number, z: number, rz: number, rx: number) {
+    const W = Math.max(cssW, 1)
+    const H = Math.max(cssH, 1)
     const x1 = x * Math.cos(rz) - y * Math.sin(rz)
     const y1 = x * Math.sin(rz) + y * Math.cos(rz)
     const y2 = y1 * Math.cos(rx) - z * Math.sin(rx)
     const z2 = y1 * Math.sin(rx) + z * Math.cos(rx)
     const fov = 560
-    const scale = Math.min(surface.width * 0.72, surface.height * 1.18)
+    const scale = Math.min(W * 0.72, H * 1.18)
     const dz = fov + z2 * 50
-    const anchorY = surface.height * 0.2
+    const anchorY = H * 0.2
     return {
-      sx: surface.width / 2 + (x1 * scale * fov) / dz,
+      sx: W / 2 + (x1 * scale * fov) / dz,
       sy: anchorY + (y2 * scale * fov) / dz,
       d: z2,
     }
@@ -117,12 +149,18 @@ function attachParaboloid(
     mx += (targetMx - mx) * 0.055
     my += (targetMy - my) * 0.055
 
-    const rz = Math.PI / 4 + t * 0.05 + mx * 0.6
-    const rx = -Math.PI / 4 + my * 0.34
+    const driftPhase = ts - t0
+    const driftRz =
+      idleAmp && !reduceMotion ? Math.sin(driftPhase * 0.00042) * 0.068 : 0
+    const driftRx =
+      idleAmp && !reduceMotion ? Math.cos(driftPhase * 0.00033) * 0.041 : 0
 
-    const W = surface.width
-    const H = surface.height
-    cx.clearRect(0, 0, W, H)
+    const rz = Math.PI / 4 + t * 0.05 + mx * 0.6 + driftRz
+    const rx = -Math.PI / 4 + my * 0.34 + driftRx
+
+    const cw = Math.max(cssW, 1)
+    const ch = Math.max(cssH, 1)
+    cx.clearRect(0, 0, cw, ch)
 
     for (let j = 0; j <= N; j++) {
       const yp = (j / N) * 2 - 1
@@ -173,7 +211,12 @@ function attachParaboloid(
   return () => {
     cancelAnimationFrame(animId)
     window.removeEventListener('resize', resize)
-    window.removeEventListener('mousemove', onMouseMove)
+    window.removeEventListener('pointermove', onPointerMove)
+    if (vv) {
+      vv.removeEventListener('resize', resize)
+      vv.removeEventListener('scroll', resize)
+    }
+    ro?.disconnect()
     mqReduce.removeEventListener('change', onReduceChange)
     gsap.set(layer, { clearProps: 'transform' })
   }
