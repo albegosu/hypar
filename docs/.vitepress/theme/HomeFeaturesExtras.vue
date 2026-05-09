@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress'
+import MicroGlyph from '../../../components/micro/MicroGlyph.vue'
 
 interface Highlight {
   title: string
@@ -68,7 +69,9 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
   <section class="hfx">
     <!-- What's inside -->
     <div class="hfx__block">
-      <p class="hfx__eyebrow">What's inside</p>
+      <p class="hfx__eyebrow hfx__eyebrow--glyph">
+        <MicroGlyph name="sparkle" decorative class="hfx__eyebrow-icon" /> What's inside
+      </p>
       <div class="hfx__grid hfx__grid--2">
         <div v-for="h in highlights" :key="h.title" class="hfx__highlight">
           <span class="hfx__highlight-icon" v-html="`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>${h.icon}</svg>`" />
@@ -83,7 +86,9 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
     <!-- Roadmap track -->
     <div class="hfx__block">
       <div class="hfx__row">
-        <p class="hfx__eyebrow">Roadmap — 10 stages, no calendar</p>
+        <p class="hfx__eyebrow hfx__eyebrow--glyph">
+          <MicroGlyph name="sectionRule" decorative class="hfx__eyebrow-rule" /> Roadmap — 10 stages, no calendar
+        </p>
         <a :href="withBase('/roadmap')" class="hfx__link">View full roadmap →</a>
       </div>
       <div class="hfx__grid hfx__grid--5">
@@ -105,9 +110,7 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
     <div class="hfx__block">
       <a href="/features/learning-quest" class="hfx__learner">
         <span class="hfx__learner-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3l10 5-10 5L2 8z" /><path d="M6 10v5c0 2 3 3 6 3s6-1 6-3v-5" />
-          </svg>
+          <MicroGlyph name="learningCap" decorative />
         </span>
         <div class="hfx__learner-body">
           <p class="hfx__learner-title">Learning RAG from zero?</p>
@@ -159,6 +162,23 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
 .hfx__eyebrow {
   font-size: 12px; font-weight: 500; margin: 0 0 16px;
   color: var(--vp-c-text-3); text-transform: uppercase; letter-spacing: 0.06em;
+}
+.hfx__eyebrow--glyph {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hfx__eyebrow-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--vp-c-text-3) 85%, transparent);
+}
+.hfx__eyebrow-rule {
+  width: 28px;
+  height: 14px;
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--vp-c-text-3) 72%, transparent);
 }
 .hfx__row .hfx__eyebrow { margin-bottom: 0; }
 
