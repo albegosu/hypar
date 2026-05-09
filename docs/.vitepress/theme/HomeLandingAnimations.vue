@@ -182,10 +182,20 @@ watch(
 
 onMounted(() => {
   window.addEventListener('resize', scheduleScrollTriggerRefresh)
+  const vv = window.visualViewport
+  if (vv) {
+    vv.addEventListener('resize', scheduleScrollTriggerRefresh)
+    vv.addEventListener('scroll', scheduleScrollTriggerRefresh)
+  }
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', scheduleScrollTriggerRefresh)
+  const vv = window.visualViewport
+  if (vv) {
+    vv.removeEventListener('resize', scheduleScrollTriggerRefresh)
+    vv.removeEventListener('scroll', scheduleScrollTriggerRefresh)
+  }
   if (resizeRefreshTimer !== null) {
     clearTimeout(resizeRefreshTimer)
     resizeRefreshTimer = null
