@@ -12,6 +12,9 @@ dist/
 /dist
 .output/
 docs/.vitepress/dist
+docs/.vitepress/cache/
+docs/.vitepress/.temp/
+docs/.vitepress/config.ts.timestamp-*.mjs
 .nuxt/
 .turbo/
 
