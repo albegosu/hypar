@@ -1,9 +1,12 @@
-# GitHub Pages: VitePress guides only (`docs/`). The Nuxt app deploys via Docker/SSH (deploy.yml).
+# GitHub Pages: VitePress guides only (`docs/`). The Nuxt app is built/published via docker-build.yml.
 name: Deploy guides to Pages
 
 on:
   push:
     branches: ['main']
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:

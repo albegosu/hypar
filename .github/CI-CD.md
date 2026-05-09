@@ -4,11 +4,13 @@
 
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
-| **CI orchestration** | `ci.yml` | Push/PR → main, develop | Routes to backend/front/learning jobs by path filters |
-| **Unified app check** | `test-backend.yml`, `test-frontend.yml`, `test-learning.yml` | Push/PR (path-scoped) | Install, Prisma migrations (where applicable), `pnpm build` |
-| **Docker build** | `docker-build.yml` | Push to main/tags/PR | Build single root Dockerfile image |
+| **Test Backend** | `test-backend.yml` | Push/PR → `main` (paths: `server/**`, `prisma/**`, `init-scripts/**`, `tests/**`) | `pnpm install` → `prisma generate` → `prisma migrate deploy` (against `pgvector/pgvector:pg16` service) → `vue-tsc --noEmit` → `pnpm test` → `pnpm build` |
+| **Test Frontend** | `test-frontend.yml` | Push/PR → `main` (paths: `pages/**`, `components/**`, `layouts/**`, `stores/**`, `assets/**`, `plugins/**`, `composables/**`, `i18n/**`, `app.vue`, `nuxt.config.ts`) | `pnpm install` → `vue-tsc --noEmit` → `pnpm test` → `pnpm build` |
+| **Test Learning** | `test-learning.yml` | Push/PR → `main` (paths: `utils/learning/**`, `pages/learn/**`, `components/learn/**`, `stores/progress.ts`) | `pnpm install` → `vue-tsc --noEmit` → `pnpm test` → `pnpm build` |
+| **Docker Build** | `docker-build.yml` | Push to `main`, tags `v*`, PR to `main` | Build single root `Dockerfile` image and push to GHCR (PRs build only, no push) |
+| **Deploy guides to Pages** | `pages.yml` | Push to `main` (paths: `docs/**`) or manual | Build VitePress (`pnpm run docs:build`) and deploy to GitHub Pages |
 
-> Adjust path filters if you add standalone packages later; currently everything lives in one Nuxt workspace.
+> The `test-*` workflows overlap on the unified Nuxt monorepo: each runs the full Vitest suite and a Nuxt build. The split is purely about scoping triggers via path filters so unrelated changes (docs only, etc.) skip CI.
 
 ---
 
@@ -21,9 +23,10 @@ Before opening a PR, run these locally:
 pnpm install
 
 # Type check + build
+pnpm typecheck
 pnpm build
 
-# Tests (chunking, text utils, agent commands)
+# Tests (chunking, text utils, agent commands, search)
 pnpm test
 
 # RAG eval harness (when retrieval / chunking changes)
@@ -52,9 +55,13 @@ docker build -t from-zero-rag:test .
 docker run -p 3000:3000 --env-file .env from-zero-rag:test
 ```
 
+The CI workflow (`docker-build.yml`) publishes images to `ghcr.io/<owner>/<repo>/app` tagged with the branch, PR number, semver (on `v*` tags) and short SHA.
+
 ---
 
 ## Deployment
+
+> Production deployment is **not yet automated** — the project is in beta. The previous `deploy.yml` (SSH-based) and `release.yml` (tag-based GitHub Releases) workflows were removed; reintroduce them when there is a target host / release process.
 
 ### Docker Compose (self-hosted)
 
@@ -72,34 +79,8 @@ See [Docker guide](../docs/DOCKER.md) for the full guide.
 4. Deploy — the entrypoint runs migrations automatically
 
 **Required env vars for cloud:**
+
 - `DATABASE_URL`
 - `GOOGLE_API_KEY` or `OPENAI_API_KEY`
 - `OLLAMA_URL` + `OLLAMA_API_KEY` (if using Ollama Cloud)
 - `OLLAMA_LLM_MODEL`
-
----
-
-## Required Secrets (for CI workflows)
-
-| Secret | Workflow | Description |
-|---|---|---|
-| `SSH_PRIVATE_KEY` | deploy | SSH key for server access |
-| `SSH_HOST` | deploy | Production server hostname |
-| `SSH_USER` | deploy | SSH username |
-| `ENV_FILE` | deploy | Production `.env` contents |
-
----
-
-## Dependabot
-
-Automatic dependency updates can be configured for weekly bumps:
-
-```yaml
-# .github/dependabot.yml
-version: 2
-updates:
-  - package-ecosystem: npm
-    directory: "/"
-    schedule:
-      interval: weekly
-```
