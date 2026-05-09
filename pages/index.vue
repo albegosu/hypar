@@ -601,7 +601,7 @@ watch(
   (newStatus, oldStatus) => {
     if (
       (oldStatus === 'submitted' || oldStatus === 'streaming') &&
-      (newStatus === 'ready' || newStatus === 'idle') &&
+      newStatus === 'ready' &&
       lastSentInput.value.startsWith('/remember')
     ) {
       store.fetchDocuments()

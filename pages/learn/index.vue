@@ -48,8 +48,11 @@
           </div>
           <div class="p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
             <div class="flex-1 min-w-0">
-              <h1 class="text-2xl sm:text-3xl font-bold" style="color: var(--wz-text-strong)">
-                {{ t('home.title') }}
+              <h1 class="text-2xl sm:text-3xl font-bold flex items-center gap-2 flex-wrap" style="color: var(--wz-text-strong)">
+                <span class="inline-flex shrink-0 opacity-70 items-center" style="color: var(--wz-accent-strong)">
+                  <MicroGlyph name="sparkle" decorative class="w-7! h-7!" />
+                </span>
+                <span>{{ t('home.title') }}</span>
               </h1>
               <p class="wz-muted text-sm mt-2 max-w-2xl">
                 {{ t('home.subtitle') }}

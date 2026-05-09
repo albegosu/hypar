@@ -1,3 +1,5 @@
+<DocMicroLead />
+
 # Production Deployment
 
 For production use `docker-compose.prod.yml`. It adds:

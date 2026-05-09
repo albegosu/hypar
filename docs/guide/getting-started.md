@@ -1,3 +1,5 @@
+<DocMicroLead />
+
 # Getting Started
 
 hypar runs as a **single Nuxt 3 process** — frontend, API routes and background workers all in one. There is no separate backend container to manage.

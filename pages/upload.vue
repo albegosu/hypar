@@ -13,9 +13,14 @@
           <span class="wz-label">upload --document</span>
         </div>
       </div>
-      <div class="p-4">
+      <div class="p-4 flex items-start gap-3">
+        <span class="mt-0.5 shrink-0 opacity-80 inline-flex text-(--term-accent-strong)">
+          <MicroGlyph name="upload" decorative class="w-6! h-6!" />
+        </span>
+        <div class="min-w-0 flex-1">
         <h1 class="text-lg font-semibold wz-strong">// {{ t('upload.title') }}</h1>
         <p class="wz-muted text-xs mt-1">{{ t('upload.subtitle') }}</p>
+        </div>
       </div>
     </section>
 
