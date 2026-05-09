@@ -238,6 +238,39 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
+  /* Desktop layout unchanged ≥641px — here we clear the stacked CTA + clone row */
+
+  /* Ornaments hug the lower viewport; top / bottom reset avoids % mid-view overlap */
+  .hpp-hud__cluster--left {
+    top: auto;
+    bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
+  }
+
+  .hpp-hud__cluster--right {
+    top: auto;
+    bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
+  }
+
+  /*
+   * Low on screen (`bottom` nearer 0): spec stack hugs the ornament row.
+   * NA05 stays above it (larger `bottom`) so bands don’t cross.
+   */
+  .hpp-hud__cluster--top {
+    top: auto;
+    bottom: clamp(88px, 15vh, 148px);
+  }
+
+  /* NA05 only — IV hidden; placed above lowered spec strip */
+  .hpp-hud__cluster--bottom {
+    bottom: clamp(200px, 36vh, 280px);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .hpp-hud__cluster--bottom .hpp-hud__serif {
+    display: none;
+  }
+
   .hpp-hud__cluster--left .hpp-hud__code,
   .hpp-hud__cluster--right .hpp-hud__code--sm {
     display: none;
@@ -246,8 +279,21 @@ onBeforeUnmount(() => {
     width: 56px;
     height: 28px;
   }
-  .hpp-hud__cluster--bottom {
-    flex-wrap: wrap;
+
+  /* Slightly quieter so microcopy doesn’t read as duplicate hero title */
+  .hpp-hud__head {
+    font-size: clamp(0.75rem, 3.2vw, 0.95rem);
+    letter-spacing: 0.16em;
+    opacity: 0.72;
+  }
+  .hpp-hud__sub,
+  .hpp-hud__dot {
+    font-size: 7px;
+    letter-spacing: 0.12em;
+  }
+  .hpp-hud__pill {
+    margin-top: 6px;
+    font-size: 7px;
   }
 }
 </style>
