@@ -16,7 +16,7 @@ describe('splitIntoChunks', () => {
 
   it('splits long text into multiple chunks with overlap', () => {
     const para = 'The quick brown fox jumps over the lazy dog. '.repeat(200)
-    const chunks = splitIntoChunks(para, { chunkTokens: 100, overlapTokens: 20 })
+    const chunks = splitIntoChunks(para, { chunkTokens: 100, overlapTokens: 20, strategy: 'with-overlap' })
     expect(chunks.length).toBeGreaterThan(1)
     for (const c of chunks) {
       expect(c.tokenCount).toBeLessThanOrEqual(140) // soft upper: chunk + last segment slop
@@ -29,7 +29,7 @@ describe('splitIntoChunks', () => {
   })
 
   it('throws when overlap >= chunk size', () => {
-    expect(() => splitIntoChunks('abc', { chunkTokens: 10, overlapTokens: 10 })).toThrow()
+    expect(() => splitIntoChunks('abc', { chunkTokens: 10, overlapTokens: 10, strategy: 'with-overlap' })).toThrow()
   })
 
   it('handles multilingual text', () => {

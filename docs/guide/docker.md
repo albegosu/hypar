@@ -1,3 +1,5 @@
+<DocMicroLead />
+
 # Docker Guide
 
 ## Architecture

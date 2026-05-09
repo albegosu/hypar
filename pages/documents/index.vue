@@ -75,7 +75,9 @@
     </div>
 
     <div v-else class="wz-panel text-center py-12 px-6">
-      <div class="text-3xl mb-2">▌</div>
+      <div class="flex justify-center mb-3 opacity-85" style="color: var(--term-accent-strong)">
+        <MicroGlyph name="inbox" decorative class="w-10! h-10!" />
+      </div>
       <h3 class="text-base font-semibold wz-strong mb-1">{{ t('documents.empty') }}</h3>
       <p class="wz-muted text-sm mb-4">{{ t('documents.emptyHint') }}</p>
       <NuxtLink to="/upload" class="wz-btn-primary text-xs inline-block">

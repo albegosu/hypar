@@ -125,7 +125,7 @@ function splitFixed(text: string, chunkTokens: number): Chunk[] {
   for (let start = 0; start < tokens.length; start += chunkTokens) {
     const slice = tokens.slice(start, start + chunkTokens)
     // Re-decode to get the original text slice
-    const content = new TextDecoder().decode(enc.decode(slice)).trim()
+    const content = enc.decode(slice).trim()
     if (!content) continue
     // Approximate char offsets (not exact, but good enough for citations)
     const charStart = Math.round((start / tokens.length) * text.length)

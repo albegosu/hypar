@@ -43,4 +43,8 @@ pnpm db:migrate   # only if Prisma schema changed
 | UI | `pages/`, `components/` |
 | Learning quest | `utils/learning/`, `pages/learn/` |
 
+## Micrographics (UI)
+
+Use the shared kit in [`components/micro/`](https://github.com/albegosu/from-zero-rag/tree/main/components/micro): `MicroGlyph.vue` plus `glyphs.ts` (stroke `1.5`, `currentColor`). Prefer **semantic** glyphs for empty states and headings; add **decorative** ones only at low density (`aria-hidden="true"` via `decorative` on `MicroGlyph`). In the docs theme, chapter pages can start with `<DocMicroLead />`. **Animation** (GSAP) is optional and should respect `prefers-reduced-motion` — match the landing pattern in `docs/.vitepress/theme/HomeLandingAnimations.vue` when extending motion.
+
 Questions or large features: open a **[GitHub issue](https://github.com/albegosu/from-zero-rag/issues)** first when in doubt.

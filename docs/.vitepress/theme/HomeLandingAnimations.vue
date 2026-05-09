@@ -28,24 +28,26 @@ function bootLandingAnimations(root: HTMLElement) {
   gsap.timeline({ defaults: { ease: 'power3.out' } })
     .from(root.querySelectorAll('.VPHomeHero .heading .name, .VPHomeHero .heading .text'), {
       autoAlpha: 0,
-      y: 24,
-      duration: 0.58,
-      stagger: 0.1,
+      y: 14,
+      x: -4,
+      duration: 0.62,
+      stagger: 0.09,
+      ease: 'power2.out',
     })
     .from(
       root.querySelectorAll('.VPHomeHero .tagline'),
-      { autoAlpha: 0, y: 16, duration: 0.48 },
-      '-=0.28',
+      { autoAlpha: 0, y: 10, x: -2, duration: 0.52, ease: 'power2.out' },
+      '-=0.32',
     )
     .from(
       root.querySelectorAll('.VPHomeHero .actions .action'),
-      { autoAlpha: 0, y: 14, duration: 0.42, stagger: 0.07 },
-      '-=0.22',
+      { autoAlpha: 0, y: 8, x: -4, duration: 0.46, stagger: 0.06, ease: 'power2.out' },
+      '-=0.26',
     )
     .from(
       root.querySelectorAll('.VPHomeHero .ht'),
-      { autoAlpha: 0, y: 12, duration: 0.42 },
-      '-=0.18',
+      { autoAlpha: 0, y: 8, x: -2, duration: 0.46, ease: 'power2.out' },
+      '-=0.2',
     )
 
   const featuresRoot = root.querySelector('.VPFeatures')

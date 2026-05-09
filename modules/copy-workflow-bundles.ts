@@ -1,6 +1,6 @@
 import { cp } from 'node:fs/promises'
 import { join } from 'node:path'
-import { defineNuxtModule } from '@nuxt/kit'
+import { defineNuxtModule } from 'nuxt/kit'
 
 /**
  * Nitro can inline the workflow step HTTP handler without ever evaluating the

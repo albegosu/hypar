@@ -53,7 +53,7 @@
       <div v-if="currentStep" class="space-y-4">
         <LearnWizardConfigForm
           :step-id="currentStep.id"
-          :fields="currentStep.configFields"
+          :fields="currentFields"
           :model-value="formValues"
           @update:model-value="formValues = $event"
         />
@@ -77,6 +77,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { step1, step2, step3, step4, step5, step6 } from '~/utils/learning/wizard/wizard-steps'
+import type { ConfigField, WizardStep } from '~/utils/learning/wizard-types'
 
 const { t } = useI18n()
 
@@ -107,6 +108,11 @@ const tabs = [
 ]
 
 const currentStep = computed(() => tabs.find((t) => t.id === activeTab.value)?.step ?? null)
+const currentFields = computed(() => getStepFields(currentStep.value))
+
+function getStepFields(step: WizardStep | null | undefined): ConfigField[] {
+  return step?.configFields ?? []
+}
 
 // ─── auth ──────────────────────────────────────────────────────────────────
 
@@ -178,12 +184,13 @@ async function loadTab(tabId: string) {
     })
 
     const defaults: Record<string, unknown> = {}
-    for (const field of step.configFields) {
+    for (const field of getStepFields(step)) {
       defaults[field.id] = field.defaultValue
     }
 
     const overlay: Record<string, unknown> = {}
-    for (const field of step.configFields) {
+    for (const field of getStepFields(step)) {
+      if (!field.envKey) continue
       const raw = data[field.envKey]
       if (raw !== undefined) {
         overlay[field.id] = parseFieldValue(raw, field.type)
@@ -195,7 +202,7 @@ async function loadTab(tabId: string) {
     formValues.value = { ...merged }
   } catch {
     const defaults: Record<string, unknown> = {}
-    for (const field of (step?.configFields ?? [])) {
+    for (const field of getStepFields(step)) {
       defaults[field.id] = field.defaultValue
     }
     loadedValues.value[tabId] = defaults
@@ -219,7 +226,7 @@ async function saveTab() {
   saveStatus.value = null
 
   try {
-    const promises = step.configFields.map((field) => {
+    const promises = getStepFields(step).filter((field) => field.envKey).map((field) => {
       const val = formValues.value[field.id]
       const value = Array.isArray(val) ? (val as string[]).join(',') : String(val ?? '')
       return $fetch('/api/admin/settings', {
@@ -245,7 +252,7 @@ async function resetTab() {
   saveStatus.value = null
 
   try {
-    const promises = step.configFields.map((field) =>
+    const promises = getStepFields(step).filter((field) => field.envKey).map((field) =>
       $fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'x-admin-key': adminToken.value },
