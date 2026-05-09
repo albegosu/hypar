@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping improve fragua. The **canonical** contributing guide (branch naming, commit style, learning challenges) lives in the repository root:
+Thank you for helping improve hypar. The **canonical** contributing guide (branch naming, commit style, learning challenges) lives in the repository root:
 
 **[`CONTRIBUTING.md`](https://github.com/albegosu/from-zero-rag/blob/main/CONTRIBUTING.md)** (same content as in your clone at the project root).
 

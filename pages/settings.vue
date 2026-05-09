@@ -80,7 +80,7 @@ import { step1, step2, step3, step4, step5, step6 } from '~/utils/learning/wizar
 
 const { t } = useI18n()
 
-const STORAGE_KEY = 'fragua_admin_token'
+const STORAGE_KEY = 'hypar_admin_token'
 
 const tokenInput = ref('')
 const authError = ref('')

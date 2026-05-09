@@ -2,15 +2,15 @@
 layout: home
 
 hero:
-  name: fragua
-  text: RAG, from zero.
-  tagline: An open-source reference implementation of modern RAG in TypeScript. A library, a bilingual tutorial, and a portfolio — built in the open.
+  name: 'hypar<span class="home-hero-name__caret" aria-hidden="true"></span>'
+  text: This is a Resizes lab_project
+  tagline: Open-source reference implementation of production RAG in TypeScript.
   actions:
     - theme: brand
-      text: Try the demo
+      text: Try demo
       link: https://github.com/albegosu/from-zero-rag
     - theme: alt
-      text: Read the tutorial
+      text: Read tutorial
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
@@ -24,7 +24,7 @@ features:
   - title: Tutorial
     icon:
       svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4h-9a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h10z"/><path d="M19 4v16"/><path d="M9 8h6"/><path d="M9 12h4"/></svg>'
-    details: Bilingual chapters paired with an interactive Monaco quest. Learn RAG by writing it yourself.
+    details: EN/ES chapters paired with an interactive Monaco quest. Learn RAG by writing it yourself.
   - title: Portfolio
     icon:
       svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>'

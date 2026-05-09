@@ -1,4 +1,4 @@
-# Contributing to fragua
+# Contributing to hypar
 
 Thanks for your interest in contributing! This is primarily a learning project, but improvements, bug fixes and ideas are welcome.
 

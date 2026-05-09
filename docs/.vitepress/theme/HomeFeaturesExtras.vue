@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { withBase } from 'vitepress'
+
 interface Highlight {
   title: string
   details: string
@@ -11,7 +13,7 @@ interface Stage {
   status?: 'now' | 'next'
 }
 
-// Six highlights — what fragua actually does today. Pillars (above) explain
+// Six highlights — what hypar actually does today. Pillars (above) explain
 // why; these explain what's inside. Keep details to one short sentence.
 const highlights: Highlight[] = [
   {
@@ -82,12 +84,7 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
     <div class="hfx__block">
       <div class="hfx__row">
         <p class="hfx__eyebrow">Roadmap — 10 stages, no calendar</p>
-        <a
-          href="https://github.com/albegosu/from-zero-rag/blob/main/PRODUCT-ROADMAP.md"
-          class="hfx__link"
-          target="_blank"
-          rel="noopener"
-        >View full roadmap →</a>
+        <a :href="withBase('/roadmap')" class="hfx__link">View full roadmap →</a>
       </div>
       <div class="hfx__grid hfx__grid--5">
         <div
@@ -122,35 +119,41 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
       </a>
     </div>
 
-    <!-- Footer stack + stats -->
+    <!-- Footer: single compact band (stack + meta) -->
     <div class="hfx__block hfx__footer">
-      <div>
-        <p class="hfx__eyebrow">Built with</p>
-        <div class="hfx__stack">
-          <span v-for="s in stack" :key="s" class="hfx__chip">{{ s }}</span>
+      <div class="hfx__footer-inner">
+        <div class="hfx__footer-left">
+          <span class="hfx__footer-tag">Built with</span>
+          <div class="hfx__stack">
+            <span v-for="s in stack" :key="s" class="hfx__chip">{{ s }}</span>
+          </div>
         </div>
-      </div>
-      <div class="hfx__stats">
-        <div class="hfx__stat"><p class="hfx__stat-value">MIT</p><p class="hfx__stat-label">License</p></div>
-        <div class="hfx__stat"><p class="hfx__stat-value">v0.4</p><p class="hfx__stat-label">Latest</p></div>
-        <a class="hfx__stat hfx__stat--link" href="https://github.com/albegosu/from-zero-rag" target="_blank" rel="noopener">
-          <p class="hfx__stat-value">GitHub</p><p class="hfx__stat-label">Source</p>
-        </a>
+        <div class="hfx__stats" aria-label="Project meta">
+          <div class="hfx__stat"><p class="hfx__stat-value">MIT</p><p class="hfx__stat-label">License</p></div>
+          <div class="hfx__stat"><p class="hfx__stat-value">v0.4</p><p class="hfx__stat-label">Latest</p></div>
+          <a class="hfx__stat hfx__stat--link" href="https://github.com/albegosu/from-zero-rag" target="_blank" rel="noopener">
+            <p class="hfx__stat-value">GitHub</p><p class="hfx__stat-label">Source</p>
+          </a>
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
+/* Match VPHomeContent — max-width includes horizontal padding pattern */
 .hfx {
-  max-width: 1152px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px 64px;
+  padding: 0 24px 40px;
 }
-@media (min-width: 768px) { .hfx { padding: 0 48px 80px; } }
-@media (min-width: 960px) { .hfx { padding: 0 64px 96px; } }
+@media (min-width: 640px) { .hfx { padding: 0 48px 48px; } }
+@media (min-width: 960px) { .hfx { padding: 0 64px 56px; } }
 
-.hfx__block { margin-top: 48px; }
+.hfx__block { margin-top: 44px; }
+.hfx__block.hfx__footer { margin-top: 32px; }
 .hfx__row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 16px; }
 
 .hfx__eyebrow {
@@ -191,8 +194,8 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
   border: 1px solid transparent;
 }
 .hfx__stage--now {
-  background: var(--vp-c-brand-soft);
-  border-color: var(--vp-c-brand-1);
+  background: color-mix(in srgb, var(--vp-c-brand-soft) 78%, var(--vp-c-bg-soft));
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 38%, var(--vp-c-divider));
 }
 .hfx__stage--next {
   border-color: var(--vp-c-divider);
@@ -225,20 +228,71 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
 .hfx__learner-details { font-size: 13px; margin: 0; color: var(--vp-c-text-2); line-height: 1.5; }
 .hfx__learner-cta { font-size: 13px; color: var(--vp-c-brand-1); flex-shrink: 0; }
 
-.hfx__footer {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  flex-wrap: wrap; gap: 24px;
+.hfx__footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
   border-top: 1px solid var(--vp-c-divider);
-  padding-top: 24px;
+  padding-top: 14px;
 }
-.hfx__stack { display: flex; gap: 6px; flex-wrap: wrap; }
+.hfx__footer-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: min(100%, 240px);
+}
+.hfx__footer-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+  white-space: nowrap;
+}
+.hfx__stack { display: flex; gap: 5px; flex-wrap: wrap; }
 .hfx__chip {
-  font-size: 12px; padding: 4px 10px;
-  background: var(--vp-c-bg-soft); border-radius: 999px; color: var(--vp-c-text-2);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 8px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid color-mix(in srgb, var(--vp-c-divider) 88%, transparent);
+  border-radius: 999px;
+  color: var(--vp-c-text-1);
 }
-.hfx__stats { display: flex; gap: 20px; align-items: flex-start; }
-.hfx__stat { text-align: center; text-decoration: none; color: inherit; }
-.hfx__stat-value { font-size: 18px; font-weight: 500; margin: 0; color: var(--vp-c-text-1); }
-.hfx__stat-label { font-size: 11px; margin: 2px 0 0; color: var(--vp-c-text-3); }
+.hfx__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 14px 18px;
+}
+.hfx__stat {
+  display: grid;
+  gap: 0;
+  justify-items: start;
+  min-width: 0;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+}
+.hfx__stat-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  margin: 0;
+  color: var(--vp-c-text-1);
+  line-height: 1.2;
+}
+.hfx__stat-label {
+  font-size: 10px;
+  margin: 1px 0 0;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vp-c-text-2);
+}
 .hfx__stat--link:hover .hfx__stat-value { color: var(--vp-c-brand-1); }
 </style>

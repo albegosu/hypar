@@ -27,9 +27,12 @@ const kind: 'placeholder' | 'screencast' = 'placeholder'
 </template>
 
 <style scoped>
+/* Same width + horizontal padding rhythm as VPHomeContent / VPFeatures (.vp-doc.container) */
 .home-demo {
-  max-width: 1152px;
-  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1280px;
+  margin: 2rem auto;
   padding: 0 24px;
 }
 .home-demo__inner {
@@ -44,7 +47,7 @@ const kind: 'placeholder' | 'screencast' = 'placeholder'
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-2);
 }
 .home-demo__icon {
   width: 32px;
@@ -54,9 +57,15 @@ const kind: 'placeholder' | 'screencast' = 'placeholder'
   font-size: 13px;
   margin: 0;
 }
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .home-demo {
     padding: 0 48px;
+  }
+}
+
+@media (min-width: 960px) {
+  .home-demo {
+    padding: 0 64px;
   }
 }
 </style>

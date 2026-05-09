@@ -1,6 +1,6 @@
 # RAG pipeline
 
-fragua implements **retrieval-augmented generation** as one Nuxt 3 app: Vue pages, Nitro `/api/*` routes, Prisma + pgvector, and the Vercel AI SDK for embeddings, tool-calling, and streaming chat.
+hypar implements **retrieval-augmented generation** as one Nuxt 3 app: Vue pages, Nitro `/api/*` routes, Prisma + pgvector, and the Vercel AI SDK for embeddings, tool-calling, and streaming chat.
 
 This page describes the **end-to-end flow** from documents to answers. For hybrid retrieval details, see [Hybrid search & HyDE](./search). For chat memory commands, see [Memory & commands](./memory).
 
