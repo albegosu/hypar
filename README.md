@@ -356,4 +356,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-**Built by [Alberto González](https://github.com/albegosu) to learn RAG architecture from scratch.**
+**Powered by [Resizes](https://resiz.es) to learn RAG architecture from scratch.**
