@@ -15,7 +15,7 @@ function copy() {
 <template>
   <div class="ht ht--micro">
     <p class="ht__stamp" aria-hidden="true">
-      <span class="ht__stamp-line">CLONE_URI</span>
+      <span class="ht__stamp-line">GITHUB</span>
       <span class="ht__stamp-sep">·</span>
       <span class="ht__stamp-line">HTTPS</span>
       <span class="ht__stamp-sep">·</span>

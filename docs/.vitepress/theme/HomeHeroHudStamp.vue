@@ -55,7 +55,7 @@ onBeforeUnmount(() => {
     <div class="hpp-hud__cluster hpp-hud__cluster--top">
       <p class="hpp-hud__head" data-hud-reveal>RAG</p>
       <p class="hpp-hud__sub" data-hud-reveal>REFERENCE IMPL · HYBRID RETRIEVAL</p>
-      <p class="hpp-hud__mono hpp-hud__dot" data-hud-reveal>MMR · BM25 · PGVECTOR — TYPE-SAFE PIPELINE</p>
+      <p class="hpp-hud__mono hpp-hud__dot" data-hud-reveal>HYBRID SEARCH · PGVECTOR — TYPE-SAFE</p>
       <span class="hpp-hud__pill" data-hud-reveal>OPEN SOURCE</span>
     </div>
 
@@ -65,14 +65,14 @@ onBeforeUnmount(() => {
         <path d="M24 8l14 14-14 14L10 22z" stroke="currentColor" stroke-width="1" stroke-linejoin="miter" />
         <path d="M24 14l8 8-8 8-8-8z" stroke="currentColor" stroke-width="0.95" opacity="0.55" />
       </svg>
-      <p class="hpp-hud__mono hpp-hud__code hpp-hud__code--sm" data-hud-reveal>C03C4 / pnpm</p>
+      <p class="hpp-hud__mono hpp-hud__code hpp-hud__code--sm" data-hud-reveal>HYPAR / pnpm</p>
     </div>
 
     <!-- Bottom band -->
     <div class="hpp-hud__cluster hpp-hud__cluster--bottom">
       <p class="hpp-hud__serif" data-hud-reveal>IV</p>
       <div class="hpp-hud__bottom-copy">
-        <p class="hpp-hud__mono" data-hud-reveal>NA05 — PRODUCTION PATTERNS</p>
+        <p class="hpp-hud__mono" data-hud-reveal>RAG 01 — PRODUCTION PATTERNS</p>
         <p class="hpp-hud__mono hpp-hud__muted" data-hud-reveal>FOR RETRIEVAL &amp; EVAL</p>
       </div>
     </div>
@@ -238,9 +238,7 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
-  /* Desktop layout unchanged ≥641px — here we clear the stacked CTA + clone row */
-
-  /* Ornaments hug the lower viewport; top / bottom reset avoids % mid-view overlap */
+  /* Left sig and right mark: hug bottom corners */
   .hpp-hud__cluster--left {
     top: auto;
     bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
@@ -251,49 +249,51 @@ onBeforeUnmount(() => {
     bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
   }
 
-  /*
-   * Low on screen (`bottom` nearer 0): spec stack hugs the ornament row.
-   * NA05 stays above it (larger `bottom`) so bands don’t cross.
-   */
+  /* Only the RAG label: centered, above the corner ornaments */
   .hpp-hud__cluster--top {
     top: auto;
     bottom: clamp(88px, 15vh, 148px);
   }
 
-  /* NA05 only — IV hidden; placed above lowered spec strip */
+  /* Bottom cluster: overflow-prone long text — hide entirely */
   .hpp-hud__cluster--bottom {
-    bottom: clamp(200px, 36vh, 280px);
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
-  .hpp-hud__cluster--bottom .hpp-hud__serif {
     display: none;
   }
 
-  .hpp-hud__cluster--left .hpp-hud__code,
+  /* Left: keep SVG sig, hide code text */
+  .hpp-hud__cluster--left .hpp-hud__code {
+    display: none;
+  }
+
+  /* Right: keep mark SVG, hide code text */
   .hpp-hud__cluster--right .hpp-hud__code--sm {
     display: none;
   }
+
+  /* Top cluster: only show "RAG" — hide sub, dot and pill */
+  .hpp-hud__cluster--top .hpp-hud__sub,
+  .hpp-hud__cluster--top .hpp-hud__dot,
+  .hpp-hud__cluster--top .hpp-hud__pill {
+    display: none;
+  }
+
+  /* Resize ornaments for mobile */
   .hpp-hud__sig {
     width: 56px;
     height: 28px;
   }
 
-  /* Slightly quieter so microcopy doesn’t read as duplicate hero title */
+  .hpp-hud__mark {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0;
+  }
+
+  /* RAG label: slightly quieter so it doesn’t read as duplicate hero title */
   .hpp-hud__head {
     font-size: clamp(0.75rem, 3.2vw, 0.95rem);
     letter-spacing: 0.16em;
     opacity: 0.72;
-  }
-  .hpp-hud__sub,
-  .hpp-hud__dot {
-    font-size: 7px;
-    letter-spacing: 0.12em;
-  }
-  .hpp-hud__pill {
-    margin-top: 6px;
-    font-size: 7px;
   }
 }
 </style>
