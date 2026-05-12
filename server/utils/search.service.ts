@@ -3,7 +3,7 @@ import { generateText, type LanguageModel } from 'ai'
 import { prisma } from './prisma'
 import { generateEmbedding } from './embedding'
 import { truncate } from './text'
-import { getSetting, getNumericSetting, getBoolSetting } from './settings.service'
+import { getSetting, getNumericSetting, getBoolSetting } from './settings.service.ts'
 
 export interface SearchResult {
   chunkId: string

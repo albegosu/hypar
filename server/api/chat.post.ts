@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
   const messages = body.messages as UIMessage[]
   validateMessageSize(messages)
 
-  const userId = body.userId?.trim() || undefined
+  const userId = requireSessionUserId(event)
 
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')
   const lastUserText = lastUser ? getMessageText(lastUser) : ''
