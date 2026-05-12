@@ -87,6 +87,7 @@ export default defineNuxtConfig({
     ragMaxContext: Number(process.env.RAG_MAX_CONTEXT ?? 4096),
     ragResponseLang: process.env.RAG_RESPONSE_LANG ?? 'auto',
     ragSystemPrompt: process.env.RAG_SYSTEM_PROMPT ?? '',
+    agentMaxSteps: Number(process.env.AGENT_MAX_STEPS ?? 5),
     // App
     memoryScope: process.env.MEMORY_SCOPE ?? 'local_per_user',
     memoryProactive: process.env.MEMORY_PROACTIVE === 'true',

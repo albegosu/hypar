@@ -46,12 +46,13 @@ function getLlmCfg() {
 
 async function getRagCfg() {
   const config = useRuntimeConfig()
-  const [tempStr, citationsStr, maxCtxStr, langStr, promptStr] = await Promise.all([
+  const [tempStr, citationsStr, maxCtxStr, langStr, promptStr, maxStepsStr] = await Promise.all([
     getSetting('RAG_TEMPERATURE', String(config.ragTemperature ?? 0.3)),
     getSetting('RAG_CITATIONS', String(config.ragCitations ?? true)),
     getSetting('RAG_MAX_CONTEXT', String(config.ragMaxContext ?? 4096)),
     getSetting('RAG_RESPONSE_LANG', String(config.ragResponseLang ?? 'auto')),
     getSetting('RAG_SYSTEM_PROMPT', String(config.ragSystemPrompt ?? '')),
+    getSetting('AGENT_MAX_STEPS', String(config.agentMaxSteps ?? 5)),
   ])
   return {
     ragTemperature: getNumericSetting(tempStr, 0.3),
@@ -59,6 +60,7 @@ async function getRagCfg() {
     ragMaxContext: Math.max(512, getNumericSetting(maxCtxStr, 4096)),
     ragResponseLang: langStr || 'auto',
     ragSystemPrompt: promptStr,
+    agentMaxSteps: Math.max(1, Math.min(20, getNumericSetting(maxStepsStr, 5))),
   }
 }
 
@@ -184,8 +186,14 @@ export async function agentStreamText(
 
   let system: string
   if (searchMode === 'direct') system = directSystem
-  else if (searchMode === 'search') system = cfg.ragSystemPrompt || searchSystem
-  else system = cfg.ragSystemPrompt || defaultSystem
+  else if (searchMode === 'search') system = searchSystem
+  else system = defaultSystem
+
+  // Custom RAG_SYSTEM_PROMPT is appended as extra guidance so the base
+  // tool-call instructions are preserved in every mode.
+  if (cfg.ragSystemPrompt?.trim()) {
+    system += `\n\n# Additional instructions\n${cfg.ragSystemPrompt.trim()}`
+  }
 
   if (searchMode !== 'direct') {
     if (cfg.ragResponseLang === 'es') system += '\n- Responde siempre en español.'
@@ -220,7 +228,7 @@ export async function agentStreamText(
     messages: modelMessages,
     ...(searchMode !== 'direct' && {
       tools: buildKbTools(userId, limit, retrievedChunks, model, cfg),
-      stopWhen: stepCountIs(5),
+      stopWhen: stepCountIs(cfg.agentMaxSteps),
       ...(searchMode === 'search' && { toolChoice: 'required' }),
     }),
     temperature: cfg.ragTemperature,
