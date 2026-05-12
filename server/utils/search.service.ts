@@ -61,9 +61,10 @@ async function getSearchConfig() {
   return { topK, minScore, hybridAlpha, rerank }
 }
 
-function getMemoryScope(): string {
+async function getMemoryScope(): Promise<string> {
   const config = useRuntimeConfig()
-  return (config.memoryScope as string) || 'local_per_user'
+  const scope = await getSetting('MEMORY_SCOPE', String(config.memoryScope ?? 'local_per_user'))
+  return scope.trim() || 'local_per_user'
 }
 
 async function expandQueryHyDE(query: string, model: LanguageModel): Promise<string> {
@@ -103,7 +104,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   const embeddingStr = `[${queryEmbedding.join(',')}]`
   const fetchLimit = Math.max(limit * overFetch, limit + 5)
 
-  const memoryScope = getMemoryScope().trim()
+  const memoryScope = (await getMemoryScope()).trim()
   const conditions: Prisma.Sql[] = []
 
   if (options.documentId) {

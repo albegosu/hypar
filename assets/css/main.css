@@ -211,6 +211,54 @@
 }
 .terminal-theme .wz-btn-danger:hover { background-color: rgba(248, 113, 113, 0.10); }
 
+/* Inline status (settings save, etc.) — readable in dark & light terminal theme */
+.terminal-theme .wz-flash {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--term-radius-lg);
+  border: 1px solid var(--term-accent-line);
+  background-color: var(--term-bg-elevated);
+  font-family: var(--term-font-sans);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--term-text-strong);
+}
+.terminal-theme .wz-flash--ok {
+  border-color: var(--term-accent-line);
+  background-color: var(--term-accent-soft);
+  box-shadow: 0 0 0 1px var(--term-accent-faint);
+}
+.terminal-theme .wz-flash--err {
+  border-color: rgba(248, 113, 113, 0.45);
+  background-color: rgba(248, 113, 113, 0.12);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.08);
+}
+.terminal-theme .wz-flash__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  margin-top: 0.05rem;
+}
+.terminal-theme .wz-flash--ok .wz-flash__icon {
+  background-color: var(--term-accent-strong);
+  color: #000;
+}
+.terminal-theme.theme-light .wz-flash--ok .wz-flash__icon {
+  color: var(--term-bg);
+}
+.terminal-theme .wz-flash--err .wz-flash__icon {
+  background-color: rgba(248, 113, 113, 0.22);
+  color: var(--term-danger);
+}
+
 .terminal-theme .wz-theme-toggle {
   border: 1px solid var(--term-accent-line);
   border-radius: 999px;

@@ -57,11 +57,16 @@ import type { ConfigField } from '~/utils/setup';
 import WizardConfigField from './WizardConfigField.vue';
 import { useI18n } from 'vue-i18n';
 
-const props = defineProps<{
-  stepId: string;
-  fields: ConfigField[];
-  modelValue: Record<string, any>;
-}>();
+const props = withDefaults(
+  defineProps<{
+    stepId: string;
+    fields: ConfigField[];
+    modelValue: Record<string, any>;
+    /** When false, required/validation messages are hidden until the parent turns this on (e.g. after Next). */
+    showFieldErrors?: boolean;
+  }>(),
+  { showFieldErrors: true },
+);
 
 const emit = defineEmits<{
   'update:modelValue': [value: Record<string, any>];
@@ -82,7 +87,7 @@ function isVisible(field: ConfigField): boolean {
 const visibleBasic = computed(() => basicFields.value.filter(isVisible));
 const visibleAdvanced = computed(() => advancedFields.value.filter(isVisible));
 
-const errors = computed<Record<string, string | null>>(() => {
+const rawErrors = computed<Record<string, string | null>>(() => {
   const out: Record<string, string | null> = {};
   for (const field of props.fields) {
     if (!isVisible(field)) {
@@ -103,7 +108,16 @@ const errors = computed<Record<string, string | null>>(() => {
   return out;
 });
 
-const isValid = computed(() => Object.values(errors.value).every((e) => e == null));
+const errors = computed<Record<string, string | null>>(() => {
+  if (!props.showFieldErrors) {
+    const masked: Record<string, string | null> = {};
+    for (const id of Object.keys(rawErrors.value)) masked[id] = null;
+    return masked;
+  }
+  return rawErrors.value;
+});
+
+const isValid = computed(() => Object.values(rawErrors.value).every((e) => e == null));
 
 watchEffect(() => emit('valid-change', isValid.value));
 

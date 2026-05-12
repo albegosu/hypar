@@ -86,7 +86,7 @@ export const step1: WizardStep = {
   },
 };
 
-function buildDatabaseUrl(cfg: WizardConfig): string {
+export function buildDatabaseUrl(cfg: WizardConfig): string {
   const type = get(cfg, 'vectorDb', 'vectorDbType', 'pgvector');
   if (type === 'supabase') {
     const ref = get(cfg, 'vectorDb', 'supabaseProjectRef', '<project-ref>');

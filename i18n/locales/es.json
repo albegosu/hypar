@@ -3,6 +3,21 @@
     "brand": "hypar",
     "subtitle": "consola de chat con recuperación aumentada"
   },
+  "welcomeModal": {
+    "cmd": "hypar --welcome",
+    "badge": "primera visita",
+    "title": "// bienvenido a hypar",
+    "subtitle": "Recorre seis pasos breves para conectar proveedores, tu almacén vectorial, embeddings, troceado de texto, búsqueda y chat — y empezar a hablar con tus documentos.",
+    "stepsLabel": "ruta del wizard",
+    "stepTags": ["proveedores", "vector", "embed", "chunks", "búsqueda", "rag"],
+    "features": {
+      "providers": "Elige modelos y claves API según ejecutes en local o en la nube.",
+      "vector": "Indica Postgres + pgvector u otro almacén compatible.",
+      "layers": "Cada pantalla explica qué hace esa capa para que nada sea una caja negra."
+    },
+    "cta": "abrir wizard de configuración",
+    "skip": "ahora no"
+  },
   "nav": {
     "chat": "chat",
     "documents": "docs",
@@ -130,10 +145,10 @@
       "search": "[ búsqueda ]",
       "rag": "[ rag ]"
     },
-    "savedOk": "✓ {tab} guardado — activo de inmediato",
-    "savedFail": "✗ Error al guardar. Comprueba el token e inténtalo de nuevo.",
-    "resetOk": "✓ Restaurado a .env — sobreescrituras en DB eliminadas",
-    "resetFail": "✗ Error al restaurar."
+    "savedOk": "Se guardó {section}. Los cambios aplican al instante, sin reiniciar.",
+    "savedFail": "No se pudo guardar. Comprueba el token de administrador e inténtalo otra vez.",
+    "resetOk": "Restaurado a los valores de .env; se eliminaron las sobreescrituras en la base de datos.",
+    "resetFail": "No se pudo restaurar. Comprueba el token e inténtalo otra vez."
   },
   "common": {
     "loading": "cargando…",
@@ -159,16 +174,22 @@
       "prev": "anterior",
       "next": "siguiente",
       "downloadEnv": "descargar config .env",
+      "applyRuntime": "aplicar al servidor en marcha",
+      "applyRuntimeSuccess": "Ajustes guardados. El servidor ya lee estos valores desde la base de datos (mismo mecanismo que el panel admin).",
+      "applyRuntimeError": "No se pudieron aplicar los ajustes. Reintenta o usa descargar .env.",
+      "runtimeNoticeTitle": "Cómo encaja este wizard con la app en ejecución",
+      "runtimeNoticeBody": "Los valores viven en el navegador y, si aún no hay admin, se pueden sincronizar con este servidor. El servidor Node no lee localStorage: usa variables de entorno y, tras pulsar aplicar, las mismas filas de BD que el panel admin (BD > .env > defectos). Descargar .env sigue siendo lo adecuado para otra máquina, Docker o CI. Si cambias DATABASE_URL, reinicia la app y define la variable en el entorno real o compose — Prisma no re-conecta solo desde el wizard.",
       "copySetup": "copiar comandos setup",
       "setupCopied": "setup copiado",
       "nextStepsTitle": "siguientes pasos",
       "stepCloneRepo": "Clona tu repositorio RAG",
-      "stepAddEnv": "Coloca este archivo descargado como `.env` en la raíz del proyecto",
-      "stepRunStack": "Arranca servicios y app",
+      "stepAddEnv": "Descarga `.env` en la raíz del proyecto, o usa Aplicar para volcar ajustes en este servidor (claves y tuning sin reinicio).",
+      "stepRestart": "Si cambiaste la URL de la base de datos, reinicia Nuxt o los contenedores y define DATABASE_URL en el entorno del host o compose.",
+      "stepRunStack": "Instala dependencias y arranca el stack",
       "ready": "listo",
       "requiredMissing": "faltan campos requeridos",
       "configCommand": "configure --step={stepId}",
-      "storageInfo": "escribe -> localStorage://rag-wizard-config"
+      "storageInfo": "escribe -> localStorage + sync servidor (antes del primer admin)"
     },
     "intro": {
       "title": "wizard de onboarding",

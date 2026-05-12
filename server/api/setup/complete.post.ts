@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { auth } from '~/server/lib/auth'
 import { prisma } from '~/server/utils/prisma'
+import { requirePreInitialSetup } from '~/server/utils/setup-pre-user'
 
 const schema = z.object({
   name: z.string().min(1).max(200),
@@ -9,11 +10,7 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const configured = await prisma.setting.findUnique({ where: { key: 'app.configured' } })
-  if (configured) throw createError({ statusCode: 409, statusMessage: 'Already configured' })
-
-  const userCount = await prisma.user.count()
-  if (userCount > 0) throw createError({ statusCode: 409, statusMessage: 'Already configured' })
+  await requirePreInitialSetup()
 
   const body = await readValidatedBody(event, schema.parse)
 
@@ -26,6 +23,8 @@ export default defineEventHandler(async (event) => {
   await prisma.setting.create({
     data: { key: 'app.configured', value: 'true', category: 'system' },
   })
+
+  await prisma.setting.deleteMany({ where: { key: 'wizard.state' } })
 
   return { ok: true }
 })

@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client'
 import { registerStepFunction } from 'workflow/internal/private'
 import type { Chunk } from '../utils/chunking'
 import { splitIntoChunks, getChunkConfig } from '../utils/chunking'
-import { generateEmbeddings } from '../utils/embedding'
+import { generateEmbeddings, invalidateEmbeddingCache } from '../utils/embedding'
 import { prisma } from '../utils/prisma'
 import { stripNul } from '../utils/text'
 
@@ -17,6 +17,9 @@ export default defineNitroPlugin(() => {
   registerStepFunction(
     `${NS}//embedChunksWithRetry`,
     async (texts: string[]): Promise<number[][]> => {
+      // Invalidate any cached embeddings so a re-ingest always uses fresh vectors.
+      await invalidateEmbeddingCache(texts)
+
       const MAX_ATTEMPTS = 3
       const BASE_DELAY_MS = 500
       let lastErr: unknown

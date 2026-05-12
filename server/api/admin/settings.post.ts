@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { requireAdmin } from '../../utils/admin-auth'
+import { requireAuthOrAdminApiKey } from '../../utils/admin-auth'
 import { upsertSetting } from '../../utils/settings.service'
 
 const VALID_CATEGORIES = ['apis', 'vectorDb', 'embeddings', 'chunking', 'search', 'rag', 'general']
@@ -11,7 +11,7 @@ const bodySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  requireAdmin(event)
+  requireAuthOrAdminApiKey(event)
 
   const body = await readBody(event)
   const parsed = bodySchema.safeParse(body)

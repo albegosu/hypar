@@ -3,7 +3,7 @@ export default defineNuxtRouteMiddleware(async () => {
 
   try {
     const session = await $fetch<{ user?: { role?: string } }>('/api/auth/get-session')
-    if (session?.user?.role === 'admin') return
+    if (session?.user) return
   } catch {
     // fall through
   }

@@ -22,10 +22,19 @@
       <!-- Status banner -->
       <div
         v-if="saveStatus"
-        class="text-xs px-3 py-2 rounded"
-        :class="saveStatus.ok ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'"
+        role="status"
+        class="wz-flash"
+        :class="saveStatus.ok ? 'wz-flash--ok' : 'wz-flash--err'"
       >
-        {{ saveStatus.message }}
+        <span class="wz-flash__icon" aria-hidden="true">
+          <UIcon
+            :name="saveStatus.ok ? 'i-heroicons-check' : 'i-heroicons-x-mark'"
+            class="size-2"
+          />
+        </span>
+        <p class="min-w-0 pt-0.5 m-0 font-medium tracking-tight">
+          {{ saveStatus.message }}
+        </p>
       </div>
 
       <!-- Config form for active tab -->
@@ -145,7 +154,10 @@ async function saveTab() {
         }),
     )
     loadedValues.value[activeTab.value] = { ...formValues.value }
-    saveStatus.value = { ok: true, message: t('settings.savedOk', { tab: activeTab.value }) }
+    saveStatus.value = {
+      ok: true,
+      message: t('settings.savedOk', { section: t(`settings.tabs.${activeTab.value}`) }),
+    }
   } catch {
     saveStatus.value = { ok: false, message: t('settings.savedFail') }
   } finally {
