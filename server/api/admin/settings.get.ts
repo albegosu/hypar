@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
 
   // Enrich with env var fallbacks for keys not saved in DB (BD > .env > default)
   const envFallbacks: Record<string, string> = {}
-  for (const field of step.configFields) {
+  for (const field of step.configFields ?? []) {
     if (!field.envKey) continue
     const envVal = process.env[field.envKey]
     if (envVal !== undefined && envVal !== '') {
