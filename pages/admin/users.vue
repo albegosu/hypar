@@ -83,7 +83,7 @@ async function toggleRole(user: { id: string; role: string }) {
   await refresh()
 }
 
-async function toggleBan(user: { id: string; banned: boolean }) {
+async function toggleBan(user: { id: string; banned: boolean | null }) {
   await $fetch(`/api/admin/users/${user.id}`, {
     method: 'PATCH',
     body: { banned: !user.banned },

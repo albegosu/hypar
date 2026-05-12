@@ -532,7 +532,7 @@ async function loadConversation(id: string) {
     conversationId.value = conv.id
     if (typeof window !== 'undefined') window.sessionStorage.setItem(CONV_ID_KEY, conv.id)
     chat.messages = conv.messages.map((m) => {
-      const rawParts: Array<{ type: string }> =
+      const rawParts: Array<{ type: string; [key: string]: unknown }> =
         Array.isArray(m.parts) && (m.parts as unknown[]).length
           ? (m.parts as Array<{ type: string }>)
           : [{ type: 'text', text: m.content }]
