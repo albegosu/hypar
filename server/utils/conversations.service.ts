@@ -58,7 +58,7 @@ export async function refreshConversationTitleFromUserPrompt(
 export async function listConversations(userId: string | undefined): Promise<ConversationSummary[]> {
   const where: Prisma.ConversationWhereInput = userId?.trim()
     ? { userId: userId.trim() }
-    : { userId: null }
+    : { userId: 'legacy' }
 
   const rows = await prisma.conversation.findMany({
     where,
@@ -88,7 +88,7 @@ export async function getConversation(id: string, userId: string | undefined) {
     include: { messages: { orderBy: { createdAt: 'asc' } } },
   })
   if (!conv) throw notFound('Conversation not found')
-  if ((conv.userId ?? null) !== (userId?.trim() || null)) {
+  if (conv.userId !== (userId?.trim() || 'legacy')) {
     throw notFound('Conversation not found') // hide existence from other users
   }
   return conv
@@ -97,7 +97,7 @@ export async function getConversation(id: string, userId: string | undefined) {
 export async function deleteConversation(id: string, userId: string | undefined): Promise<void> {
   const conv = await prisma.conversation.findUnique({ where: { id }, select: { userId: true } })
   if (!conv) throw notFound('Conversation not found')
-  if ((conv.userId ?? null) !== (userId?.trim() || null)) {
+  if (conv.userId !== (userId?.trim() || 'legacy')) {
     throw notFound('Conversation not found')
   }
   await prisma.conversation.delete({ where: { id } })
@@ -122,7 +122,7 @@ export async function ensureConversation(
 
   const created = await prisma.conversation.create({
     data: {
-      userId: userId?.trim() || null,
+      userId: userId?.trim() || 'legacy',
       title: deriveTitle(firstUserText),
     },
     select: { id: true },

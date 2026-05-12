@@ -1,23 +1,21 @@
 import type { H3Event } from 'h3'
 
 /**
- * Verify admin auth header. Throws 401 unless ADMIN_API_KEY is set in config
- * AND the caller provides a matching `Authorization: Bearer <key>` or
- * `x-admin-key: <key>` header.
- *
- * If ADMIN_API_KEY is empty, all admin endpoints are denied — never opened.
+ * Verify admin access. Accepts either:
+ *   1. A session user with role === 'admin'
+ *   2. A matching ADMIN_API_KEY header (for CI/scripts)
  */
 export function requireAdmin(event: H3Event): void {
-  const key = (useRuntimeConfig().adminApiKey as string) || ''
-  if (!key) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Admin API disabled (ADMIN_API_KEY not set)',
-    })
+  // API key fallback for CI/scripts
+  const apiKey = (useRuntimeConfig().adminApiKey as string) || ''
+  if (apiKey) {
+    const header = getHeader(event, 'authorization') ?? getHeader(event, 'x-admin-key') ?? ''
+    const provided = header.startsWith('Bearer ') ? header.slice(7) : header
+    if (provided === apiKey) return
   }
-  const auth = getHeader(event, 'authorization') ?? getHeader(event, 'x-admin-key') ?? ''
-  const provided = auth.startsWith('Bearer ') ? auth.slice(7) : auth
-  if (provided !== key) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+
+  // Role-based check via session
+  const user = event.context.auth?.user
+  if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  if (user.role !== 'admin') throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
 }

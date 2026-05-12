@@ -39,6 +39,8 @@ const bodySchema = z.object({
   userId: z.string().max(200).optional(),
   conversationId: z.string().uuid().optional(),
   limit: z.number().int().min(1).max(20).optional(),
+  model: z.string().max(200).optional(),
+  searchMode: z.enum(['auto', 'search', 'direct']).optional(),
 })
 
 function classifyError(error: unknown): { statusCode: number; message: string } {
@@ -154,6 +156,8 @@ export default defineEventHandler(async (event) => {
       userId,
       limit: body.limit ?? 8,
       retrievedChunks,
+      modelOverride: body.model,
+      searchMode: body.searchMode,
     })
   } catch (error) {
     console.error('[chat] pre-stream error:', error)

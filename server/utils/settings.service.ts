@@ -64,7 +64,8 @@ export async function upsertSetting(key: string, value: string, category: string
     update: { value, category },
     create: { key, value, category },
   })
-  toCache(key, value)
+  if (value) toCache(key, value)
+  else invalidateCache(key)
 }
 
 export function getNumericSetting(value: string, fallback: number): number {

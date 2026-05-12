@@ -49,6 +49,7 @@
                 <UIcon name="i-heroicons-arrow-path" class="w-3.5 h-3.5" />
                 {{ reprocessing ? '…' : t('document.rechunk') }}
               </button>
+
               <button
                 type="button"
                 class="wz-btn-danger text-xs"
@@ -62,6 +63,14 @@
           </div>
         </div>
       </header>
+
+      <RagIngestProgress
+        v-if="reprocessDocumentId && reprocessRunId"
+        :document-id="reprocessDocumentId"
+        :run-id="reprocessRunId"
+        @complete="onReprocessComplete"
+        @failed="onReprocessFailed"
+      />
 
       <section>
         <h2 class="text-[10px] uppercase tracking-widest wz-label mb-3 flex items-center gap-2">
@@ -116,6 +125,8 @@ const doc = ref<DocumentDetail | null>(null)
 const loading = ref(true)
 const deleting = ref(false)
 const reprocessing = ref(false)
+const reprocessDocumentId = ref('')
+const reprocessRunId = ref('')
 
 const documentId = computed(() => String(route.params.id))
 
@@ -149,35 +160,32 @@ async function onDelete() {
 
 async function onReprocess() {
   reprocessing.value = true
+  reprocessDocumentId.value = ''
+  reprocessRunId.value = ''
   try {
     const { runId } = await store.reprocessDocument(documentId.value)
-    let status = 'processing'
-    let lastError: string | null = null
-    // API uses ingestStatus 'ready' on success (not 'completed').
-    while (status !== 'ready' && status !== 'completed' && status !== 'failed') {
-      await new Promise(r => setTimeout(r, 1500))
-      const poll = await $fetch<{ status: string; error?: string | null }>(
-        `/api/documents/${documentId.value}/ingest-status?runId=${encodeURIComponent(runId)}`,
-      )
-      status = poll.status
-      lastError = poll.error ?? null
-    }
-    if (status === 'failed') {
-      toast.add({
-        title: t('document.rechunkFailed'),
-        description: lastError ?? '',
-        color: 'error',
-      })
-      await load()
-      return
-    }
-    toast.add({ title: t('document.rechunkOk') })
-    await load()
+    reprocessDocumentId.value = documentId.value
+    reprocessRunId.value = runId
   } catch (err: any) {
     toast.add({ title: t('document.rechunkFailed'), description: err?.message ?? '', color: 'error' })
-  } finally {
     reprocessing.value = false
   }
+}
+
+async function onReprocessComplete() {
+  reprocessDocumentId.value = ''
+  reprocessRunId.value = ''
+  reprocessing.value = false
+  toast.add({ title: t('document.rechunkOk') })
+  await load()
+}
+
+function onReprocessFailed(error: string | null) {
+  reprocessDocumentId.value = ''
+  reprocessRunId.value = ''
+  reprocessing.value = false
+  toast.add({ title: t('document.rechunkFailed'), description: error ?? '', color: 'error' })
+  load()
 }
 
 function iconForType(type: string) {

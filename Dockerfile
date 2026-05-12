@@ -21,7 +21,7 @@ RUN apk add --no-cache libc6-compat dumb-init
 WORKDIR /app
 
 LABEL org.opencontainers.image.title="from-zero-rag" \
-      org.opencontainers.image.description="Unified Nuxt 3 app — RAG UI, Learning Quest, and server API" \
+      org.opencontainers.image.description="Unified Nuxt 3 app — RAG UI, multi-user auth, and server API" \
       org.opencontainers.image.source="https://github.com/albegosu/from-zero-rag" \
       org.opencontainers.image.licenses="MIT"
 

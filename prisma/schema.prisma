@@ -17,10 +17,7 @@ model Document {
   title        String
   content      String   // Full original content
   sourceType   String   // 'text', 'markdown', 'pdf', 'web'
-  // Optional user/tenant identifier for local dev "per-user" memory.
-  // - uploaded docs can leave this null (global)
-  // - chat memories should set it
-  userId       String?
+  userId       String
   metadata     Json?    // Flexible metadata
   ingestStatus String   @default("pending") // 'pending' | 'processing' | 'ready' | 'failed'
   ingestError  String?
@@ -57,7 +54,7 @@ model Chunk {
 // Conversation = a chat session, optionally per user
 model Conversation {
   id        String    @id @default(uuid())
-  userId    String?
+  userId    String
   title     String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
