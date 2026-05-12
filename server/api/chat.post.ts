@@ -93,19 +93,16 @@ export default defineEventHandler(async (event) => {
   )
   const conversationId = convMeta.id
 
-  // Persist the new user message (idempotent enough for MVP — duplicates would
-  // require client retries, which the SDK does not do).
-  if (lastUser) {
-    await appendUserMessage(conversationId, lastUser, lastUserText)
-      .then(() => refreshConversationTitleFromUserPrompt(conversationId, lastUserText))
-      .catch((err) => {
-        console.error('[chat] failed to persist user message:', err)
-      })
-  }
-
   // ── Memory command short-circuit (no model call) ─────────────────────────
+  // For commands we persist the user message right away — there's no remote
+  // call that can fail and leave it orphaned.
   const memoryCmd = parseMemoryCommand(lastUserText)
   if (memoryCmd) {
+    if (lastUser) {
+      await appendUserMessage(conversationId, lastUser, lastUserText)
+        .then(() => refreshConversationTitleFromUserPrompt(conversationId, lastUserText))
+        .catch((err) => console.error('[chat] failed to persist user message:', err))
+    }
     const startedAt = Date.now()
     const reply = await runMemoryCommand({
       ...memoryCmd,
@@ -160,9 +157,20 @@ export default defineEventHandler(async (event) => {
       searchMode: body.searchMode,
     })
   } catch (error) {
+    // Stream setup failed (e.g. bad API key, unreachable Ollama). The user
+    // message has NOT been persisted yet, so there's no orphan to clean up.
     console.error('[chat] pre-stream error:', error)
     const { statusCode, message } = classifyError(error)
     throw createError({ statusCode, statusMessage: message })
+  }
+
+  // Stream setup succeeded — now safe to persist the user turn. If the stream
+  // truncates later we still get a user msg + the EMPTY_REPLY_AFTER_RETRIEVAL
+  // placeholder from the .then() below, so the conversation stays consistent.
+  if (lastUser) {
+    await appendUserMessage(conversationId, lastUser, lastUserText)
+      .then(() => refreshConversationTitleFromUserPrompt(conversationId, lastUserText))
+      .catch((err) => console.error('[chat] failed to persist user message:', err))
   }
 
   // When the stream finishes, persist the assistant message and audit the query.
