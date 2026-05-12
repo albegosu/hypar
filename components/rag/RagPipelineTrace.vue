@@ -24,13 +24,13 @@
         <RagPipelineStepRow
           status="done"
           label="VECTOR SEARCH"
-          :detail="`cosine similarity · top-${params.topK * 3} candidates`"
+          :detail="`cosine similarity · top-${fetchLimit} candidates`"
         />
         <RagPipelineStepRow
           v-if="params.hybridEnabled"
           status="done"
           label="BM25 SEARCH"
-          :detail="`keyword matching · top-${params.topK * 3} candidates`"
+          :detail="`keyword matching · top-${fetchLimit} candidates`"
         />
         <RagPipelineStepRow
           v-if="params.hybridEnabled"
@@ -101,6 +101,11 @@ const props = defineProps<{
 const open = ref(false)
 
 const separator = '─'.repeat(42)
+
+// Mirrors server/utils/search.service.ts: fetchLimit = max(topK * overFetch, topK + 5)
+const fetchLimit = computed(() =>
+  Math.max(props.params.topK * (props.params.overFetch ?? 3), props.params.topK + 5),
+)
 
 function scoreBar(score: number): string {
   const filled = Math.round(score * 5)
