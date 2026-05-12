@@ -444,6 +444,17 @@ export const step6: WizardStep = {
         { value: 'es', label: 'español' },
       ],
     },
+    {
+      id: 'agentMaxSteps',
+      label: 'AGENT_MAX_STEPS',
+      type: 'number',
+      envKey: 'AGENT_MAX_STEPS',
+      advanced: true,
+      defaultValue: 5,
+      min: 1,
+      max: 20,
+      helpText: 'max tool-call rounds the agent can make per message',
+    },
   ],
 
   envSnippet: (cfg) => `# RAG generation
@@ -451,7 +462,8 @@ RAG_TEMPERATURE=${get(cfg, 'rag', 'temperature', 0.3)}
 RAG_CITATIONS=${get(cfg, 'rag', 'citationsEnabled', true)}
 RAG_MAX_CONTEXT=${get(cfg, 'rag', 'maxContextTokens', 4096)}
 RAG_RESPONSE_LANG=${get(cfg, 'rag', 'responseLanguage', 'auto')}
-RAG_SYSTEM_PROMPT="${get(cfg, 'rag', 'systemPromptTemplate', '').replace(/"/g, '\\"')}"`,
+RAG_SYSTEM_PROMPT="${get(cfg, 'rag', 'systemPromptTemplate', '').replace(/"/g, '\\"')}"
+AGENT_MAX_STEPS=${get(cfg, 'rag', 'agentMaxSteps', 5)}`,
 
   hasCodePreview: true,
   codeSnippet: {
