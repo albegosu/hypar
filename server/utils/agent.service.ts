@@ -14,7 +14,7 @@ import { createMistral } from '@ai-sdk/mistral'
 import { z } from 'zod'
 import { normalizeOllamaNativeHost } from './ollama'
 import { rag, logRagQuery, type SearchResult } from './search.service'
-import { getSetting, getNumericSetting, getBoolSetting } from './settings.service'
+import { getSetting, getNumericSetting, getBoolSetting } from './settings.service.ts'
 import {
   createChatMemory,
   deleteChatMemories,

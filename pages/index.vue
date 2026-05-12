@@ -296,7 +296,6 @@ import { useI18n } from 'vue-i18n'
 import { Chat } from '@ai-sdk/vue'
 import { DefaultChatTransport, APICallError, type UIMessage } from 'ai'
 import { marked } from 'marked'
-import { useUserId } from '~/composables/useUserId'
 import type { SearchResult, ConverseSource } from '~/stores/documents'
 
 interface KbToolOutput {
@@ -308,7 +307,6 @@ interface KbToolOutput {
 
 const { t } = useI18n()
 const store = useDocumentsStore()
-const { userId } = useUserId()
 const input = ref('')
 const lastSentInput = ref('')
 const scrollRef = ref<HTMLElement | null>(null)
@@ -332,7 +330,6 @@ const chat = new Chat({
   transport: new DefaultChatTransport({
     api: '/api/chat',
     body: () => ({
-      userId: userId.value || undefined,
       conversationId: conversationId.value || undefined,
     }),
   }),
@@ -342,7 +339,7 @@ async function ensureConversationId(): Promise<string> {
   if (conversationId.value) return conversationId.value
   const { id } = await $fetch<{ id: string }>('/api/conversations', {
     method: 'POST',
-    body: { userId: userId.value || undefined },
+    body: {},
   })
   conversationId.value = id
   if (typeof window !== 'undefined') window.sessionStorage.setItem(CONV_ID_KEY, id)
@@ -352,9 +349,7 @@ async function ensureConversationId(): Promise<string> {
 
 async function fetchConversations() {
   try {
-    const { items } = await $fetch<{ items: ConversationSummary[] }>('/api/conversations', {
-      query: { userId: userId.value || undefined },
-    })
+    const { items } = await $fetch<{ items: ConversationSummary[] }>('/api/conversations')
     conversations.value = items
   } catch {
     /* non-fatal */
@@ -366,7 +361,7 @@ async function loadConversation(id: string) {
     const conv = await $fetch<{
       id: string
       messages: Array<{ id: string; role: string; content: string; parts: unknown; sources: unknown }>
-    }>(`/api/conversations/${id}`, { query: { userId: userId.value || undefined } })
+    }>(`/api/conversations/${id}`)
     conversationId.value = conv.id
     if (typeof window !== 'undefined') window.sessionStorage.setItem(CONV_ID_KEY, conv.id)
     chat.messages = conv.messages.map((m) => ({
@@ -391,10 +386,7 @@ async function newConversation() {
 }
 
 async function deleteConversation(id: string) {
-  await $fetch(`/api/conversations/${id}`, {
-    method: 'DELETE',
-    query: { userId: userId.value || undefined },
-  })
+  await $fetch(`/api/conversations/${id}`, { method: 'DELETE' })
   if (conversationId.value === id) await newConversation()
   await fetchConversations()
 }
