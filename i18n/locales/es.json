@@ -135,19 +135,6 @@
     "loading": "cargando…",
     "cancel": "cancelar"
   },
-  "home": {
-    "header": "bienvenido --rag-quest",
-    "title": "// monta tu sistema RAG",
-    "subtitle": "Onboarding: genera tu configuración local RAG (`.env`) y arranca el stack. Challenges: aprende embeddings, chunking y recuperación de punta a punta.",
-    "ctaOnboarding": "iniciar onboarding (configurar RAG) ▶",
-    "ctaChallenges": "ir a challenges →",
-    "durationLabel": "duración",
-    "durationValue": "~30 min",
-    "stepsLabel": "pasos",
-    "stepsValue": "6 guiados",
-    "configLabel": "config",
-    "configValue": "100% local"
-  },
   "wizard": {
     "chrome": {
       "basic": "básico",
