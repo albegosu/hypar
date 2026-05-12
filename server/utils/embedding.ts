@@ -2,7 +2,7 @@ import { embed, embedMany, type EmbeddingModel } from 'ai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createOpenAI } from '@ai-sdk/openai'
 import { normalizeOllamaNativeHost } from './ollama.ts'
-import { getSetting, getNumericSetting, getBoolSetting } from './settings.service'
+import { getSetting, getNumericSetting, getBoolSetting } from './settings.service.ts'
 
 const DEFAULT_DIMENSIONS = 768
 

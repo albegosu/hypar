@@ -1,5 +1,5 @@
 import { getEncoding, type Tiktoken } from 'js-tiktoken'
-import { getSetting, getNumericSetting } from './settings.service'
+import { getSetting, getNumericSetting } from './settings.service.ts'
 
 export interface Chunk {
   content: string

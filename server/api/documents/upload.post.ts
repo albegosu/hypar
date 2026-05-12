@@ -40,8 +40,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const userIdPart = parts.find((p) => p.name === 'userId')
-  const userId = userIdPart?.data?.toString('utf-8').trim() || undefined
+  const userId = requireSessionUserId(event)
 
   return ingestFromFile(
     {
