@@ -1,4 +1,4 @@
-import { prisma } from './prisma'
+import { prisma } from './prisma.ts'
 
 const CACHE_TTL_MS = 60_000
 

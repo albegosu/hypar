@@ -54,6 +54,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: rag-app
+    env_file: .env
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_password}@postgres:5432/${POSTGRES_DB:-rag_db}
