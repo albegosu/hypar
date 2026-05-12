@@ -8,7 +8,6 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@pinia/nuxt',
     '@vueuse/nuxt',
-    'nuxt-monaco-editor',
     'workflow/nuxt',
     './modules/copy-workflow-bundles',
   ],
@@ -16,7 +15,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   colorMode: {
-    preference: 'dark',
+    preference: 'light',
   },
 
   app: {
@@ -65,6 +64,7 @@ export default defineNuxtConfig({
     mistralApiKey: process.env.MISTRAL_API_KEY ?? '',
     mistralModel: process.env.MISTRAL_MODEL ?? 'mistral-medium-latest',
     openaiLlmModel: process.env.OPENAI_LLM_MODEL ?? 'gpt-4.1-mini',
+    googleLlmModel: process.env.GOOGLE_LLM_MODEL ?? 'gemini-2.5-flash',
     // Step 3 - Embeddings
     embeddingBatchSize: Number(process.env.EMBEDDING_BATCH_SIZE ?? 32),
     embeddingCacheEnabled: process.env.EMBEDDING_CACHE_ENABLED !== 'false',
@@ -92,10 +92,6 @@ export default defineNuxtConfig({
     memoryProactive: process.env.MEMORY_PROACTIVE === 'true',
     adminApiKey: process.env.ADMIN_API_KEY ?? '',
     public: {},
-  },
-
-  monacoEditor: {
-    locale: 'en',
   },
 
   typescript: {

@@ -1,3 +1,0 @@
-{"question":"What is the chunking strategy used by this app?","expectedSubstring":"chunk"}
-{"question":"How are embeddings generated?","expectedSubstring":"embedding"}
-{"question":"Which vector database is used?","expectedSubstring":"pgvector"}

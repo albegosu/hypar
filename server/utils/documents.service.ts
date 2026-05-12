@@ -87,7 +87,7 @@ export async function ingestFromText(input: CreateDocumentInput): Promise<{
       content,
       sourceType: stripNul(input.sourceType) || 'text',
       metadata: sanitizeJsonMetadata(input.metadata) as Prisma.InputJsonValue,
-      userId: input.userId?.trim() || null,
+      userId: input.userId?.trim() || 'legacy',
       ingestStatus: 'processing',
     },
   })
@@ -123,7 +123,7 @@ export async function ingestFromFile(
         size: file.size,
         mime: file.mimetype,
       }) as Prisma.InputJsonValue,
-      userId: opts.userId?.trim() || null,
+      userId: opts.userId?.trim() || 'legacy',
       ingestStatus: 'processing',
     },
   })
@@ -165,6 +165,23 @@ export async function deleteChatMemories(userId: string | undefined, term?: stri
   return prisma.$executeRaw(Prisma.sql`DELETE FROM "Document" ${where}`)
 }
 
+export async function listChatMemories(userId: string | undefined): Promise<string[]> {
+  const userCondition = userId?.trim()
+    ? Prisma.sql`"userId" = ${userId.trim()}`
+    : Prisma.sql`"userId" IS NULL`
+
+  const rows = await prisma.$queryRaw<Array<{ content: string }>>(Prisma.sql`
+    SELECT content
+    FROM "Document"
+    WHERE ${userCondition}
+      AND metadata->>'kind' = 'chat_memory'
+    ORDER BY "createdAt" DESC
+    LIMIT 20
+  `)
+
+  return rows.map((r) => r.content)
+}
+
 export async function chatMemoryExists(
   userId: string | undefined,
   contentSnippet: string,
@@ -189,9 +206,7 @@ export async function chatMemoryExists(
 }
 
 export async function findAll(userId?: string) {
-  const where = userId?.trim()
-    ? { OR: [{ userId: userId.trim() }, { userId: null as string | null }] }
-    : { userId: null as string | null }
+  const where = userId?.trim() ? { userId: userId.trim() } : { userId: 'legacy' }
   return prisma.document.findMany({
     where,
     orderBy: { createdAt: 'desc' },

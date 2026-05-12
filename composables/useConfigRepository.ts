@@ -1,4 +1,4 @@
-import type { WizardConfig } from '~/utils/learning';
+import type { WizardConfig } from '~/utils/setup';
 
 /**
  * Storage abstraction for the wizard configuration.

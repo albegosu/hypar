@@ -18,141 +18,165 @@
           <MicroGlyph name="upload" decorative class="w-6! h-6!" />
         </span>
         <div class="min-w-0 flex-1">
-        <h1 class="text-lg font-semibold wz-strong">// {{ t('upload.title') }}</h1>
-        <p class="wz-muted text-xs mt-1">{{ t('upload.subtitle') }}</p>
+          <h1 class="text-lg font-semibold wz-strong">// {{ t('upload.title') }}</h1>
+          <p class="wz-muted text-xs mt-1">{{ t('upload.subtitle') }}</p>
         </div>
       </div>
     </section>
 
-    <!-- Tabs -->
-    <div class="flex items-center gap-1 mb-4 text-[11px]">
-      <button
-        type="button"
-        class="px-3 py-1.5 rounded transition-colors"
-        :class="activeTab === 0 ? 'wz-pill' : 'wz-faint hover:text-[color:var(--term-text-strong)]'"
-        @click="activeTab = 0"
-      >
-        [● {{ t('upload.tabText') }}]
-      </button>
-      <button
-        type="button"
-        class="px-3 py-1.5 rounded transition-colors"
-        :class="activeTab === 1 ? 'wz-pill' : 'wz-faint hover:text-[color:var(--term-text-strong)]'"
-        @click="activeTab = 1"
-      >
-        [● {{ t('upload.tabFile') }}]
-      </button>
-    </div>
+    <!-- Ingestion progress — stays visible until user dismisses -->
+    <div v-if="ingestDocumentId && ingestRunId" class="space-y-3">
+      <RagIngestProgress
+        :document-id="ingestDocumentId"
+        :run-id="ingestRunId"
+        @complete="onIngestComplete"
+        @failed="onIngestFailed"
+      />
 
-    <!-- Text Input -->
-    <div v-if="activeTab === 0" class="space-y-4">
-      <div>
-        <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldTitle') }}</label>
-        <input
-          v-model="form.title"
-          type="text"
-          class="wz-input mt-1"
-          :placeholder="t('upload.fieldTitlePlaceholder')"
-        >
-      </div>
-
-      <div>
-        <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldContent') }}</label>
-        <textarea
-          v-model="form.content"
-          class="wz-textarea mt-1"
-          rows="12"
-          :placeholder="t('upload.fieldContentPlaceholder')"
-        />
-      </div>
-
-      <div>
-        <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldType') }}</label>
-        <select v-model="form.sourceType" class="wz-select mt-1">
-          <option value="text">text</option>
-          <option value="markdown">markdown</option>
-        </select>
-      </div>
-
-      <div v-if="uploadError" class="wz-panel px-3 py-2 text-xs flex items-start gap-2" style="border-color: var(--term-error, #f87171);">
-        <span style="color: var(--term-error, #f87171);">⚠</span>
-        <span class="wz-muted flex-1">{{ uploadError }}</span>
-        <button type="button" class="wz-btn-ghost text-[10px]" @click="uploadError = null">✕</button>
-      </div>
-
-      <button
-        type="button"
-        class="wz-btn-primary w-full justify-center"
-        :disabled="!form.title || !form.content || uploading"
-        @click="submitText"
-      >
-        {{ uploading ? '…' : `${t('upload.save')} ▶` }}
-      </button>
-    </div>
-
-    <!-- File Upload -->
-    <div v-else class="space-y-4">
-      <div
-        class="wz-panel p-8 text-center cursor-pointer transition-colors"
-        style="border-style: dashed;"
-        @click="fileInput?.click()"
-      >
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-md mb-3" style="background: var(--term-accent-soft); border: 1px solid var(--term-accent-line)">
-          <UIcon name="i-heroicons-cloud-arrow-up" class="w-6 h-6 wz-accent" />
+      <!-- Action panel appears below the steps once complete -->
+      <div v-if="uploadDone" class="wz-panel p-4 space-y-3">
+        <div class="flex items-center gap-2 font-mono text-sm">
+          <span class="wz-accent">[✓]</span>
+          <span class="wz-strong">{{ t('upload.successTitle') }}</span>
         </div>
-        <p class="wz-strong font-medium mb-1">{{ t('upload.dropZone') }}</p>
-        <p class="text-sm wz-muted">{{ t('upload.supports') }}</p>
+        <p class="wz-muted text-xs">{{ t('upload.successHint') }}</p>
+        <div class="flex gap-2 pt-1">
+          <NuxtLink :to="`/documents/${uploadedDocumentId}`" class="wz-btn-outline text-xs">
+            {{ t('upload.successView') }} →
+          </NuxtLink>
+          <button type="button" class="wz-btn-ghost text-xs" @click="resetUpload">
+            {{ t('upload.successAnother') }}
+          </button>
+        </div>
+      </div>
+    </div>
 
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".txt,.md,.pdf"
-          class="hidden"
-          @change="handleFileChange"
-        >
-
+    <!-- Form — hidden during ingestion -->
+    <template v-if="!ingestDocumentId">
+      <!-- Tabs -->
+      <div class="flex items-center gap-1 mb-4 text-[11px]">
         <button
           type="button"
-          class="wz-btn-outline mt-4 text-xs"
-          @click.stop="fileInput?.click()"
+          class="px-3 py-1.5 rounded transition-colors"
+          :class="activeTab === 0 ? 'wz-pill' : 'wz-faint hover:text-[color:var(--term-text-strong)]'"
+          @click="activeTab = 0"
         >
-          {{ t('upload.selectFile') }}
+          [● {{ t('upload.tabText') }}]
+        </button>
+        <button
+          type="button"
+          class="px-3 py-1.5 rounded transition-colors"
+          :class="activeTab === 1 ? 'wz-pill' : 'wz-faint hover:text-[color:var(--term-text-strong)]'"
+          @click="activeTab = 1"
+        >
+          [● {{ t('upload.tabFile') }}]
         </button>
       </div>
 
-      <div v-if="selectedFile" class="wz-panel flex items-center gap-3 p-3">
-        <div class="w-10 h-10 shrink-0 rounded-md flex items-center justify-center" style="background: var(--term-accent-soft); border: 1px solid var(--term-accent-line)">
-          <UIcon name="i-heroicons-document" class="w-5 h-5 wz-accent" />
+      <!-- Text Input -->
+      <div v-if="activeTab === 0" class="space-y-4">
+        <div>
+          <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldTitle') }}</label>
+          <input
+            v-model="form.title"
+            type="text"
+            class="wz-input mt-1"
+            :placeholder="t('upload.fieldTitlePlaceholder')"
+          >
         </div>
-        <div class="flex-1 min-w-0">
-          <p class="font-medium wz-strong truncate">{{ selectedFile.name }}</p>
-          <p class="text-sm wz-faint">{{ formatFileSize(selectedFile.size) }}</p>
+
+        <div>
+          <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldContent') }}</label>
+          <textarea
+            v-model="form.content"
+            class="wz-textarea mt-1"
+            rows="12"
+            :placeholder="t('upload.fieldContentPlaceholder')"
+          />
         </div>
+
+        <div>
+          <label class="wz-label text-[11px] uppercase tracking-widest">// {{ t('upload.fieldType') }}</label>
+          <select v-model="form.sourceType" class="wz-select mt-1">
+            <option value="text">text</option>
+            <option value="markdown">markdown</option>
+          </select>
+        </div>
+
+        <div v-if="uploadError" class="wz-panel px-3 py-2 text-xs flex items-start gap-2" style="border-color: var(--term-error, #f87171);">
+          <span style="color: var(--term-error, #f87171);">⚠</span>
+          <span class="wz-muted flex-1">{{ uploadError }}</span>
+          <button type="button" class="wz-btn-ghost text-[10px]" @click="uploadError = null">✕</button>
+        </div>
+
         <button
           type="button"
-          class="wz-btn-ghost"
-          @click="selectedFile = null"
+          class="wz-btn-primary w-full justify-center"
+          :disabled="!form.title || !form.content || uploading"
+          @click="submitText"
         >
-          ✕
+          {{ uploading ? '…' : `${t('upload.save')} ▶` }}
         </button>
       </div>
 
-      <div v-if="uploadError" class="wz-panel px-3 py-2 text-xs flex items-start gap-2" style="border-color: var(--term-error, #f87171);">
-        <span style="color: var(--term-error, #f87171);">⚠</span>
-        <span class="wz-muted flex-1">{{ uploadError }}</span>
-        <button type="button" class="wz-btn-ghost text-[10px]" @click="uploadError = null">✕</button>
-      </div>
+      <!-- File Upload -->
+      <div v-else class="space-y-4">
+        <div
+          class="wz-panel p-8 text-center cursor-pointer transition-colors"
+          style="border-style: dashed;"
+          @click="fileInput?.click()"
+        >
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-md mb-3" style="background: var(--term-accent-soft); border: 1px solid var(--term-accent-line)">
+            <UIcon name="i-heroicons-cloud-arrow-up" class="w-6 h-6 wz-accent" />
+          </div>
+          <p class="wz-strong font-medium mb-1">{{ t('upload.dropZone') }}</p>
+          <p class="text-sm wz-muted">{{ t('upload.supports') }}</p>
 
-      <button
-        v-if="selectedFile"
-        type="button"
-        class="wz-btn-primary w-full justify-center"
-        :disabled="uploading"
-        @click="submitFile"
-      >
-        {{ uploadStatus || `${t('upload.uploadFile')} ▶` }}
-      </button>
-    </div>
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".txt,.md,.pdf"
+            class="hidden"
+            @change="handleFileChange"
+          >
+
+          <button
+            type="button"
+            class="wz-btn-outline mt-4 text-xs"
+            @click.stop="fileInput?.click()"
+          >
+            {{ t('upload.selectFile') }}
+          </button>
+        </div>
+
+        <div v-if="selectedFile" class="wz-panel flex items-center gap-3 p-3">
+          <div class="w-10 h-10 shrink-0 rounded-md flex items-center justify-center" style="background: var(--term-accent-soft); border: 1px solid var(--term-accent-line)">
+            <UIcon name="i-heroicons-document" class="w-5 h-5 wz-accent" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium wz-strong truncate">{{ selectedFile.name }}</p>
+            <p class="text-sm wz-faint">{{ formatFileSize(selectedFile.size) }}</p>
+          </div>
+          <button type="button" class="wz-btn-ghost" @click="selectedFile = null">✕</button>
+        </div>
+
+        <div v-if="uploadError" class="wz-panel px-3 py-2 text-xs flex items-start gap-2" style="border-color: var(--term-error, #f87171);">
+          <span style="color: var(--term-error, #f87171);">⚠</span>
+          <span class="wz-muted flex-1">{{ uploadError }}</span>
+          <button type="button" class="wz-btn-ghost text-[10px]" @click="uploadError = null">✕</button>
+        </div>
+
+        <button
+          v-if="selectedFile"
+          type="button"
+          class="wz-btn-primary w-full justify-center"
+          :disabled="uploading"
+          @click="submitFile"
+        >
+          {{ uploadStatus || `${t('upload.uploadFile')} ▶` }}
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -161,7 +185,6 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const store = useDocumentsStore()
-const router = useRouter()
 
 const activeTab = ref(0)
 const uploading = ref(false)
@@ -169,6 +192,10 @@ const uploadStatus = ref('')
 const uploadError = ref<string | null>(null)
 const selectedFile = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
+const ingestDocumentId = ref('')
+const ingestRunId = ref('')
+const uploadDone = ref(false)
+const uploadedDocumentId = ref('')
 
 function extractErrorMessage(err: unknown): string {
   if (err && typeof err === 'object') {
@@ -201,20 +228,8 @@ async function submitText() {
       content: form.content,
       sourceType: form.sourceType,
     })
-    uploadStatus.value = t('upload.processing')
-    let status = 'processing'
-    while (status !== 'ready' && status !== 'completed' && status !== 'failed') {
-      await new Promise((r) => setTimeout(r, 1500))
-      const poll = await $fetch<{ status: string }>(
-        `/api/documents/${documentId}/ingest-status?runId=${encodeURIComponent(runId)}`,
-      )
-      status = poll.status
-    }
-    if (status === 'failed') {
-      uploadError.value = t('upload.errorIngestion')
-      return
-    }
-    router.push('/documents')
+    ingestDocumentId.value = documentId
+    ingestRunId.value = runId
   } catch (err) {
     uploadError.value = extractErrorMessage(err)
   } finally {
@@ -226,29 +241,39 @@ async function submitText() {
 async function submitFile() {
   if (!selectedFile.value) return
   uploading.value = true
-    uploadStatus.value = t('upload.uploading')
+  uploadStatus.value = t('upload.uploading')
   uploadError.value = null
   try {
     const { documentId, runId } = await store.uploadFile(selectedFile.value)
-    uploadStatus.value = t('upload.processing')
-    let status = 'processing'
-    // API uses ingestStatus 'ready' on success (not 'completed').
-    while (status !== 'ready' && status !== 'completed' && status !== 'failed') {
-      await new Promise(r => setTimeout(r, 1500))
-      const poll = await $fetch<{ status: string }>(`/api/documents/${documentId}/ingest-status?runId=${encodeURIComponent(runId)}`)
-      status = poll.status
-    }
-    if (status === 'failed') {
-      uploadError.value = t('upload.errorIngestion')
-      return
-    }
-    router.push('/documents')
+    ingestDocumentId.value = documentId
+    ingestRunId.value = runId
   } catch (err) {
     uploadError.value = extractErrorMessage(err)
   } finally {
     uploading.value = false
     uploadStatus.value = ''
   }
+}
+
+function onIngestComplete() {
+  uploadedDocumentId.value = ingestDocumentId.value
+  uploadDone.value = true
+  // ingestDocumentId stays set → IngestProgress remains mounted and readable
+}
+
+function onIngestFailed(error: string | null) {
+  uploadError.value = error ?? t('upload.errorIngestion')
+  ingestDocumentId.value = ''
+  ingestRunId.value = ''
+}
+
+function resetUpload() {
+  uploadDone.value = false
+  ingestDocumentId.value = ''
+  ingestRunId.value = ''
+  selectedFile.value = null
+  form.title = ''
+  form.content = ''
 }
 
 function formatFileSize(bytes: number) {

@@ -11,13 +11,16 @@ import {
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createMistral } from '@ai-sdk/mistral'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { z } from 'zod'
 import { normalizeOllamaNativeHost } from './ollama'
-import { rag, logRagQuery, type SearchResult } from './search.service'
+import { resolveModelOverride } from './llm-models'
+import { rag, search, logRagQuery, type SearchResult } from './search.service'
 import { getSetting, getNumericSetting, getBoolSetting } from './settings.service.ts'
 import {
   createChatMemory,
   deleteChatMemories,
+  listChatMemories,
 } from './documents.service'
 import { truncate } from './text'
 import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-commands'
@@ -35,6 +38,8 @@ function getLlmCfg() {
     anthropicModel: (config.anthropicModel as string) || 'claude-sonnet-4-6',
     mistralApiKey: config.mistralApiKey as string,
     mistralModel: (config.mistralModel as string) || 'mistral-medium-latest',
+    googleApiKey: config.googleApiKey as string,
+    googleLlmModel: (config.googleLlmModel as string) || 'gemini-2.5-flash',
     memoryScope: (config.memoryScope as string) || 'local_per_user',
   }
 }
@@ -57,7 +62,7 @@ async function getRagCfg() {
   }
 }
 
-export function getLlmModel(): LanguageModel {
+export function getLlmModel(modelOverride?: string): LanguageModel {
   const cfg = getLlmCfg()
 
   // Explicit provider via LLM_PROVIDER env var; fall back to API key presence
@@ -65,21 +70,29 @@ export function getLlmModel(): LanguageModel {
     || (cfg.anthropicApiKey ? 'anthropic' : '')
     || (cfg.mistralApiKey ? 'mistral' : '')
     || (cfg.openaiApiKey ? 'openai' : '')
+    || (cfg.googleApiKey ? 'gemini' : '')
     || 'ollama'
+
+  const resolved = resolveModelOverride(provider, modelOverride)
+
+  if (provider === 'gemini') {
+    const google = createGoogleGenerativeAI({ apiKey: cfg.googleApiKey })
+    return google(resolved ?? cfg.googleLlmModel)
+  }
 
   if (provider === 'anthropic') {
     const anthropic = createAnthropic({ apiKey: cfg.anthropicApiKey })
-    return anthropic(cfg.anthropicModel)
+    return anthropic(resolved ?? cfg.anthropicModel)
   }
 
   if (provider === 'openai') {
     const openai = createOpenAI({ apiKey: cfg.openaiApiKey })
-    return openai.chat(cfg.openaiLlmModel)
+    return openai.chat(resolved ?? cfg.openaiLlmModel)
   }
 
   if (provider === 'mistral') {
     const mistral = createMistral({ apiKey: cfg.mistralApiKey })
-    return mistral(cfg.mistralModel)
+    return mistral(resolved ?? cfg.mistralModel)
   }
 
   // ollama-cloud, ollama-local, or default
@@ -89,7 +102,7 @@ export function getLlmModel(): LanguageModel {
     baseURL,
     name: 'ollama',
   })
-  return ollama.chat(cfg.ollamaLlmModel)
+  return ollama.chat(resolved ?? cfg.ollamaLlmModel)
 }
 
 /**
@@ -115,7 +128,9 @@ function buildKbTools(
       }),
       execute: async ({ query }) => {
         const safeQuery = truncate(query.trim(), 512)
+        const t0 = Date.now()
         const { results, sources, context } = await rag(safeQuery, limit, userId, hydeModel)
+        const latencyMs = Date.now() - t0
         for (const r of results) bucket.push(r)
         const truncatedContext = truncate(context || '(no matching passages found)', cfg.ragMaxContext)
         return {
@@ -123,11 +138,14 @@ function buildKbTools(
           sources: cfg.ragCitations ? sources : [],
           results,
           count: results.length,
+          latencyMs,
         }
       },
     }),
   }
 }
+
+export type SearchMode = 'auto' | 'search' | 'direct'
 
 export interface AgentStreamInput {
   messages: UIMessage[]
@@ -135,6 +153,8 @@ export interface AgentStreamInput {
   limit?: number
   /** Chunks the model retrieved during this turn are pushed here. */
   retrievedChunks: SearchResult[]
+  modelOverride?: string
+  searchMode?: SearchMode
 }
 
 export async function agentStreamText(
@@ -142,6 +162,7 @@ export async function agentStreamText(
 ): Promise<StreamTextResult<ToolSet, never>> {
   const { messages, userId, retrievedChunks } = input
   const limit = input.limit ?? 8
+  const searchMode = input.searchMode ?? 'auto'
   const cfg = await getRagCfg()
 
   const defaultSystem = `You are a helpful assistant for a personal RAG application.
@@ -152,9 +173,24 @@ export async function agentStreamText(
 - After EVERY tool call you MUST write at least one short paragraph in natural language for the user. Never finish your turn with only a tool invocation: always follow with a visible answer grounded in the tool's returned context. Cite using [1], [2], … matching the order of the passages. If the context is empty, say clearly that nothing relevant was found.
 - Be concise. Match the language of the user's last message.`
 
-  let system = cfg.ragSystemPrompt || defaultSystem
-  if (cfg.ragResponseLang === 'es') system += '\n- Responde siempre en español.'
-  else if (cfg.ragResponseLang === 'en') system += '\n- Respond always in English.'
+  const directSystem = `You are a helpful assistant. Answer directly from your own knowledge without searching any documents.
+- Be concise. Match the language of the user's last message.`
+
+  const searchSystem = `You are a helpful assistant for a personal RAG application.
+- Identity: You are only this app's RAG helper over the user's own documents and memories. Do not say you are Claude, ChatGPT, Gemini, Copilot, or any other vendor product.
+- You MUST always call the searchKnowledgeBase tool before answering, regardless of the question.
+- After the tool call you MUST write at least one paragraph grounded in the returned context. Cite using [1], [2], … If the context is empty, say clearly that nothing relevant was found.
+- Be concise. Match the language of the user's last message.`
+
+  let system: string
+  if (searchMode === 'direct') system = directSystem
+  else if (searchMode === 'search') system = cfg.ragSystemPrompt || searchSystem
+  else system = cfg.ragSystemPrompt || defaultSystem
+
+  if (searchMode !== 'direct') {
+    if (cfg.ragResponseLang === 'es') system += '\n- Responde siempre en español.'
+    else if (cfg.ragResponseLang === 'en') system += '\n- Respond always in English.'
+  }
 
   const validMessages = messages.filter((m) => {
     if (m.role !== 'assistant') return true
@@ -176,14 +212,17 @@ export async function agentStreamText(
   })
 
   const modelMessages = await convertToModelMessages(validMessages)
-  const model = getLlmModel()
+  const model = getLlmModel(input.modelOverride)
 
   return streamText({
     model,
     system,
     messages: modelMessages,
-    tools: buildKbTools(userId, limit, retrievedChunks, model, cfg),
-    stopWhen: stepCountIs(5),
+    ...(searchMode !== 'direct' && {
+      tools: buildKbTools(userId, limit, retrievedChunks, model, cfg),
+      stopWhen: stepCountIs(5),
+      ...(searchMode === 'search' && { toolChoice: 'required' }),
+    }),
     temperature: cfg.ragTemperature,
     onError: ({ error }) => {
       console.error('[agent] streamText error:', error)
@@ -203,12 +242,42 @@ export async function runMemoryCommand(
 ): Promise<string> {
   const { type, userId, startedAt, queryText, conversationId } = cmd
 
+  if (type === 'list') {
+    const items = await listChatMemories(userId)
+    const reply = items.length
+      ? `Memoria local (${items.length}):\n${items.map((m, i) => `${i + 1}. ${m}`).join('\n')}`
+      : 'No tienes nada guardado en memoria local.'
+    await logRagQuery({
+      queryText, responseText: reply, results: [], latencyMs: Date.now() - startedAt,
+      userId, conversationId, toolCalled: false,
+    })
+    return reply
+  }
+
+  if (type === 'search') {
+    const query = (cmd as { type: 'search'; query: string }).query
+    const results = await search(query, { userId, limit: cmd.limit ?? 5 })
+    const reply = results.length
+      ? `Resultados para "${query}":\n\n${results.map((r, i) =>
+          `**${i + 1}. ${r.documentTitle}** (score: ${r.score.toFixed(2)})\n${r.content.slice(0, 300)}…`
+        ).join('\n\n')}`
+      : `No encontré resultados para "${query}".`
+    await logRagQuery({
+      queryText, responseText: reply, results, latencyMs: Date.now() - startedAt,
+      userId, conversationId, toolCalled: true,
+    })
+    return reply
+  }
+
   if (type === 'help') {
     const reply =
       'Comandos:\n' +
       '- `/remember <texto>`: guarda un dato en tu memoria.\n' +
       '- `/forget <texto>`: borra memorias que coincidan (por fragmento).\n' +
-      '- `/forget` o `/memory clear`: limpia tu memoria local.\n'
+      '- `/forget` o `/memory clear`: limpia tu memoria local.\n' +
+      '- `/list`: muestra tu memoria local.\n' +
+      '- `/search <consulta>`: busca en tu base de conocimiento.\n' +
+      '- `/new`: inicia una nueva conversación.\n'
     await logRagQuery({
       queryText, responseText: reply, results: [], latencyMs: Date.now() - startedAt,
       userId, conversationId, toolCalled: false,

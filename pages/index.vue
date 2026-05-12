@@ -1,4 +1,5 @@
 <template>
+  <WelcomeModal />
   <div
     class="max-w-5xl mx-auto px-4 pt-4 lg:pt-6 flex flex-col h-[calc(100dvh-3rem-6rem)] max-h-[calc(100dvh-3rem-6rem)] overflow-hidden min-h-0"
   >
@@ -78,6 +79,13 @@
                   >{{ s.documentTitle }}</NuxtLink>{{ i < msg.sources.length - 1 ? ', ' : '' }}
                 </span>
               </div>
+
+              <RagPipelineTrace
+                v-if="msg.role === 'assistant' && msg.sources?.length && searchParams"
+                :sources="msg.sources"
+                :params="searchParams"
+                :latency-ms="msg.latencyMs"
+              />
 
               <div
                 v-if="msg.role === 'assistant' && msg.results?.length"
@@ -179,9 +187,11 @@
               {{ t('chat.commandsAvailable') }}
             </div>
             <div
-              v-for="cmd in filteredCommands"
+              v-for="(cmd, idx) in filteredCommands"
               :key="cmd.name"
-              class="flex flex-col"
+              class="flex flex-col cursor-pointer px-1 py-0.5 rounded select-none"
+              :class="idx === selectedCommandIdx ? 'bg-[color:var(--term-accent-line)] text-[color:var(--term-fg)]' : 'hover:bg-[color:var(--term-accent-line)]/40'"
+              @click="selectCommand(cmd)"
             >
               <span class="wz-accent font-mono">{{ cmd.name }}</span>
               <span class="wz-muted">{{ cmd.description }}</span>
@@ -197,6 +207,105 @@
               ✕ {{ t('chat.clear') }}
             </button>
             <span v-else />
+            <div class="flex items-center gap-3">
+            <!-- search mode selector -->
+            <div class="relative">
+              <button
+                type="button"
+                class="font-mono text-[10px] flex items-center gap-1 cursor-pointer select-none wz-faint hover:wz-accent"
+                :class="selectedSearchMode !== 'auto' ? 'wz-accent' : ''"
+                :title="`search mode: ${selectedSearchMode}`"
+                @click.stop="searchModeMenuOpen = !searchModeMenuOpen"
+              >
+                <span class="opacity-50">mode/</span>
+                <span>{{ selectedSearchMode }}</span>
+                <span class="opacity-50">▾</span>
+              </button>
+              <div
+                v-if="searchModeMenuOpen"
+                class="absolute bottom-full right-0 mb-2 w-56 z-10 rounded border border-[color:var(--term-accent-line)] bg-[color:var(--term-bg)] shadow-xl"
+                @click.stop
+              >
+                <div class="px-3 py-1.5 text-[9px] wz-faint uppercase tracking-widest border-b border-[color:var(--term-accent-line)]">// search mode</div>
+                <button
+                  v-for="m in SEARCH_MODES"
+                  :key="m.value"
+                  type="button"
+                  class="w-full text-left px-3 py-2 flex flex-col gap-0.5"
+                  :class="m.value === selectedSearchMode
+                    ? 'wz-accent bg-[color:var(--term-accent-soft)]'
+                    : 'hover:bg-[color:var(--term-accent-soft)]'"
+                  @click="selectSearchMode(m.value)"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="font-mono text-[11px]">{{ m.label }}</span>
+                    <span v-if="m.value === selectedSearchMode" class="text-[9px] opacity-40">✓</span>
+                  </div>
+                  <span class="text-[9px] wz-faint opacity-60">{{ m.description }}</span>
+                </button>
+              </div>
+            </div>
+            <!-- model selector -->
+            <div v-if="llmConfig && llmConfig.models.length > 1" class="relative">
+              <button
+                type="button"
+                class="font-mono text-[10px] flex items-center gap-1 cursor-pointer select-none wz-faint hover:wz-accent"
+                :title="`${llmConfig.provider} · click to change model`"
+                @click.stop="modelMenuOpen = !modelMenuOpen"
+              >
+                <span class="opacity-50">{{ llmConfig.provider }}/</span>
+                <span>{{ selectedModel }}</span>
+                <span class="opacity-50">▾</span>
+              </button>
+              <div
+                v-if="modelMenuOpen"
+                class="absolute bottom-full right-0 mb-2 w-64 z-10 rounded border border-[color:var(--term-accent-line)] bg-[color:var(--term-bg)] shadow-xl flex flex-col"
+                style="max-height: 320px"
+                @click.stop
+              >
+                <!-- header -->
+                <div class="px-3 py-1.5 text-[9px] wz-faint uppercase tracking-widest border-b border-[color:var(--term-accent-line)] shrink-0 flex items-center justify-between">
+                  <span>// model</span>
+                  <span class="opacity-40">{{ filteredLlmModels.length }}/{{ llmConfig.models.length }}</span>
+                </div>
+                <!-- search -->
+                <div class="px-2 py-1.5 border-b border-[color:var(--term-accent-line)] shrink-0">
+                  <input
+                    ref="modelSearchRef"
+                    v-model="modelSearch"
+                    type="text"
+                    placeholder="filter..."
+                    class="w-full bg-transparent font-mono text-[11px] wz-faint outline-none placeholder:opacity-30"
+                    @keydown.escape.stop="modelMenuOpen = false"
+                  >
+                </div>
+                <!-- active model pinned -->
+                <div class="px-3 py-1.5 border-b border-[color:var(--term-accent-line)] shrink-0 flex items-center justify-between bg-[color:var(--term-accent-soft)]">
+                  <span class="font-mono text-[11px] wz-accent truncate">{{ selectedModel }}</span>
+                  <span class="text-[9px] wz-faint ml-2 shrink-0">active</span>
+                </div>
+                <!-- list -->
+                <div class="overflow-y-auto flex-1">
+                  <button
+                    v-for="m in filteredLlmModels"
+                    :key="m.value"
+                    type="button"
+                    class="w-full text-left px-3 py-1.5 text-[11px] font-mono flex items-center justify-between"
+                    :class="m.value === selectedModel
+                      ? 'wz-accent bg-[color:var(--term-accent-soft)]'
+                      : 'wz-faint hover:wz-accent hover:bg-[color:var(--term-accent-soft)]'"
+                    @click="selectModel(m.value)"
+                  >
+                    <span class="truncate">{{ m.value }}</span>
+                    <span v-if="m.value === selectedModel" class="text-[9px] opacity-40 ml-2 shrink-0">✓</span>
+                  </button>
+                  <div v-if="!filteredLlmModels.length" class="px-3 py-2 text-[11px] wz-faint opacity-50">
+                    no results
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div><!-- end flex gap-3 -->
           </div>
         </div>
       </div>
@@ -297,12 +406,15 @@ import { Chat } from '@ai-sdk/vue'
 import { DefaultChatTransport, APICallError, type UIMessage } from 'ai'
 import { marked } from 'marked'
 import type { SearchResult, ConverseSource } from '~/stores/documents'
+import { useSearchParams, type SearchParamsConfig } from '~/composables/useSearchParams'
+import { fetchLlmModels, getPersistedModel, persistModel, type LlmModelsConfig } from '~/composables/useLlmModels'
 
 interface KbToolOutput {
   context: string
   sources: ConverseSource[]
   results: SearchResult[]
   count: number
+  latencyMs?: number
 }
 
 const { t } = useI18n()
@@ -326,11 +438,65 @@ interface ConversationSummary {
 }
 const conversations = ref<ConversationSummary[]>([])
 
+const llmConfig = ref<LlmModelsConfig | null>(null)
+const selectedModel = ref('')
+const modelMenuOpen = ref(false)
+const modelSearch = ref('')
+const modelSearchRef = ref<HTMLInputElement | null>(null)
+
+type SearchMode = 'auto' | 'search' | 'direct'
+const SEARCH_MODE_KEY = 'rag-ui:searchMode'
+const selectedSearchMode = ref<SearchMode>('auto')
+const searchModeMenuOpen = ref(false)
+
+const SEARCH_MODES: { value: SearchMode; label: string; description: string }[] = [
+  { value: 'auto',   label: 'auto',   description: 'agent decides when to search' },
+  { value: 'search', label: 'search', description: 'always search the knowledge base' },
+  { value: 'direct', label: 'direct', description: 'skip KB, answer from model' },
+]
+
+function selectSearchMode(mode: SearchMode) {
+  selectedSearchMode.value = mode
+  if (typeof window !== 'undefined') localStorage.setItem(SEARCH_MODE_KEY, mode)
+  searchModeMenuOpen.value = false
+  nextTick(() => chatInputRef.value?.focus())
+}
+
+function closeSearchModeMenu() {
+  searchModeMenuOpen.value = false
+}
+
+const filteredLlmModels = computed(() => {
+  if (!llmConfig.value) return []
+  const q = modelSearch.value.trim().toLowerCase()
+  return llmConfig.value.models.filter((m) => !q || m.value.toLowerCase().includes(q))
+})
+
+watch(modelMenuOpen, (open) => {
+  if (open) {
+    modelSearch.value = ''
+    nextTick(() => modelSearchRef.value?.focus())
+  }
+})
+
+function selectModel(model: string) {
+  selectedModel.value = model
+  persistModel(model)
+  modelMenuOpen.value = false
+  nextTick(() => chatInputRef.value?.focus())
+}
+
+function closeModelMenu() {
+  modelMenuOpen.value = false
+}
+
 const chat = new Chat({
   transport: new DefaultChatTransport({
     api: '/api/chat',
     body: () => ({
       conversationId: conversationId.value || undefined,
+      model: selectedModel.value || undefined,
+      searchMode: selectedSearchMode.value !== 'auto' ? selectedSearchMode.value : undefined,
     }),
   }),
 })
@@ -364,13 +530,35 @@ async function loadConversation(id: string) {
     }>(`/api/conversations/${id}`)
     conversationId.value = conv.id
     if (typeof window !== 'undefined') window.sessionStorage.setItem(CONV_ID_KEY, conv.id)
-    chat.messages = conv.messages.map((m) => ({
-      id: m.id,
-      role: m.role as 'user' | 'assistant' | 'system',
-      parts: Array.isArray(m.parts) && m.parts.length
-        ? (m.parts as Array<{ type: string }>)
-        : [{ type: 'text', text: m.content }],
-    })) as unknown as UIMessage[]
+    chat.messages = conv.messages.map((m) => {
+      const rawParts: Array<{ type: string }> =
+        Array.isArray(m.parts) && (m.parts as unknown[]).length
+          ? (m.parts as Array<{ type: string }>)
+          : [{ type: 'text', text: m.content }]
+
+      // Inject a synthetic tool-output part for assistant messages that have
+      // stored sources but no tool call in their parts (e.g. older messages).
+      const storedSources = Array.isArray(m.sources) ? (m.sources as ConverseSource[]) : []
+      const hasTool = rawParts.some((p) => p.type.startsWith('tool-'))
+      if (m.role === 'assistant' && storedSources.length > 0 && !hasTool) {
+        rawParts.push({
+          type: 'tool-searchKnowledgeBase',
+          state: 'output-available',
+          output: {
+            context: '',
+            sources: storedSources,
+            results: storedSources,
+            count: storedSources.length,
+          },
+        } as { type: string })
+      }
+
+      return {
+        id: m.id,
+        role: m.role as 'user' | 'assistant' | 'system',
+        parts: rawParts,
+      }
+    }) as unknown as UIMessage[]
     expandedSet.clear()
     nextTick(scrollToBottom)
   } catch (err) {
@@ -442,6 +630,7 @@ interface DisplayMessage {
   sources?: ConverseSource[]
   results?: SearchResult[]
   usedKb: boolean | null
+  latencyMs?: number
 }
 
 function renderMarkdown(text: string): string {
@@ -496,16 +685,23 @@ const displayMessages = computed<DisplayMessage[]>(() => {
       sources: normalizeToolSources(toolOutput?.sources),
       results: toolOutput?.results,
       usedKb: m.role === 'assistant' ? (toolCalled ? true : (text ? false : null)) : null,
+      latencyMs: toolOutput?.latencyMs,
     }
   })
 })
 
 const commandHelp = computed(() => [
-  { name: '/remember', description: t('chat.commands.remember') },
-  { name: '/forget', description: t('chat.commands.forget') },
-  { name: '/memory clear', description: t('chat.commands.memoryClear') },
-  { name: '/help', description: t('chat.commands.help') },
+  { name: '/remember',    description: t('chat.commands.remember'),    hasArgs: true },
+  { name: '/forget',      description: t('chat.commands.forget'),      hasArgs: true },
+  { name: '/search',      description: t('chat.commands.search'),      hasArgs: true },
+  { name: '/list',        description: t('chat.commands.list'),        hasArgs: false },
+  { name: '/new',         description: t('chat.commands.new'),         hasArgs: false },
+  { name: '/memory clear', description: t('chat.commands.memoryClear'), hasArgs: false },
+  { name: '/help',        description: t('chat.commands.help'),        hasArgs: false },
 ])
+
+const selectedCommandIdx = ref(-1)
+watch(input, () => { selectedCommandIdx.value = -1 })
 
 const showCommandHelp = computed(() => input.value.trim().startsWith('/'))
 const filteredCommands = computed(() => {
@@ -514,6 +710,12 @@ const filteredCommands = computed(() => {
   const lower = text.toLowerCase()
   return commandHelp.value.filter((c) => c.name.toLowerCase().startsWith(lower))
 })
+
+function selectCommand(cmd: { name: string; hasArgs: boolean }) {
+  input.value = cmd.hasArgs ? `${cmd.name} ` : cmd.name
+  selectedCommandIdx.value = -1
+  nextTick(() => chatInputRef.value?.focus())
+}
 
 function toggleExpand(idx: number) {
   if (expandedSet.has(idx)) expandedSet.delete(idx)
@@ -539,11 +741,29 @@ function loadChatFromSession() {
   }
 }
 
+const searchParams = ref<SearchParamsConfig | null>(null)
+
 onMounted(() => {
   loadChatFromSession()
   fetchConversations()
   store.fetchDocuments()
   nextTick(scrollToBottom)
+  useSearchParams().then((p) => { searchParams.value = p }).catch(() => {})
+  fetchLlmModels().then((cfg) => {
+    llmConfig.value = cfg
+    const persisted = getPersistedModel()
+    const valid = cfg.models.length === 0 || cfg.models.some((m) => m.value === persisted)
+    selectedModel.value = (persisted && valid) ? persisted : cfg.defaultModel
+  }).catch(() => {})
+  document.addEventListener('click', closeModelMenu)
+  document.addEventListener('click', closeSearchModeMenu)
+  const savedMode = typeof window !== 'undefined' ? localStorage.getItem(SEARCH_MODE_KEY) : null
+  if (savedMode === 'search' || savedMode === 'direct') selectedSearchMode.value = savedMode
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeModelMenu)
+  document.removeEventListener('click', closeSearchModeMenu)
 })
 
 function scrollToBottom() {
@@ -560,10 +780,28 @@ function focusChatInput() {
 }
 
 function onChatInputKeydown(e: KeyboardEvent) {
-  if (!isBusy.value) return
-  const k = e.key
-  if (k.length === 1 || k === 'Enter' || k === 'Backspace' || k === 'Delete') {
-    e.preventDefault()
+  if (isBusy.value) {
+    const k = e.key
+    if (k.length === 1 || k === 'Enter' || k === 'Backspace' || k === 'Delete') {
+      e.preventDefault()
+    }
+    return
+  }
+  if (showCommandHelp.value && filteredCommands.value.length) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      selectedCommandIdx.value = (selectedCommandIdx.value + 1) % filteredCommands.value.length
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      selectedCommandIdx.value = selectedCommandIdx.value <= 0
+        ? filteredCommands.value.length - 1
+        : selectedCommandIdx.value - 1
+    } else if (e.key === 'Enter' && selectedCommandIdx.value >= 0) {
+      e.preventDefault()
+      selectCommand(filteredCommands.value[selectedCommandIdx.value])
+    } else if (e.key === 'Escape') {
+      input.value = ''
+    }
   }
 }
 
@@ -611,6 +849,11 @@ watch(
 async function send() {
   const text = input.value.trim()
   if (!text || isBusy.value) return
+  if (text === '/new') {
+    input.value = ''
+    newConversation()
+    return
+  }
   lastSentInput.value = text
   input.value = ''
   await ensureConversationId()

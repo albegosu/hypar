@@ -1,6 +1,6 @@
 {
   "app": {
-    "brand": "f[rag]ua",
+    "brand": "hypar",
     "subtitle": "consola de chat con recuperación aumentada"
   },
   "nav": {
@@ -9,8 +9,9 @@
     "upload": "subir",
     "add": "añadir",
     "back": "volver",
-    "learn": "aprender",
-    "settings": "config"
+    "setup": "wizard",
+    "admin": "admin",
+    "settings": "ajustes"
   },
   "chat": {
     "title": "chatea con tu base de conocimiento",
@@ -48,7 +49,10 @@
       "remember": "guardar un dato en tu memoria local. Ej: /remember mi color favorito es naranja",
       "forget": "borrar memorias que contengan un texto. Ej: /forget color favorito",
       "memoryClear": "limpiar toda tu memoria local.",
-      "help": "mostrar ayuda sobre comandos disponibles."
+      "help": "mostrar ayuda sobre comandos disponibles.",
+      "list": "mostrar todo lo guardado en tu memoria local.",
+      "new": "iniciar una nueva conversación.",
+      "search": "buscar en tu base de conocimiento sin usar el modelo. Ej: /search kubernetes config"
     },
     "errorReach": "no se pudo conectar a la api en {url}. ¿está corriendo el backend?",
     "errorHint": "con docker: `docker compose up -d --build backend frontend` y luego recarga forzada."
@@ -96,7 +100,11 @@
     "saving": "Guardando…",
     "uploading": "Subiendo…",
     "processing": "Procesando…",
-    "errorIngestion": "El procesamiento falló. Prueba a re-chunkear desde la página del documento."
+    "errorIngestion": "El procesamiento falló. Prueba a re-chunkear desde la página del documento.",
+    "successTitle": "Documento listo",
+    "successHint": "Tu documento ha sido dividido en chunks e indexado en la base de datos vectorial.",
+    "successView": "ver documento",
+    "successAnother": "+ añadir otro"
   },
   "settings": {
     "title": "// config en runtime",

@@ -104,6 +104,22 @@ services:
       start_period: 60s
     profiles: ["full", "all"]
 
+  # pgAdmin for visual database management
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: rag-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: alberto@resiz.es
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - rag-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["full", "all"]
+
 volumes:
   postgres_data:
   ollama_data:

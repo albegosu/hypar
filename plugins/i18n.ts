@@ -35,7 +35,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       initial = stored
       localeCookie.value = stored
     } else {
-      initial = navigator.language.toLowerCase().startsWith('es') ? 'es' : 'en'
+      initial = 'en'
     }
   }
 

@@ -15,6 +15,11 @@ docs/.vitepress/dist
 docs/.vitepress/cache/
 docs/.vitepress/.temp/
 docs/.vitepress/config.ts.timestamp-*.mjs
+.vitepress/cache/
+.vitepress/.temp/
+
+# Workflow SDK runtime data (events, runs, steps, locks)
+data/workflow/
 .nuxt/
 .turbo/
 

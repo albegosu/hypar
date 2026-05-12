@@ -5,12 +5,18 @@ export type MemoryCommand =
   | { type: 'remember'; content: string }
   | { type: 'forget'; term?: string }
   | { type: 'clear' }
+  | { type: 'list' }
+  | { type: 'search'; query: string }
 
 export function parseMemoryCommand(text: string): MemoryCommand | null {
   const t = text.trim()
   if (!t) return null
   if (/^\/memory\s+clear(?:\s+|$)$/i.test(t)) return { type: 'clear' }
   if (/^\/(?:help|memory)(?:\s+|$)$/i.test(t)) return { type: 'help' }
+  if (/^\/list(?:\s+|$)$/i.test(t)) return { type: 'list' }
+
+  const searchCmd = t.match(/^\/search\s+([\s\S]+)$/i)
+  if (searchCmd) return { type: 'search', query: searchCmd[1].trim() }
 
   const rememberCmd = t.match(/^\/remember\s+([\s\S]+)$/i)
   if (rememberCmd) {

@@ -1,14 +1,27 @@
-import { useSession } from '~/utils/auth-client'
+type SessionUser = {
+  id: string
+  name: string
+  email: string
+  role: string
+  banned?: boolean
+}
+
+type SessionResponse = {
+  user?: SessionUser | null
+  session?: unknown
+} | null
 
 /**
- * Replaces the old useUserId (localStorage random UUID).
- * Reads the real better-auth session from the server.
- *
- * Usage:
- *   const { userId, isAdmin, isAuthenticated } = useAuth()
+ * Fetches the better-auth session via useAsyncData so it works correctly
+ * in Nuxt component context (useSession() from better-auth/vue doesn't
+ * trigger its internal fetch outside of a mounted component).
  */
 export function useAuth() {
-  const { data: session, isPending, error } = useSession()
+  const { data: session, pending: isPending, error } = useAsyncData<SessionResponse>(
+    'auth-session',
+    () => $fetch<SessionResponse>('/api/auth/get-session'),
+    { server: false, default: () => null },
+  )
 
   const user = computed(() => session.value?.user ?? null)
   const userId = computed(() => session.value?.user?.id ?? null)
