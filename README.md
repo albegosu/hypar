@@ -65,7 +65,7 @@ This repo wires all three stages with knobs you can change live (chunk size, top
 - **MMR re-ranking** — over-fetch K×3 then diversify with Maximal Marginal Relevance
 - **Score threshold** — drop matches below 0.2 cosine similarity
 - **Source citations** — `[1]`, `[2]` aligned with returned passages, persisted on every assistant message
-- **Per-user memory scope** — chat memories are user-scoped; uploads are global
+- **Per-user scope** — chat memories and uploaded documents are tied to the signed-in user; retrieval uses that user’s corpus
 
 ### Persistence & history
 - **Conversations + Messages tables** — chat history survives reloads, browser closes, devices
@@ -73,7 +73,7 @@ This repo wires all three stages with knobs you can change live (chunk size, top
 
 ### Multi-user & auth
 - **Per-user documents & conversations** — every doc, chat, and memory is scoped to its owner
-- **Admin role** — `/admin/*` pages (stats, settings, users, usage) require an admin user
+- **Admin dashboard** — `/admin/*` (stats, settings, users, usage) uses the `admin` route middleware (**signed-in session**). The first user created via `/setup` is promoted to `admin`; others can be promoted in `/admin/users`. **Note:** `/api/admin/*` handlers currently accept **any authenticated session** or optional `ADMIN_API_KEY` (see `server/utils/admin-auth.ts`); role-based enforcement on those routes is not wired yet — lock down before untrusted multi-tenant use.
 
 ### Runtime configuration (`/admin/settings`)
 - **Live tuning** — change chunking, search, hybrid α, RAG temperature, system prompt, agent max steps without restarting
@@ -81,7 +81,7 @@ This repo wires all three stages with knobs you can change live (chunk size, top
 
 ### Safety & ops
 - **Rate-limit middleware** — chat 30/min, upload 10/min per (IP+userId)
-- **Admin auth** — protected by `better-auth` session; admin role required
+- **Admin auth** — `better-auth` session and/or `ADMIN_API_KEY` for `/api/admin/*` (see above)
 - **Strict input validation** — Zod schemas + 64KB/part chat message cap
 - **Tests** — `pnpm test` (vitest) covers chunking, text utils, agent commands, search
 
@@ -159,10 +159,10 @@ Embeddings (`nomic-embed-text`, 768 dims) work well as-is.
 
 ### Admin endpoints
 
-`/api/admin/*` endpoints (`stats`, `usage`, `users`, `settings`) require an
-authenticated user with the `admin` role. Sign up the first user via the
-`/setup` wizard — it is promoted to admin automatically. Subsequent admins
-can be granted from `/admin/users`.
+`/api/admin/*` (`stats`, `usage`, `users`, `settings`) accept **any signed-in
+user** or a matching **`ADMIN_API_KEY`** header (see `.env.example`). The first
+account from `/setup` is given the `admin` role for **user management** in the
+UI; tighten API access before exposing the app to untrusted users.
 
 ---
 
@@ -264,6 +264,9 @@ Open http://localhost:3000.
 | `pnpm test` | Vitest (chunking, text utils, agent commands, search) |
 | `pnpm typecheck` | `vue-tsc --noEmit` |
 | `pnpm reingest` | Re-chunk & re-embed every document (after a chunking change) |
+| `pnpm docs:dev` | VitePress dev server for `docs/` |
+| `pnpm docs:build` | Static build → `docs/.vitepress/dist` (used by GitHub Pages) |
+| `pnpm docs:preview` | Preview the built docs site locally |
 
 ---
 
@@ -313,7 +316,7 @@ POST /api/search/rag     # RAG query (search only, no LLM)
 POST /api/search/inspect # embedding debug + latency info
 ```
 
-### Admin (admin role required)
+### Admin (signed-in session or `ADMIN_API_KEY`)
 
 ```http
 GET  /api/admin/stats     # document/chunk/query counts
@@ -382,13 +385,17 @@ from-zero-rag/
 
 ---
 
+## Internal notes
+
+- [`agents-plans/`](agents-plans/) — ephemeral Cursor/agent scratch plans (see [agents-plans/README.md](agents-plans/README.md)); **not** maintained as product documentation.
+
 ## Further reading
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — branch naming, commits, dev workflow
 - [ROADMAP.md](ROADMAP.md) — month-by-month plan
 - [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md) — stage-based product evolution
 - [.github/CI-CD.md](.github/CI-CD.md) — CI pipeline + Docker build
-- Tutorial chapters (`docs/`) — coming soon, will power the GitHub Pages site
+- **Published docs (GitHub Pages)** — full VitePress site at [https://albegosu.github.io/from-zero-rag/](https://albegosu.github.io/from-zero-rag/) (Guide, Features, API, Architecture, Roadmap, ADRs/RFCs). Build with `pnpm docs:build`; deploy on push to `main` when `docs/**` changes (see `.github/workflows/pages.yml`).
 
 ---
 

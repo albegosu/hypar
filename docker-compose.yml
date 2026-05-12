@@ -48,7 +48,7 @@ services:
       - rag-network
     profiles: ["full", "api", "all"]
 
-  # Unified Nuxt 3 app (RAG UI + Learning Quest + server API)
+  # Unified Nuxt 3 app (RAG UI + server API)
   app:
     build:
       context: .

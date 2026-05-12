@@ -8,7 +8,15 @@ This roadmap is intentionally honest about what is *already done* and where the 
 
 ## Where we are (snapshot, May 2026)
 
-hypar is already a substantial, production-shaped RAG application. The retrieval pipeline (pgvector HNSW + BM25 hybrid with MMR re-ranking, optional HyDE, score-floor filtering) is wired end-to-end with citations and persisted audit trails. Ingestion is durable through the Vercel Workflow SDK with retries and per-step status. Multi-provider embeddings (Gemini / OpenAI / Ollama) abstract away the model choice. There is a Vitest suite, a `pnpm eval` harness producing hit-rate / MRR / latency over a golden JSONL, a VitePress documentation site published to GitHub Pages, Docker Compose profiles, an admin-key-gated stats API, and a Monaco-powered learning quest with three levels and nine challenges.
+### Shipped in this repository today
+
+hypar is a substantial, production-shaped **multi-user** RAG application on **Nuxt 3**. The retrieval pipeline (pgvector HNSW + BM25 hybrid with MMR re-ranking, optional HyDE, score-floor filtering) is wired end-to-end with citations and persisted audit trails. Ingestion is durable through the Vercel Workflow SDK with retries and per-step status. Multi-provider embeddings (Gemini / OpenAI / Ollama) abstract away the model choice. There is a **Vitest** suite, **Docker Compose** profiles, **`better-auth`** with an `/admin` surface, and a **VitePress** site under `docs/` (guides plus ADRs/RFCs) built by `pnpm docs:build` and **deployed to GitHub Pages** when `docs/**` changes on `main`.
+
+### Planned / not wired up yet (called out explicitly so the roadmap stays honest)
+
+- A **`pnpm eval`** golden-set harness (hit-rate, MRR, latency) checked into the repo and run in CI.
+- A **Monaco “learning quest”** UI and `/learn` routes (the old monorepo had a separate playground; the unified app has not reintroduced it).
+- **Strict `admin`-role enforcement** on every `/api/admin/*` handler (today, authenticated session or optional `ADMIN_API_KEY` — see `server/utils/admin-auth.ts`).
 
 That is the foundation. The rest of 2026 is about turning a working app into a piece of work that *clearly demonstrates professional-grade engineering*: observability, advanced retrieval techniques, security hardening, public benchmarks, a contributor-friendly surface, and a tutorial worth following. None of the items below restart what already works — they harden, generalise, measure, and explain it.
 
@@ -16,7 +24,7 @@ That is the foundation. The rest of 2026 is about turning a working app into a p
 
 ## Where we want to land (v1.0, December 2026)
 
-By v1.0, a visitor to the GitHub repo should immediately understand three things. First, that hypar is a serious reference implementation of a modern RAG stack written in TypeScript on Nuxt 3 — with public, reproducible benchmark numbers (hit-rate, MRR, RAGAS faithfulness, p95 latency, cost-per-query) on at least one real-world dataset. Second, that anyone can run `pnpm create hypar-app` (or equivalent) to scaffold a working RAG against their own corpus, swap pgvector for Qdrant or Weaviate without rewriting business logic, and deploy via Docker, Vercel, Fly.io, or Kubernetes following a copy-paste recipe. Third, that there is a complete learning curriculum behind it — the existing learning quest plus a written tutorial that takes a reader from "what is an embedding" to "how do I evaluate a production RAG" using hypar's own code as the running example, available in both Spanish and English.
+By v1.0, a visitor to the GitHub repo should immediately understand three things. First, that hypar is a serious reference implementation of a modern RAG stack written in TypeScript on Nuxt 3 — with public, reproducible benchmark numbers (hit-rate, MRR, RAGAS faithfulness, p95 latency, cost-per-query) on at least one real-world dataset. Second, that anyone can run `pnpm create hypar-app` (or equivalent) to scaffold a working RAG against their own corpus, swap pgvector for Qdrant or Weaviate without rewriting business logic, and deploy via Docker, Vercel, Fly.io, or Kubernetes following a copy-paste recipe. Third, that there is a complete learning curriculum behind it — **written VitePress chapters** (and, if we bring it back, an interactive quest) that take a reader from "what is an embedding" to "how do I evaluate a production RAG" using hypar's own code as the running example, available in both Spanish and English.
 
 Concrete v1.0 success criteria (checked at year-end):
 
@@ -41,7 +49,7 @@ Every month advances three tracks in parallel. The point is to never finish a fe
 
 **Library track.** Make hypar reusable by other people. This means stable interfaces, swappable backends, a scaffolding CLI, semver discipline, and explicit extension points (custom rerankers, custom embedders, custom routers).
 
-**Tutorial track.** Make hypar teachable. The VitePress site already exists; it grows month by month with chapters that walk a reader through the *real code* of hypar — not toy examples — covering one concept at a time. The Monaco learning quest gets new levels in lockstep.
+**Tutorial track.** Make hypar teachable. The **VitePress** shell under `docs/` is live on GitHub Pages; it should grow with chapters that walk a reader through the *real code* of hypar — not toy examples — covering one concept at a time. A **Monaco learning quest** (or similar) would be reintroduced in lockstep when that UI lands again.
 
 **Portfolio track.** Make hypar impressive in 60 seconds to a hiring manager. Public benchmarks, a hosted demo with anonymous traffic, a recorded walkthrough, a write-up of a real problem you solved, and a clean GitHub front page that signals seniority.
 
@@ -50,6 +58,8 @@ A feature is highest-priority when it advances all three tracks at once. Most do
 ---
 
 ## Monthly plan
+
+> **Scenario planning.** The subsections from May through December are **intent and themes**, not a guarantee of what is shipped in the repo at each date. For what is actually in `main`, see *Where we are (snapshot)* above and the codebase.
 
 Each month has a single **theme** that anchors the work. Inside the theme, deliverables are split across the three tracks. Time estimates are realistic given competing life demands; if a month runs over, the *theme* matters more than any single deliverable, so trim the lowest-impact items first.
 
@@ -85,7 +95,7 @@ pgvector is excellent and stays the default, but a library worth its name expose
 
 ### October 2026 — Tutorial completeness & Spanish parity *(theme: teachable in two languages)*
 
-Most RAG content online is English-only and shallow. Spanish-language quality is your differentiator. **Library:** make sure every API doc-string, error message, and CLI prompt is i18n-ready (you already have `i18n/locales` for the UI; extend the discipline to docs and dev-facing strings). **Tutorial:** complete the curriculum — chapters now total 8, with chapters 1–4 published bilingually (ES + EN). Add 3 new Monaco quest levels covering reranking, evaluation, and observability so the interactive learning matches the written curriculum. Cross-link every chapter to the file in hypar's source code that implements the concept. **Portfolio:** post a write-up to dev.to / Hacker News / r/MachineLearning ES communities; track inbound stars and engagement.
+Most RAG content online is English-only and shallow. Spanish-language quality is your differentiator. **Library:** make sure every API doc-string, error message, and CLI prompt is i18n-ready (you already have `i18n/locales` for the UI; extend the discipline to docs and dev-facing strings). **Tutorial:** complete the curriculum — chapters now total 8, with chapters 1–4 published bilingually (ES + EN). If a Monaco `/learn` quest exists again, add new levels covering reranking, evaluation, and observability so the interactive track matches the written curriculum; otherwise focus the month on VitePress depth. Cross-link every chapter to the file in hypar's source code that implements the concept. **Portfolio:** post a write-up to dev.to / Hacker News / r/MachineLearning ES communities; track inbound stars and engagement.
 
 *Estimated: ~50 hrs.* Release: **v0.9** — feature-complete, content-rich, awaiting v1.0 polish.
 
