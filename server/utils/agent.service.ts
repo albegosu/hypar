@@ -25,22 +25,51 @@ import {
 import { truncate } from './text'
 import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-commands'
 
-function getLlmCfg() {
+async function getLlmCfg() {
   const config = useRuntimeConfig()
+  const [
+    llmProvider,
+    ollamaUrl,
+    ollamaApiKey,
+    ollamaLlmModel,
+    openaiApiKey,
+    openaiLlmModel,
+    anthropicApiKey,
+    anthropicModel,
+    mistralApiKey,
+    mistralModel,
+    googleApiKey,
+    googleLlmModel,
+    memoryScope,
+  ] = await Promise.all([
+    getSetting('LLM_PROVIDER', String(config.llmProvider ?? '')),
+    getSetting('OLLAMA_URL', String(config.ollamaUrl ?? '')),
+    getSetting('OLLAMA_API_KEY', String(config.ollamaApiKey ?? '')),
+    getSetting('OLLAMA_LLM_MODEL', String(config.ollamaLlmModel ?? '')),
+    getSetting('OPENAI_API_KEY', String(config.openaiApiKey ?? '')),
+    getSetting('OPENAI_LLM_MODEL', String(config.openaiLlmModel ?? 'gpt-4.1-mini')),
+    getSetting('ANTHROPIC_API_KEY', String(config.anthropicApiKey ?? '')),
+    getSetting('ANTHROPIC_MODEL', String(config.anthropicModel ?? 'claude-sonnet-4-6')),
+    getSetting('MISTRAL_API_KEY', String(config.mistralApiKey ?? '')),
+    getSetting('MISTRAL_MODEL', String(config.mistralModel ?? 'mistral-medium-latest')),
+    getSetting('GOOGLE_API_KEY', String(config.googleApiKey ?? '')),
+    getSetting('GOOGLE_LLM_MODEL', String(config.googleLlmModel ?? 'gemini-2.5-flash')),
+    getSetting('MEMORY_SCOPE', String(config.memoryScope ?? 'local_per_user')),
+  ])
   return {
-    llmProvider: (config.llmProvider as string) || '',
-    ollamaUrl: config.ollamaUrl as string,
-    ollamaApiKey: config.ollamaApiKey as string,
-    ollamaLlmModel: config.ollamaLlmModel as string,
-    openaiApiKey: config.openaiApiKey as string,
-    openaiLlmModel: (config.openaiLlmModel as string) || 'gpt-4.1-mini',
-    anthropicApiKey: config.anthropicApiKey as string,
-    anthropicModel: (config.anthropicModel as string) || 'claude-sonnet-4-6',
-    mistralApiKey: config.mistralApiKey as string,
-    mistralModel: (config.mistralModel as string) || 'mistral-medium-latest',
-    googleApiKey: config.googleApiKey as string,
-    googleLlmModel: (config.googleLlmModel as string) || 'gemini-2.5-flash',
-    memoryScope: (config.memoryScope as string) || 'local_per_user',
+    llmProvider,
+    ollamaUrl,
+    ollamaApiKey,
+    ollamaLlmModel,
+    openaiApiKey,
+    openaiLlmModel,
+    anthropicApiKey,
+    anthropicModel,
+    mistralApiKey,
+    mistralModel,
+    googleApiKey,
+    googleLlmModel,
+    memoryScope,
   }
 }
 
@@ -64,8 +93,8 @@ async function getRagCfg() {
   }
 }
 
-export function getLlmModel(modelOverride?: string): LanguageModel {
-  const cfg = getLlmCfg()
+export async function getLlmModel(modelOverride?: string): Promise<LanguageModel> {
+  const cfg = await getLlmCfg()
 
   // Explicit provider via LLM_PROVIDER env var; fall back to API key presence
   const provider = cfg.llmProvider
@@ -220,7 +249,7 @@ export async function agentStreamText(
   })
 
   const modelMessages = await convertToModelMessages(validMessages)
-  const model = getLlmModel(input.modelOverride)
+  const model = await getLlmModel(input.modelOverride)
 
   return streamText({
     model,

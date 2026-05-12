@@ -46,7 +46,7 @@ async function refineConversationTitleFromTranscript(conversationId: string): Pr
     if (transcript.length < 12) return
 
     const { text } = await generateText({
-      model: getLlmModel(),
+      model: await getLlmModel(),
       system:
         'You name chat threads for a RAG assistant. Reply with exactly one line: a short descriptive title (maximum 10 words), in the SAME language as the transcript. No quotation marks, no markdown, no emojis, no trailing period.',
       prompt: `Transcript:\n---\n${transcript}\n---\nTitle:`,

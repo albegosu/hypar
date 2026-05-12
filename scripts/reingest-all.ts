@@ -22,7 +22,7 @@ async function reingest(documentId: string, content: string): Promise<number> {
   if (!chunks.length) return 0
 
   const chunkTexts = chunks.map((c) => c.content)
-  invalidateEmbeddingCache(chunkTexts)
+  await invalidateEmbeddingCache(chunkTexts)
   const embeddings = await generateEmbeddings(chunkTexts)
 
   await prisma.$transaction(async (tx) => {

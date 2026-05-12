@@ -1,4 +1,4 @@
-import { requireAdmin } from '../../utils/admin-auth'
+import { requireAuthOrAdminApiKey } from '../../utils/admin-auth'
 import { getSettings } from '../../utils/settings.service'
 import { step1, step2, step3, step4, step5, step6 } from '~/utils/setup/wizard-steps'
 import type { WizardStep } from '~/utils/setup/wizard-types'
@@ -15,7 +15,7 @@ const STEPS: Record<string, WizardStep> = {
 }
 
 export default defineEventHandler(async (event) => {
-  requireAdmin(event)
+  requireAuthOrAdminApiKey(event)
 
   const query = getQuery(event)
   const category = typeof query.category === 'string' ? query.category : 'general'

@@ -57,8 +57,29 @@ services:
       NUXT_EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-768}
       MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
       NUXT_MEMORY_SCOPE: ${MEMORY_SCOPE:-local_per_user}
+      MEMORY_PROACTIVE: ${MEMORY_PROACTIVE:-true}
+      NUXT_MEMORY_PROACTIVE: ${MEMORY_PROACTIVE:-true}
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
       NUXT_ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      # Auth (better-auth)
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      # Additional LLM/embedding providers
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      NUXT_VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      NUXT_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      NUXT_MISTRAL_API_KEY: ${MISTRAL_API_KEY:-}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-}
+      NUXT_EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
+      NUXT_LLM_PROVIDER: ${LLM_PROVIDER:-}
       WORKFLOW_LOCAL_DATA_DIR: /app/data/workflow
       NUXT_HOST: 0.0.0.0
       NUXT_PORT: 3000
@@ -89,6 +110,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
     # No ports: — database not exposed to host in production
     networks:
       - rag-network
@@ -107,7 +129,7 @@ services:
     entrypoint: >
       sh -c "
         ollama serve &
-        sleep 5
+        until ollama list >/dev/null 2>&1; do sleep 2; done
         ollama pull ${OLLAMA_MODEL:-nomic-embed-text}
         ollama pull ${OLLAMA_LLM_MODEL:-llama3.1:8b}
         tail -f /dev/null

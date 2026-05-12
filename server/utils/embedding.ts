@@ -57,13 +57,13 @@ const embeddingCache = new LruCache<number[]>(256)
  * with no argument). Call this when re-ingesting a document so stale vectors
  * from a prior chunking strategy don't bleed into the new run.
  */
-export function invalidateEmbeddingCache(texts?: string[]): void {
+export async function invalidateEmbeddingCache(texts?: string[]): Promise<void> {
   if (!texts?.length) {
     embeddingCache.clear()
     return
   }
-  const prefix = resolveEmbedder().cacheKeyPrefix
-  for (const text of texts) embeddingCache.delete(prefix + text)
+  const { cacheKeyPrefix } = await resolveEmbedder()
+  for (const text of texts) embeddingCache.delete(cacheKeyPrefix + text)
 }
 
 async function getEmbeddingSettings() {
@@ -89,21 +89,32 @@ interface ResolvedEmbedder {
   providerOptions?: Record<string, Record<string, unknown>>
 }
 
-function resolveEmbedder(): ResolvedEmbedder {
+async function resolveEmbedder(): Promise<ResolvedEmbedder> {
   const config = useRuntimeConfig()
   const dimensions =
     Number.isFinite(config.embeddingDimensions) && (config.embeddingDimensions as number) > 0
       ? Number(config.embeddingDimensions)
       : DEFAULT_DIMENSIONS
 
-  const embeddingProvider = (config.embeddingProvider as string) || ''
-  const embeddingModel = (config.embeddingModel as string) || ''
-  const googleApiKey = config.googleApiKey as string
-  const openaiApiKey = config.openaiApiKey as string
-  const voyageApiKey = config.voyageApiKey as string
-  const ollamaUrl = config.ollamaUrl as string
-  const ollamaApiKey = config.ollamaApiKey as string
-  const ollamaModel = config.ollamaModel as string
+  const [
+    embeddingProvider,
+    embeddingModel,
+    googleApiKey,
+    openaiApiKey,
+    voyageApiKey,
+    ollamaUrl,
+    ollamaApiKey,
+    ollamaModel,
+  ] = await Promise.all([
+    getSetting('EMBEDDING_PROVIDER', String(config.embeddingProvider ?? '')),
+    getSetting('EMBEDDING_MODEL', String(config.embeddingModel ?? '')),
+    getSetting('GOOGLE_API_KEY', String(config.googleApiKey ?? '')),
+    getSetting('OPENAI_API_KEY', String(config.openaiApiKey ?? '')),
+    getSetting('VOYAGE_API_KEY', String(config.voyageApiKey ?? '')),
+    getSetting('OLLAMA_URL', String(config.ollamaUrl ?? '')),
+    getSetting('OLLAMA_API_KEY', String(config.ollamaApiKey ?? '')),
+    getSetting('OLLAMA_MODEL', String(config.ollamaModel ?? '')),
+  ])
 
   if (embeddingProvider === 'gemini' || (!embeddingProvider && googleApiKey)) {
     const model = embeddingModel || 'gemini-embedding-001'
@@ -179,7 +190,7 @@ async function withRetry<T>(fn: () => Promise<T>, attempts: number): Promise<T> 
 }
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const { model, dimensions, cacheKeyPrefix, providerOptions } = resolveEmbedder()
+  const { model, dimensions, cacheKeyPrefix, providerOptions } = await resolveEmbedder()
   const { cacheEnabled, cacheTtlMs, retryAttempts } = await getEmbeddingSettings()
   const cacheKey = cacheKeyPrefix + text
 
@@ -203,7 +214,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   if (!texts.length) return []
-  const { model, dimensions, cacheKeyPrefix, providerOptions } = resolveEmbedder()
+  const { model, dimensions, cacheKeyPrefix, providerOptions } = await resolveEmbedder()
   const { cacheEnabled, cacheTtlMs, retryAttempts, batchSize } = await getEmbeddingSettings()
 
   const out: number[][] = new Array(texts.length)

@@ -3,6 +3,21 @@
     "brand": "hypar",
     "subtitle": "retrieval-augmented chat console"
   },
+  "welcomeModal": {
+    "cmd": "hypar --welcome",
+    "badge": "first visit",
+    "title": "// welcome to hypar",
+    "subtitle": "Walk through six short steps to wire providers, your vector store, embeddings, chunking, search, and chat — then you are ready to talk to your documents.",
+    "stepsLabel": "wizard path",
+    "stepTags": ["providers", "vector", "embed", "chunk", "search", "rag"],
+    "features": {
+      "providers": "Pick models and API keys that match how you run locally or in the cloud.",
+      "vector": "Point the app at Postgres + pgvector or another compatible store.",
+      "layers": "Each screen explains what that layer does so nothing feels like a black box."
+    },
+    "cta": "open setup wizard",
+    "skip": "maybe later"
+  },
   "nav": {
     "chat": "chat",
     "documents": "docs",
@@ -130,10 +145,10 @@
       "search": "[ search ]",
       "rag": "[ rag ]"
     },
-    "savedOk": "✓ {tab} saved — active immediately",
-    "savedFail": "✗ Save failed. Check your token and try again.",
-    "resetOk": "✓ Reset to .env — DB overrides cleared",
-    "resetFail": "✗ Reset failed."
+    "savedOk": "{section} saved. Changes apply immediately; no restart needed.",
+    "savedFail": "Could not save. Check your admin token and try again.",
+    "resetOk": "Reset to .env values; database overrides were cleared.",
+    "resetFail": "Could not reset. Check your token and try again."
   },
   "common": {
     "loading": "loading…",
@@ -159,16 +174,22 @@
       "prev": "prev",
       "next": "next",
       "downloadEnv": "download .env config",
+      "applyRuntime": "apply to running server",
+      "applyRuntimeSuccess": "Settings saved. The server reads these values from the database now (same override path as the admin panel).",
+      "applyRuntimeError": "Could not apply settings. Try again or use download .env.",
+      "runtimeNoticeTitle": "How this wizard relates to the running app",
+      "runtimeNoticeBody": "Values are kept in your browser and optionally synced to this server while no admin account exists yet. The Node server does not read localStorage: it uses environment variables and, after you click apply, the same database overrides the admin panel uses (DB > .env > defaults). Downloading .env is still the right path for another machine, Docker, or CI. If you change DATABASE_URL, restart the app and set the variable in the real environment — Prisma does not reconnect from the wizard alone.",
       "copySetup": "copy setup commands",
       "setupCopied": "setup copied",
       "nextStepsTitle": "next steps",
       "stepCloneRepo": "Clone your RAG repository",
-      "stepAddEnv": "Place this downloaded file as `.env` in the project root",
-      "stepRunStack": "Start services and app",
+      "stepAddEnv": "Download `.env` to the project root, or use Apply to push settings into this server (API keys and tuning take effect without a restart).",
+      "stepRestart": "If you changed the database URL, restart Nuxt or your containers and set DATABASE_URL in the host or compose environment.",
+      "stepRunStack": "Install dependencies and start the stack",
       "ready": "ready",
       "requiredMissing": "required fields missing",
       "configCommand": "configure --step={stepId}",
-      "storageInfo": "writes -> localStorage://rag-wizard-config"
+      "storageInfo": "writes -> localStorage + server sync (before first admin)"
     },
     "intro": {
       "title": "onboarding wizard",

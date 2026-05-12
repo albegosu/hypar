@@ -96,6 +96,7 @@
           :step-id="currentStepData.id"
           :fields="currentStepData.configFields ?? []"
           :model-value="config[currentStepData.id] ?? {}"
+          :show-field-errors="wizardShowFieldErrorsByStep[currentStepData.id] ?? false"
           @update:model-value="onConfigChange(currentStepData.id, $event)"
           @valid-change="onValidChange"
         />
@@ -163,11 +164,33 @@
           {{ setupCopied ? `✓ ${t('wizard.chrome.setupCopied')}` : `📋 ${t('wizard.chrome.copySetup')}` }}
         </button>
       </div>
-      <div class="p-4 text-xs space-y-2">
+      <div class="p-4 text-xs space-y-3">
+        <div
+          class="wz-muted leading-relaxed border-l-2 pl-3 py-1"
+          style="border-color: var(--term-accent)"
+        >
+          <span class="wz-strong text-[11px] block mb-1">{{ t('wizard.chrome.runtimeNoticeTitle') }}</span>
+          <span>{{ t('wizard.chrome.runtimeNoticeBody') }}</span>
+        </div>
         <p class="wz-muted">1) {{ t('wizard.chrome.stepCloneRepo') }}</p>
         <p class="wz-muted">2) {{ t('wizard.chrome.stepAddEnv') }}</p>
-        <p class="wz-muted">3) {{ t('wizard.chrome.stepRunStack') }}</p>
+        <p class="wz-muted">3) {{ t('wizard.chrome.stepRestart') }}</p>
+        <p class="wz-muted">4) {{ t('wizard.chrome.stepRunStack') }}</p>
         <pre class="mt-2 p-3 text-[11px] overflow-x-auto wz-faint" style="background: var(--term-bg-input); border: 1px solid var(--term-accent-line); border-radius: 6px;">{{ setupCommands }}</pre>
+        <p
+          v-if="applyOk"
+          class="text-[11px] px-3 py-2 rounded font-mono"
+          style="color: var(--term-accent); background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25)"
+        >
+          ✓ {{ t('wizard.chrome.applyRuntimeSuccess') }}
+        </p>
+        <p
+          v-if="applyError"
+          class="text-[11px] px-3 py-2 rounded font-mono"
+          style="color: var(--term-danger); background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25)"
+        >
+          ⚠ {{ applyError }}
+        </p>
       </div>
     </section>
 
@@ -188,11 +211,21 @@
         <span v-else>✓ {{ t('wizard.chrome.ready') }}</span>
       </div>
 
-      <!-- last wizard step: download .env -->
+      <!-- last wizard step: apply + download .env -->
       <template v-if="currentStep === wizardSteps.length - 1">
-        <button type="button" class="wz-btn-primary" @click="completeWizard">
-          {{ t('wizard.chrome.downloadEnv') }} ▶
-        </button>
+        <div class="flex flex-wrap items-center gap-2 justify-end">
+          <button
+            type="button"
+            class="wz-btn-ghost"
+            :disabled="applying"
+            @click="applyToRunningServer"
+          >
+            {{ applying ? '…' : t('wizard.chrome.applyRuntime') }} ▶
+          </button>
+          <button type="button" class="wz-btn-primary" @click="completeWizard">
+            {{ t('wizard.chrome.downloadEnv') }} ▶
+          </button>
+        </div>
       </template>
       <!-- admin creation step -->
       <template v-else-if="currentStep >= wizardSteps.length">
@@ -236,10 +269,15 @@ const { isAuthenticated } = useAuth()
 const currentStep = ref(0)
 const config = ref<WizardConfig>({})
 const validByStep = ref<Record<string, boolean>>({})
+/** After user clicks Next with an invalid step, show inline field errors for that step. */
+const wizardShowFieldErrorsByStep = ref<Record<string, boolean>>({})
 const envCopied = ref(false)
 const setupCopied = ref(false)
 const submitting = ref(false)
 const setupError = ref('')
+const applying = ref(false)
+const applyError = ref('')
+const applyOk = ref(false)
 const adminName = ref('')
 const adminEmail = ref('')
 const adminPassword = ref('')
@@ -334,6 +372,15 @@ function onValidChange(valid: boolean) {
 }
 
 function nextStep() {
+  if (currentStep.value < wizardSteps.length) {
+    const stepId = currentStepData.value.id
+    const fields = currentStepData.value.configFields ?? []
+    if (fields.length > 0 && validByStep.value[stepId] === false) {
+      wizardShowFieldErrorsByStep.value = { ...wizardShowFieldErrorsByStep.value, [stepId]: true }
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+  }
   if (currentStep.value < allSteps.value.length - 1) {
     currentStep.value++
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -366,6 +413,25 @@ function completeWizard() {
   const a = document.createElement('a')
   a.href = url; a.download = '.env'; a.click()
   URL.revokeObjectURL(url)
+}
+
+async function applyToRunningServer() {
+  applyError.value = ''
+  applyOk.value = false
+  applying.value = true
+  try {
+    await $fetch('/api/setup/apply-wizard', {
+      method: 'POST',
+      body: { config: config.value },
+    })
+    applyOk.value = true
+  } catch (err: unknown) {
+    applyError.value = (err as { data?: { statusMessage?: string }; message?: string })?.data?.statusMessage
+      ?? (err as { message?: string })?.message
+      ?? t('wizard.chrome.applyRuntimeError')
+  } finally {
+    applying.value = false
+  }
 }
 
 async function submitSetup() {

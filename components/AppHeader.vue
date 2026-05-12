@@ -15,11 +15,10 @@
         <div v-if="user" class="hidden sm:flex items-center gap-1.5 mr-2 min-w-0">
           <span class="wz-faint shrink-0">@</span>
           <span class="wz-muted truncate max-w-[120px]">{{ userLabel }}</span>
-          <span v-if="isAdmin" class="wz-pill shrink-0">admin</span>
         </div>
 
         <NuxtLink
-          v-if="isAdmin"
+          v-if="user"
           to="/admin"
           class="wz-btn-ghost text-[10px] shrink-0"
         >
@@ -83,7 +82,7 @@ import { signOut } from '~/utils/auth-client'
 
 const { t } = useI18n({ useScope: 'global' })
 const { theme, locale, toggleTheme, setLocale } = useTerminalPrefs()
-const { user, isAdmin } = useAuth()
+const { user } = useAuth()
 const route = useRoute()
 
 const loggingOut = ref(false)

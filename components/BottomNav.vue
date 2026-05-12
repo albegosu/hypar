@@ -25,7 +25,7 @@ import { useI18n } from 'vue-i18n'
 const route = useRoute()
 const { t } = useI18n()
 
-const { isAdmin } = useAuth()
+const { isAuthenticated } = useAuth()
 
 const baseItems = [
   { path: '/', icon: 'i-heroicons-chat-bubble-left-right', label: 'nav.chat' },
@@ -38,7 +38,9 @@ const adminItems = [
   { path: '/admin/settings', icon: 'i-heroicons-cog-6-tooth', label: 'nav.settings' },
 ]
 
-const items = computed(() => isAdmin.value ? [...baseItems, ...adminItems] : baseItems)
+const items = computed(() =>
+  isAuthenticated.value ? [...baseItems, ...adminItems] : baseItems,
+)
 
 function isActive(path: string) {
   if (path === '/') return route.path === '/'
