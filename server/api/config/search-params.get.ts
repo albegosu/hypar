@@ -4,6 +4,7 @@ const DEFAULT_LIMIT = 5
 const DEFAULT_MIN_SCORE = 0.2
 const DEFAULT_HYBRID_ALPHA = 0.7
 const DEFAULT_MMR_LAMBDA = 0.7
+const DEFAULT_OVERFETCH = 3
 
 export default defineEventHandler(async () => {
   const config = useRuntimeConfig()
@@ -39,6 +40,7 @@ export default defineEventHandler(async () => {
     embeddingDims: Number(config.embeddingDimensions ?? 768),
     hybridEnabled,
     rerankEnabled,
+    overFetch: DEFAULT_OVERFETCH,
     llmModel: llmModelMap[llmProvider] ?? llmProvider,
     llmProvider,
   }

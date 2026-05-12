@@ -6,6 +6,7 @@ export interface SearchParamsConfig {
   embeddingDims: number
   hybridEnabled: boolean
   rerankEnabled: boolean
+  overFetch: number
   llmModel: string
   llmProvider: string
 }
