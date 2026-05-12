@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../utils/prisma'
 import { splitIntoChunks, getChunkConfig, type Chunk } from '../utils/chunking'
-import { generateEmbeddings } from '../utils/embedding'
+import { generateEmbeddings, invalidateEmbeddingCache } from '../utils/embedding'
 import { stripNul } from '../utils/text'
 
 export interface IngestResult {
@@ -21,7 +21,11 @@ export async function ingestDocument(documentId: string, content: string): Promi
       return { documentId, chunkCount: 0, status: 'ready' }
     }
 
-    const embeddings = await embedChunksWithRetry(chunks.map((c) => c.content))
+    const chunkTexts = chunks.map((c) => c.content)
+    // Drop any cached embeddings for these chunks so a re-ingest (after a
+    // chunking-strategy or content change) doesn't reuse stale vectors.
+    invalidateEmbeddingCache(chunkTexts)
+    const embeddings = await embedChunksWithRetry(chunkTexts)
     await persistChunks(documentId, chunks, embeddings)
     await markStatus(documentId, 'ready', chunks.length, null)
 

@@ -8,7 +8,7 @@ import 'dotenv/config'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 import { splitIntoChunks } from '../server/utils/chunking'
-import { generateEmbeddings } from '../server/utils/embedding'
+import { generateEmbeddings, invalidateEmbeddingCache } from '../server/utils/embedding'
 import { stripNul } from '../server/utils/text'
 
 const connectionString = process.env.DATABASE_URL
@@ -21,7 +21,9 @@ async function reingest(documentId: string, content: string): Promise<number> {
   const chunks = splitIntoChunks(content)
   if (!chunks.length) return 0
 
-  const embeddings = await generateEmbeddings(chunks.map((c) => c.content))
+  const chunkTexts = chunks.map((c) => c.content)
+  invalidateEmbeddingCache(chunkTexts)
+  const embeddings = await generateEmbeddings(chunkTexts)
 
   await prisma.$transaction(async (tx) => {
     await tx.$executeRawUnsafe(`DELETE FROM "Chunk" WHERE "documentId" = $1`, documentId)
