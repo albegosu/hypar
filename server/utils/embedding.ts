@@ -40,9 +40,31 @@ class LruCache<V> {
     }
     this.store.set(key, { value, expiresAt: ttlMs === Infinity ? Infinity : Date.now() + ttlMs })
   }
+
+  delete(key: string): void {
+    this.store.delete(key)
+  }
+
+  clear(): void {
+    this.store.clear()
+  }
 }
 
 const embeddingCache = new LruCache<number[]>(256)
+
+/**
+ * Drop cached embeddings for the given texts (or the whole cache when called
+ * with no argument). Call this when re-ingesting a document so stale vectors
+ * from a prior chunking strategy don't bleed into the new run.
+ */
+export function invalidateEmbeddingCache(texts?: string[]): void {
+  if (!texts?.length) {
+    embeddingCache.clear()
+    return
+  }
+  const prefix = resolveEmbedder().cacheKeyPrefix
+  for (const text of texts) embeddingCache.delete(prefix + text)
+}
 
 async function getEmbeddingSettings() {
   const config = useRuntimeConfig()
