@@ -1,6 +1,8 @@
 # hypar
 
-A production-ready full-stack application for **Retrieval-Augmented Generation (RAG)** built as a single Nuxt 3 project. Includes a RAG chat interface, document management, and an interactive learning quest — all in one app.
+A learning-focused, full-stack **Retrieval-Augmented Generation (RAG)** app built as a single Nuxt 3 project. Upload documents, chat with an agent over your own knowledge base, and tune every layer of the pipeline at runtime from the admin settings.
+
+> Designed to be **read like a tutorial**: every step (chunking, embedding, hybrid search, MMR, agentic tool-calling) is a small, named file you can open in your editor and follow end-to-end.
 
 ![Banner](https://github.com/user-attachments/assets/a2125d39-9f24-498c-b84e-b19ca6fbe45d)
 <br>
@@ -10,6 +12,33 @@ A production-ready full-stack application for **Retrieval-Augmented Generation (
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
 [![Nuxt](https://img.shields.io/badge/Nuxt-3-green)](https://nuxt.com/)
 [![pgvector](https://img.shields.io/badge/pgvector-0.5-purple)](https://github.com/pgvector/pgvector)
+
+---
+
+## What is RAG?
+
+**Retrieval-Augmented Generation (RAG)** gives an LLM access to your own documents at answer time, so it can ground its replies in facts it never saw during training. The flow is always the same three stages:
+
+1. **Ingest** — split each document into small **chunks**, turn each chunk into a numeric **embedding**, store it in a vector database.
+2. **Retrieve** — when the user asks something, embed the query, find the most similar chunks in the vector store (optionally combined with keyword search — *hybrid search*), and optionally re-rank them for diversity (**MMR**).
+3. **Generate** — pass the retrieved chunks to the LLM as context and ask it to answer with citations.
+
+This repo wires all three stages with knobs you can change live (chunk size, top-K, hybrid α, MMR λ, HyDE on/off, search mode `auto` / `search` / `direct`). The same app also acts as an **agent**: the LLM decides *whether* to call `searchKnowledgeBase` for a given message instead of always running RAG, so small-talk doesn't waste an embedding round-trip.
+
+### Glossary
+
+| Term | Meaning |
+|---|---|
+| **Chunk** | A bounded piece of a document (≈400 tokens). The unit of retrieval. |
+| **Embedding** | A fixed-length vector (here 768 dims) that represents a chunk's meaning. |
+| **pgvector** | PostgreSQL extension that stores vectors and computes cosine distance. |
+| **BM25** | Classical keyword-relevance score; complements semantic search on names, codes, literals. |
+| **Hybrid search** | Weighted blend of vector similarity and BM25, controlled by α ∈ [0, 1]. |
+| **HyDE** | *Hypothetical Document Embeddings*: have the LLM draft a fake answer first, then embed *that* as the query. Often improves recall. |
+| **MMR** | *Maximal Marginal Relevance*: re-rank to balance relevance vs. diversity, controlled by λ. |
+| **top-K** | How many chunks survive to be shown to the LLM. |
+| **Tool call** | The LLM decides to invoke a function (here `searchKnowledgeBase`) instead of replying directly. |
+| **Agent / search mode** | `auto` = LLM decides; `search` = force retrieval; `direct` = skip retrieval. |
 
 ---
 
@@ -42,18 +71,19 @@ A production-ready full-stack application for **Retrieval-Augmented Generation (
 - **Conversations + Messages tables** — chat history survives reloads, browser closes, devices
 - **Audit trail** — every query logs which chunks were retrieved (`Query.sources`, `Query.toolCalled`)
 
+### Multi-user & auth
+- **Per-user documents & conversations** — every doc, chat, and memory is scoped to its owner
+- **Admin role** — `/admin/*` pages (stats, settings, users, usage) require an admin user
+
+### Runtime configuration (`/admin/settings`)
+- **Live tuning** — change chunking, search, hybrid α, RAG temperature, system prompt, agent max steps without restarting
+- **Setup wizard** (`/setup`) — guided first-run config that writes the same DB-backed settings
+
 ### Safety & ops
 - **Rate-limit middleware** — chat 30/min, upload 10/min per (IP+userId)
-- **Admin auth** — endpoints return 401 unconditionally if `ADMIN_API_KEY` is not set
+- **Admin auth** — protected by `better-auth` session; admin role required
 - **Strict input validation** — Zod schemas + 64KB/part chat message cap
-- **Eval harness** — `pnpm eval` reports hit-rate, MRR, p50/p95 latency over `evals/golden.jsonl`
-- **Tests** — `pnpm test` (vitest) covers chunking, text utils, agent commands
-
-### RAG Learning Quest (`/learn`)
-- **3 Levels** — Embeddings, Chunking, Vector Database
-- **9 Coding Challenges** — easy → hard, 650 XP total
-- **Live Code Editor** — Monaco Editor with instant validation
-- **Progress Tracking** — XP, badges, persisted state
+- **Tests** — `pnpm test` (vitest) covers chunking, text utils, agent commands, search
 
 ---
 
@@ -69,7 +99,9 @@ Everything runs as a **single Nuxt 3 app** on port 3000. The frontend and backen
 │  ├── /           ├── chat.post.ts        │
 │  ├── /documents  ├── documents/          │
 │  ├── /upload     ├── search/             │
-│  └── /learn/*    └── admin/              │
+│  ├── /admin/*    ├── conversations/      │
+│  ├── /auth/*     ├── setup/              │
+│  └── /setup      └── admin/              │
 │                                          │
 │  server/utils/                           │
 │  ├── prisma.ts (pgvector)                │
@@ -127,10 +159,10 @@ Embeddings (`nomic-embed-text`, 768 dims) work well as-is.
 
 ### Admin endpoints
 
-`/api/admin/stats` and `/api/admin/queries` are **disabled by default**. To
-enable them set `ADMIN_API_KEY` in `.env` and pass it as
-`Authorization: Bearer <key>` (or `x-admin-key: <key>`). With the key unset
-both endpoints return 401 — they will never be silently public.
+`/api/admin/*` endpoints (`stats`, `usage`, `users`, `settings`) require an
+authenticated user with the `admin` role. Sign up the first user via the
+`/setup` wizard — it is promoted to admin automatically. Subsequent admins
+can be granted from `/admin/users`.
 
 ---
 
@@ -147,7 +179,7 @@ both endpoints return 401 — they will never be silently public.
 | LLM | Ollama (local or cloud) — via OpenAI-compat endpoint |
 | LLM / Chat SDK | Vercel AI SDK (`ai`, `@ai-sdk/vue`, `@ai-sdk/google`, `@ai-sdk/openai`) |
 | Ingestion | Vercel Workflow SDK (`workflow`) — durable, per-step retries |
-| Code Editor | Monaco Editor (learning only) |
+| Auth | `better-auth` (email + password, sessions, roles) |
 | Runtime | Node.js 20 |
 
 ---
@@ -229,8 +261,9 @@ Open http://localhost:3000.
 | `pnpm db:migrate` | Run Prisma migrations (dev) |
 | `pnpm db:deploy` | Run migrations (production) |
 | `pnpm db:studio` | Open Prisma Studio |
-| `pnpm test` | Vitest (chunking, text utils, agent commands) |
-| `pnpm eval` | RAG eval harness (`evals/golden.jsonl`) |
+| `pnpm test` | Vitest (chunking, text utils, agent commands, search) |
+| `pnpm typecheck` | `vue-tsc --noEmit` |
+| `pnpm reingest` | Re-chunk & re-embed every document (after a chunking change) |
 
 ---
 
@@ -280,11 +313,14 @@ POST /api/search/rag     # RAG query (search only, no LLM)
 POST /api/search/inspect # embedding debug + latency info
 ```
 
-### Admin
+### Admin (admin role required)
 
 ```http
-GET /api/admin/stats     # document/chunk/query counts
-GET /api/admin/queries   # recent query log
+GET  /api/admin/stats     # document/chunk/query counts
+GET  /api/admin/usage     # recent query log + latency stats
+GET  /api/admin/users     # list users, manage roles
+GET  /api/admin/settings  # read runtime settings (by category)
+POST /api/admin/settings  # update a runtime setting
 ```
 
 ---
@@ -296,57 +332,63 @@ from-zero-rag/
 ├── nuxt.config.ts          # modules, runtimeConfig
 ├── app.vue / app.config.ts
 ├── prisma/
-│   ├── schema.prisma       # Document, Chunk, Query models
+│   ├── schema.prisma       # User, Document, Chunk, Query, Setting, Conversation, Message
 │   └── migrations/
 ├── assets/css/main.css     # Tailwind v4 + theme tokens
 ├── pages/
 │   ├── index.vue           # RAG chat
 │   ├── upload.vue
-│   ├── documents/
-│   └── learn/              # Learning Quest (/learn/*)
+│   ├── setup.vue           # first-run wizard
+│   ├── documents/          # list + detail
+│   ├── auth/               # signin / signup
+│   └── admin/              # stats, settings, users, usage
 ├── components/
 │   ├── AppHeader.vue
 │   ├── BottomNav.vue
-│   └── learn/              # auto-prefixed <Learn*>
+│   ├── WelcomeModal.vue
+│   ├── rag/                # IngestProgress, PipelineStepRow, RagPipelineTrace
+│   ├── setup/              # wizard form + fields
+│   └── micro/              # micrographic decoration
 ├── layouts/
-│   ├── default.vue         # RAG shell
-│   └── learn.vue           # Learning shell
+│   └── default.vue
 ├── stores/
-│   ├── documents.ts
-│   └── progress.ts         # Learning XP/badges
-├── utils/learning/         # inlined learning library
-│   ├── levels/
-│   ├── validators/
-│   └── wizard/
+│   └── documents.ts
+├── composables/            # useAuth, useConfigRepository, useSearchParams, …
+├── utils/setup/            # wizard catalog + step definitions
 └── server/
     ├── api/                # h3 route handlers
-    │   ├── chat.post.ts    # streaming agentic chat (AI SDK)
+    │   ├── chat.post.ts
+    │   ├── conversations/
     │   ├── documents/
     │   ├── search/
+    │   ├── config/         # search-params endpoint for the UI trace
+    │   ├── setup/
+    │   ├── auth/           # better-auth handler
     │   └── admin/
     ├── workflows/
-    │   └── ingest-document.ts  # durable ingest (Workflow SDK)
-    ├── utils/              # services + singletons
-    │   ├── prisma.ts
-    │   ├── embedding.ts    # AI SDK embed/embedMany (Google/OpenAI/Ollama)
+    │   └── ingest-document.ts   # durable ingest (Workflow SDK)
+    ├── lib/auth.ts              # better-auth config
+    ├── middleware/              # rate limit, setup guard
+    ├── utils/                   # services + singletons
+    │   ├── embedding.ts         # AI SDK embed/embedMany
     │   ├── chunking.ts
-    │   ├── ollama.ts       # URL normalisation helper
-    │   ├── documents.service.ts
-    │   ├── search.service.ts
-    │   └── agent.service.ts    # AI SDK streamText + tool definitions
+    │   ├── search.service.ts    # hybrid + MMR + HyDE
+    │   ├── agent.service.ts     # streamText + searchKnowledgeBase tool
+    │   ├── settings.service.ts  # runtime-tunable settings
+    │   ├── conversations.service.ts
+    │   └── documents.service.ts
     └── plugins/
-        ├── prisma.ts       # disconnect on shutdown
-        └── workflow-init.ts # mkdir WORKFLOW_LOCAL_DATA_DIR on boot
 ```
 
 ---
 
-## Documentation
+## Further reading
 
-- [Getting Started (VitePress)](docs/guide/getting-started.md) — same flow as this README; use `.env.example` as the env template
-- [Docker Guide](docs/DOCKER.md)
-- [Contributing](CONTRIBUTING.md)
-- [Architecture Notes](docs/architecture/core-rag-architecture.md)
+- [CONTRIBUTING.md](CONTRIBUTING.md) — branch naming, commits, dev workflow
+- [ROADMAP.md](ROADMAP.md) — month-by-month plan
+- [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md) — stage-based product evolution
+- [.github/CI-CD.md](.github/CI-CD.md) — CI pipeline + Docker build
+- Tutorial chapters (`docs/`) — coming soon, will power the GitHub Pages site
 
 ---
 
