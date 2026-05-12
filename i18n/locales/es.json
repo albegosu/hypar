@@ -26,8 +26,6 @@
     "errorUnauthorized": "API key inválida o ausente. Revisa la configuración del proveedor.",
     "errorRateLimit": "Límite de peticiones alcanzado. Espera un momento e inténtalo de nuevo.",
     "errorModel": "Error del proveedor del modelo",
-    "kbHit": "kb hit",
-    "kbMiss": "sin kb",
     "sources": "fuentes",
     "showRetrieval": "ver recuperación",
     "hideRetrieval": "ocultar recuperación",
@@ -55,7 +53,13 @@
       "search": "buscar en tu base de conocimiento sin usar el modelo. Ej: /search kubernetes config"
     },
     "errorReach": "no se pudo conectar a la api en {url}. ¿está corriendo el backend?",
-    "errorHint": "con docker: `docker compose up -d --build backend frontend` y luego recarga forzada."
+    "errorHint": "con docker: `docker compose up -d --build backend frontend` y luego recarga forzada.",
+    "searched": "buscó",
+    "searchedHint": "el agente invocó la búsqueda en tu base de conocimiento",
+    "notSearched": "sin búsqueda",
+    "notSearchedHint": "el agente respondió sin buscar",
+    "cited": "con citas",
+    "citedHint": "la respuesta cita pasajes recuperados con [n]"
   },
   "documents": {
     "title": "documentos",

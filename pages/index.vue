@@ -51,8 +51,9 @@
                 class="wz-faint text-[10px] mb-1 font-mono flex items-center gap-2"
               >
                 <span>&lt; agent</span>
-                <span v-if="msg.usedKb === true" class="wz-pill">{{ t('chat.kbHit') }}</span>
-                <span v-else-if="msg.usedKb === false" class="wz-pill wz-pill-dashed">{{ t('chat.kbMiss') }}</span>
+                <span v-if="msg.searched === true" class="wz-pill" :title="t('chat.searchedHint')">{{ t('chat.searched') }}</span>
+                <span v-else-if="msg.searched === false" class="wz-pill wz-pill-dashed" :title="t('chat.notSearchedHint')">{{ t('chat.notSearched') }}</span>
+                <span v-if="msg.cited" class="wz-pill" :title="t('chat.citedHint')">{{ t('chat.cited') }}</span>
               </div>
 
               <div
@@ -629,7 +630,10 @@ interface DisplayMessage {
   html: string
   sources?: ConverseSource[]
   results?: SearchResult[]
-  usedKb: boolean | null
+  /** True if the agent invoked the searchKnowledgeBase tool. */
+  searched: boolean | null
+  /** True only if the assistant text references retrieved sources. */
+  cited: boolean
   latencyMs?: number
 }
 
@@ -677,14 +681,21 @@ const displayMessages = computed<DisplayMessage[]>(() => {
       m.role === 'assistant' && !text.trim() && toolOutput != null && toolCalled
     const displayText = assistantNoTextButRetrieved ? t('chat.noModelReply') : text
 
+    const sources = normalizeToolSources(toolOutput?.sources)
+    // The assistant "cited" only if its text actually contains a [n] reference
+    // matching one of the returned sources. Retrieving chunks alone isn't enough.
+    const cited = m.role === 'assistant'
+      && !!sources?.length
+      && /\[\d+\]/.test(text)
     return {
       id: m.id,
       role: m.role,
       text: displayText,
       html: m.role === 'assistant' ? renderMarkdown(displayText) : '',
-      sources: normalizeToolSources(toolOutput?.sources),
+      sources,
       results: toolOutput?.results,
-      usedKb: m.role === 'assistant' ? (toolCalled ? true : (text ? false : null)) : null,
+      searched: m.role === 'assistant' ? (toolCalled ? true : (text ? false : null)) : null,
+      cited,
       latencyMs: toolOutput?.latencyMs,
     }
   })
