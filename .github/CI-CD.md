@@ -6,11 +6,10 @@
 |---|---|---|---|
 | **Test Backend** | `test-backend.yml` | Push/PR → `main` (paths: `server/**`, `prisma/**`, `init-scripts/**`, `tests/**`) | `pnpm install` → `prisma generate` → `prisma migrate deploy` (against `pgvector/pgvector:pg16` service) → `vue-tsc --noEmit` → `pnpm test` → `pnpm build` |
 | **Test Frontend** | `test-frontend.yml` | Push/PR → `main` (paths: `pages/**`, `components/**`, `layouts/**`, `stores/**`, `assets/**`, `plugins/**`, `composables/**`, `i18n/**`, `app.vue`, `nuxt.config.ts`) | `pnpm install` → `vue-tsc --noEmit` → `pnpm test` → `pnpm build` |
-| **Test Learning** | `test-learning.yml` | Push/PR → `main` (paths: `utils/learning/**`, `pages/learn/**`, `components/learn/**`, `stores/progress.ts`) | `pnpm install` → `vue-tsc --noEmit` → `pnpm test` → `pnpm build` |
 | **Docker Build** | `docker-build.yml` | Push to `main`, tags `v*`, PR to `main` | Build single root `Dockerfile` image and push to GHCR (PRs build only, no push) |
 | **Deploy guides to Pages** | `pages.yml` | Push to `main` (paths: `docs/**`) or manual | Build VitePress (`pnpm run docs:build`) and deploy to GitHub Pages |
 
-> The `test-*` workflows overlap on the unified Nuxt monorepo: each runs the full Vitest suite and a Nuxt build. The split is purely about scoping triggers via path filters so unrelated changes (docs only, etc.) skip CI.
+> The two `test-*` workflows overlap on the unified Nuxt monorepo: each runs the full Vitest suite and a Nuxt build. The split is purely about scoping triggers via path filters so unrelated changes (docs-only edits under `docs/**`, etc.) skip the app CI jobs.
 
 ---
 
@@ -29,8 +28,8 @@ pnpm build
 # Tests (chunking, text utils, agent commands, search)
 pnpm test
 
-# RAG eval harness (when retrieval / chunking changes)
-pnpm eval
+# VitePress docs (when docs/** changes)
+pnpm docs:build
 
 # Database migrations (if schema changed)
 pnpm db:migrate

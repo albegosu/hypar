@@ -17,7 +17,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "vue-tsc --noEmit",
-    "reingest": "tsx scripts/reingest-all.ts"
+    "reingest": "tsx scripts/reingest-all.ts",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.74",
@@ -53,11 +56,13 @@
     "@types/pdf-parse": "^1.1.4",
     "@types/uuid": "^9.0.7",
     "dotenv": "^17.4.2",
+    "gsap": "^3.15.0",
     "nuxt": "^3.15.3",
     "prisma": "^7.8.0",
     "tailwindcss": "^4.2.4",
     "tsx": "^4.19.0",
     "typescript": "^5.3.3",
+    "vitepress": "^1.6.3",
     "vitest": "^2.1.0",
     "vue-tsc": "^3.2.7"
   },
@@ -74,6 +79,6 @@
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0",
-    "pnpm": ">=8.0.0"
+    "pnpm": ">=10.0.0"
   }
 }

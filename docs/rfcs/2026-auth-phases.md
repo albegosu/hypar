@@ -3,6 +3,8 @@
 > Agent instructions for completing Phases 2–5 of the auth and multi-user rollout.
 > Phase 1 (better-auth bootstrap) is already merged. Read this file top to bottom before writing any code.
 
+**Repo drift note (2026):** Some paths below reference a **staging** layout (`pages/learn/*`, `utils/learning/*`). On current **`main`**, first-run onboarding lives in **`pages/setup.vue`** with wizard data in **`utils/setup/wizard-steps.ts`** and UI under **`components/setup/`**. The Monaco `/learn` quest is **removed** from the app ([Learning quest](/features/learning-quest)). Treat old `learn` paths as historical unless you are restoring that stack.
+
 ---
 
 ## Context you must understand first
@@ -29,7 +31,7 @@
 **DO NOT touch:**
 - `server/utils/search.service.ts`, `agent.service.ts`, `embedding.ts`, `chunking.ts` — RAG core, leave as-is
 - `server/workflows/ingest-document.ts` — durable ingest workflow, leave as-is
-- Anything under `pages/learn/` or `utils/learning/` — that is the staging repo's learning quest, not part of the product
+- The old **`pages/learn/`** / **`utils/learning/`** tree — it is **not** on `main`; do not reintroduce it unless explicitly reviving the quest
 
 ---
 
@@ -66,13 +68,13 @@ Logic:
 6. Return `{ ok: true }`
 
 #### `pages/setup.vue`
-Public page (`definePageMeta({ layout: false, middleware: [] })`). Uses the existing wizard steps from `utils/learning/wizard/wizard-steps.ts` (steps 1–6) for provider config, then adds a final step to create the admin account.
+Public page (`definePageMeta({ layout: false, middleware: [] })`). Uses wizard steps from **`utils/setup/wizard-steps.ts`** (provider / DB / embedding / chunking / search / RAG) and components under **`components/setup/`**, then a final step to create the first admin account.
 
 Structure:
-- Reuse the wizard terminal UI from `pages/learn/onboarding.vue` as reference for the shell aesthetic
-- Steps 1–6: provider/DB/embedding/chunking/search/RAG config (already defined in `wizard-steps.ts`) — these generate the `.env` preview
-- Final step (step 7): admin account creation form — name, email, password fields
-- On submit of step 7: POST to `/api/setup/complete` with `{ name, email, password }`
+- Reuse the terminal aesthetic from `pages/auth/signin.vue` and existing setup components as reference
+- Steps 1–6: provider/DB/embedding/chunking/search/RAG config — persisted via `/api/setup/wizard-state` and applied with `/api/setup/apply-wizard` (see `server/api/setup/*`)
+- Final step: admin account creation form — name, email, password fields
+- On submit of final step: POST to `/api/setup/complete` with `{ name, email, password }`
 - On success: `navigateTo('/auth/signin')` with a success message
 
 ### Files to MODIFY
@@ -210,6 +212,8 @@ Add an admin section to `components/AppHeader.vue` — only visible when `isAdmi
 
 ## Phase 5 — Remove learning/docs from the product
 
+> **Status on `main`:** the Nuxt `/learn` stack described in this phase has **already been removed**. Keep this section as an audit checklist if you fork or restore files from history.
+
 **Goal:** Strip the staging-only features so the product repo is clean.
 
 ### Files and folders to DELETE
@@ -279,7 +283,7 @@ Phase 5 is purely destructive — commit the deletions separately so they're eas
 
 **Phase 4:** Admin user visits `/admin/users`, sees all users, can change roles. `/admin/usage` shows query counts per user.
 
-**Phase 5:** `pnpm dev` starts with no Monaco warnings. `/learn` returns 404. VitePress is gone from devDependencies.
+**Phase 5:** `pnpm dev` starts with no Monaco warnings. `/learn` returns 404. The interactive learning stack is removed from the Nuxt app. **Note:** the **VitePress** site under `docs/` is separate from the app — it stays in `devDependencies` and is built with `pnpm docs:build` for GitHub Pages; it is not loaded by `pnpm dev` unless you run `pnpm docs:dev`.
 
 ---
 

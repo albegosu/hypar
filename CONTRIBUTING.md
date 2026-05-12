@@ -42,13 +42,14 @@ Open http://localhost:3000.
 
 ```
 from-zero-rag/
-├── pages/              # All routes (/ + /learn/*)
+├── pages/              # App routes (/, /documents, /upload, /setup, /auth/*, /admin/*)
 ├── components/         # Vue components
 ├── stores/             # Pinia stores
+├── docs/               # VitePress site (guides, ADRs, RFCs) → GitHub Pages
 ├── server/
 │   ├── api/            # h3 route handlers
 │   └── utils/          # Services and utilities
-├── utils/learning/     # Learning challenge logic (inlined library)
+├── utils/setup/        # Setup wizard catalog + steps
 ├── prisma/             # Database schema + migrations
 └── nuxt.config.ts
 ```
@@ -67,8 +68,8 @@ pnpm build
 # Unit tests (chunking, text utils, agent commands)
 pnpm test
 
-# RAG eval harness — optional but run if you change retrieval / chunking
-pnpm eval
+# Docs site (if you change docs/**)
+pnpm docs:build
 
 # Database (if schema changed)
 pnpm db:migrate
@@ -99,16 +100,20 @@ chore: update pnpm lockfile
 ## What to Contribute
 
 - **Bug fixes** — especially around chunking, embedding edge cases, or memory commands
-- **New learning challenges** — add levels/validators under `utils/learning/`
-- **Documentation** — clarifications and improvements are always welcome
-- **UI/UX improvements** — chat interface, document management, or `/learn` pages
+- **Documentation** — `README.md`, `docs/` (VitePress), ADRs under `docs/decisions/`, RFCs under `docs/rfcs/`
+- **UI/UX improvements** — chat interface, document management, admin, setup wizard
 
-## Adding a Learning Challenge
+## Documentation site (`docs/`)
 
-1. Add challenge data to the relevant level file in `utils/learning/levels/`
-2. Create a validator in `utils/learning/validators/`
-3. Export from `utils/learning/index.ts`
-4. Test via `/learn/challenge/<id>`
+The static site is built with [VitePress](https://vitepress.dev/). Locally:
+
+```bash
+pnpm docs:dev      # edit with hot reload
+pnpm docs:build    # must pass before merging doc changes that affect Pages
+pnpm docs:preview  # serve the production build
+```
+
+GitHub Pages runs `pnpm docs:build` on pushes to `main` when files under `docs/**` change (see `.github/workflows/pages.yml`).
 
 ## Questions?
 
