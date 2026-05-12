@@ -8,7 +8,7 @@
       <div class="wz-panel-header flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="wz-accent">$</span>
-          <span class="wz-label">chat --rag --agent --stream</span>
+          <span class="wz-label">chat --mode={{ selectedSearchMode }} --stream</span>
         </div>
         <span class="wz-faint text-[10px]">{{ store.documents.length }} docs · ctx</span>
       </div>
