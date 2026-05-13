@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Try demo
-      link: https://github.com/albegosu/from-zero-rag
+      link: https://from-zero-rag-production.up.railway.app/
     - theme: alt
       text: Read tutorial
       link: /guide/getting-started

@@ -6,8 +6,10 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const userId = requireSessionUserId(event)
+  requireSessionUserId(event)
+  const workspaceId = event.context.workspaceId
+  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
   const body = await readValidatedBody(event, schema.parse)
-  const { id } = await ensureConversation(undefined, userId, body.title ?? '')
+  const { id } = await ensureConversation(undefined, workspaceId, body.title ?? '')
   return { id }
 })

@@ -1,8 +1,8 @@
 import { prisma } from '../../utils/prisma'
-import { requireAuthOrAdminApiKey } from '../../utils/admin-auth'
+import { requireAdmin } from '../../utils/admin-auth'
 
 export default defineEventHandler(async (event) => {
-  requireAuthOrAdminApiKey(event)
+  requireAdmin(event)
 
   const rows = await prisma.query.groupBy({
     by: ['userId'],

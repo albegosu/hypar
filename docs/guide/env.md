@@ -14,6 +14,8 @@ Edit `.env` for your machine; never commit real secrets.
 - **Local `pnpm dev`:** set `DATABASE_URL`, `OLLAMA_URL` (often `http://localhost:11434`), and `WORKFLOW_LOCAL_DATA_DIR` as described in `.env.example`.
 - **Onboarding / first run:** open **`/setup`** in the app. The wizard (DB-backed + provider steps) configures keys and creates the first admin; it does **not** write `.env` for you — keep using root **`.env.example`** as the template and sync values manually if needed.
 
+**Cross-links (optional):** `NUXT_PUBLIC_DOCS_SITE_URL` points the Nuxt app header to your published docs (defaults to the GitHub Pages URL). For the VitePress build, `VITEPRESS_DEMO_URL` sets the hosted chat URL used in the nav and social icon; the default lives in `docs/.vitepress/demo-app-url.ts` and should match the **Try demo** hero link in `docs/index.md`. In GitHub Actions you can set repository variable `VITEPRESS_DEMO_URL` (see `.github/workflows/pages.yml`).
+
 ---
 
 ## Provider selection

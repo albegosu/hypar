@@ -26,7 +26,10 @@
     "back": "back",
     "setup": "wizard",
     "admin": "admin",
-    "settings": "settings"
+    "settings": "settings",
+    "adminSettings": "admin",
+    "docsSiteLabel": "guide",
+    "docsSiteTitle": "Open documentation site (VitePress)"
   },
   "chat": {
     "title": "chat with your knowledge base",
@@ -39,7 +42,8 @@
     "errorGeneric": "An unexpected error occurred. Please try again.",
     "errorUnreachable": "Cannot reach the model. Is Ollama running?",
     "errorUnauthorized": "API key invalid or missing. Check your provider configuration.",
-    "errorRateLimit": "Rate limit reached. Please wait a moment and try again.",
+    "errorRateLimit": "Rate limit reached. Add your own API key in Settings to remove this limit.",
+    "errorRateLimitCta": "Go to Settings",
     "errorModel": "Model provider error",
     "sources": "sources",
     "showRetrieval": "show retrieval",
@@ -148,7 +152,18 @@
     "savedOk": "{section} saved. Changes apply immediately; no restart needed.",
     "savedFail": "Could not save. Check your admin token and try again.",
     "resetOk": "Reset to .env values; database overrides were cleared.",
-    "resetFail": "Could not reset. Check your token and try again."
+    "resetFail": "Could not reset. Check your token and try again.",
+    "userTitle": "// personal settings",
+    "userSubtitle": "Your overrides apply only to your account and fall back to system defaults when blank.",
+    "userReset": "[ clear my overrides ]",
+    "userResetOk": "{section} overrides cleared — falling back to system defaults.",
+    "userResetFail": "Could not clear overrides. Try again.",
+    "rateLimitBanner": "rate limit reached",
+    "rateLimitBannerHint": "Add your own API key below to bypass the shared usage limit. Your key is encrypted at rest and never shared.",
+    "ownKey": "your key ✓",
+    "systemDefault": "system default",
+    "privacyTitle": "privacy note",
+    "privacyBody": "Your keys are encrypted with AES-256-GCM before storage. The server decrypts them only when making requests on your behalf. Admins cannot view your key values."
   },
   "common": {
     "loading": "loading…",

@@ -1,9 +1,9 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../../utils/prisma'
-import { requireAuthOrAdminApiKey } from '../../utils/admin-auth'
+import { requireAdmin } from '../../utils/admin-auth'
 
 export default defineEventHandler(async (event) => {
-  requireAuthOrAdminApiKey(event)
+  requireAdmin(event)
 
   const [
     docs,

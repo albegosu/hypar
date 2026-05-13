@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress'
+import { demoAppUrl } from './demo-app-url'
 
 /** GitHub Pages project site: set in CI (e.g. `/from-zero-rag/`). Local dev: omit or `/`. */
 function vitepressBase(): string {
@@ -45,6 +46,12 @@ export default defineConfig({
       { text: 'Architecture', link: '/architecture' },
       { text: 'Roadmap', link: '/roadmap' },
       {
+        text: 'Chat app',
+        link: demoAppUrl(),
+        target: '_blank',
+        rel: 'noopener noreferrer',
+      },
+      {
         text: 'GitHub',
         link: 'https://github.com/albegosu/from-zero-rag',
         target: '_blank',
@@ -89,6 +96,14 @@ export default defineConfig({
     ],
 
     socialLinks: [
+      {
+        icon: {
+          /* VPSocialLink.css sets `fill: currentColor` on svg — stroke-only icons become a solid square. */
+          svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 5v14h16V5"/><path d="M8 9l2 2-2 2"/><path d="M12 13h4"/></svg>',
+        },
+        link: demoAppUrl(),
+        ariaLabel: 'Open hosted hypar chat app',
+      },
       { icon: 'github', link: 'https://github.com/albegosu/from-zero-rag' },
     ],
 

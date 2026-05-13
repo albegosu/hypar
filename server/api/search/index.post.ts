@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { search } from '../../utils/search.service'
+import { enforceRateLimit } from '../../utils/rate-limit'
 
 const schema = z.object({
   query: z.string().min(1),
@@ -7,7 +8,9 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const userId = event.context.auth?.user?.id
+  requireSessionUserId(event)
+  await enforceRateLimit(event)
+  const workspaceId = event.context.workspaceId
   const body = await readValidatedBody(event, schema.parse)
-  return search(body.query, { limit: body.limit ?? 5, userId })
+  return search(body.query, { limit: body.limit ?? 5, workspaceId })
 })

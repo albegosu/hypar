@@ -18,7 +18,7 @@ export interface CreateDocumentInput {
   title: string
   content: string
   sourceType: string
-  userId?: string
+  workspaceId: string
   metadata?: Record<string, unknown>
 }
 
@@ -87,7 +87,7 @@ export async function ingestFromText(input: CreateDocumentInput): Promise<{
       content,
       sourceType: stripNul(input.sourceType) || 'text',
       metadata: sanitizeJsonMetadata(input.metadata) as Prisma.InputJsonValue,
-      userId: input.userId?.trim() || 'legacy',
+      workspaceId: input.workspaceId,
       ingestStatus: 'processing',
     },
   })
@@ -101,7 +101,7 @@ export async function ingestFromText(input: CreateDocumentInput): Promise<{
  */
 export async function ingestFromFile(
   file: UploadedFile,
-  opts: { userId?: string } = {},
+  opts: { workspaceId: string },
 ): Promise<{ documentId: string; title: string; runId: string; status: 'processing' }> {
   if (!file?.buffer?.length) throw badRequest('No file uploaded')
   if (!isAllowedMime(file.mimetype, file.originalname)) {
@@ -123,7 +123,7 @@ export async function ingestFromFile(
         size: file.size,
         mime: file.mimetype,
       }) as Prisma.InputJsonValue,
-      userId: opts.userId?.trim() || 'legacy',
+      workspaceId: opts.workspaceId,
       ingestStatus: 'processing',
     },
   })
@@ -132,7 +132,7 @@ export async function ingestFromFile(
   return { documentId: document.id, title: document.title, runId: run.runId, status: 'processing' }
 }
 
-export async function createChatMemory(userId: string | undefined, content: string) {
+export async function createChatMemory(workspaceId: string, content: string) {
   const text = stripNul(content).trim()
   if (!text) return null
   const title = text.length > 80 ? text.slice(0, 80).trim() : text
@@ -140,22 +140,17 @@ export async function createChatMemory(userId: string | undefined, content: stri
     title: title || 'chat memory',
     content: text,
     sourceType: 'text',
-    userId,
+    workspaceId,
     metadata: { kind: 'chat_memory' },
   })
 }
 
-export async function deleteChatMemories(userId: string | undefined, term?: string) {
+export async function deleteChatMemories(workspaceId: string, term?: string) {
   const trimmedTerm = term?.trim()
-  const conditions: Prisma.Sql[] = []
-
-  if (userId?.trim()) {
-    conditions.push(Prisma.sql`"userId" = ${userId.trim()}`)
-  } else {
-    conditions.push(Prisma.sql`"userId" IS NULL`)
-  }
-
-  conditions.push(Prisma.sql`metadata->>'kind' = 'chat_memory'`)
+  const conditions: Prisma.Sql[] = [
+    Prisma.sql`"workspaceId" = ${workspaceId}`,
+    Prisma.sql`metadata->>'kind' = 'chat_memory'`,
+  ]
 
   if (trimmedTerm) {
     conditions.push(Prisma.sql`content ILIKE ${`%${trimmedTerm}%`}`)
@@ -165,15 +160,11 @@ export async function deleteChatMemories(userId: string | undefined, term?: stri
   return prisma.$executeRaw(Prisma.sql`DELETE FROM "Document" ${where}`)
 }
 
-export async function listChatMemories(userId: string | undefined): Promise<string[]> {
-  const userCondition = userId?.trim()
-    ? Prisma.sql`"userId" = ${userId.trim()}`
-    : Prisma.sql`"userId" IS NULL`
-
+export async function listChatMemories(workspaceId: string): Promise<string[]> {
   const rows = await prisma.$queryRaw<Array<{ content: string }>>(Prisma.sql`
     SELECT content
     FROM "Document"
-    WHERE ${userCondition}
+    WHERE "workspaceId" = ${workspaceId}
       AND metadata->>'kind' = 'chat_memory'
     ORDER BY "createdAt" DESC
     LIMIT 20
@@ -183,20 +174,16 @@ export async function listChatMemories(userId: string | undefined): Promise<stri
 }
 
 export async function chatMemoryExists(
-  userId: string | undefined,
+  workspaceId: string,
   contentSnippet: string,
 ): Promise<boolean> {
   const snippet = stripNul(contentSnippet).trim()
   if (!snippet) return false
 
-  const userCondition = userId?.trim()
-    ? Prisma.sql`"userId" = ${userId.trim()}`
-    : Prisma.sql`"userId" IS NULL`
-
   const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
     SELECT id
     FROM "Document"
-    WHERE ${userCondition}
+    WHERE "workspaceId" = ${workspaceId}
       AND metadata->>'kind' = 'chat_memory'
       AND content ILIKE ${`%${snippet}%`}
     LIMIT 1
@@ -205,10 +192,9 @@ export async function chatMemoryExists(
   return rows.length > 0
 }
 
-export async function findAll(userId?: string) {
-  const where = userId?.trim() ? { userId: userId.trim() } : { userId: 'legacy' }
+export async function findAll(workspaceId: string) {
   return prisma.document.findMany({
-    where,
+    where: { workspaceId },
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { chunks: true } } },
   })
@@ -240,13 +226,13 @@ export async function reprocessDocument(documentId: string): Promise<{ runId: st
   return { runId: run.runId }
 }
 
-export async function removeDocument(documentId: string, userId?: string): Promise<void> {
+export async function removeDocument(documentId: string, workspaceId: string): Promise<void> {
   const doc = await prisma.document.findUnique({
     where: { id: documentId },
-    select: { id: true, userId: true },
+    select: { id: true, workspaceId: true },
   })
   if (!doc) throw notFound('Document not found')
-  if (doc.userId && userId?.trim() && doc.userId !== userId.trim()) {
+  if (doc.workspaceId !== workspaceId) {
     throw createError({ statusCode: 403, statusMessage: 'Forbidden' })
   }
   await prisma.document.delete({ where: { id: documentId } })

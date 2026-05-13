@@ -497,7 +497,6 @@ input, textarea, select { font-size: 16px; }
 }
 
 .hairline-b { border-bottom: 1px solid var(--term-accent-line); }
-.hairline-t { border-top: 1px solid var(--term-accent-line); }
 
 .glass {
   background-color: var(--term-header-bg);

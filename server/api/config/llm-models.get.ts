@@ -1,5 +1,6 @@
 import { LLM_MODELS_BY_PROVIDER, type LlmModelOption } from '../../utils/llm-models'
 import { getSetting } from '../../utils/settings.service'
+import { requireSessionUserId } from '../../utils/session'
 
 interface CacheEntry { models: LlmModelOption[]; expiresAt: number }
 const modelCache = new Map<string, CacheEntry>()
@@ -150,6 +151,7 @@ async function fetchModels(
 }
 
 export default defineEventHandler(async (event) => {
+  requireSessionUserId(event)
   const base = useRuntimeConfig()
   const config = await resolveLlmFetchLayer(base)
 

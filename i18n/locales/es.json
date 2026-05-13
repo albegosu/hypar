@@ -26,7 +26,10 @@
     "back": "volver",
     "setup": "wizard",
     "admin": "admin",
-    "settings": "ajustes"
+    "settings": "ajustes",
+    "adminSettings": "admin",
+    "docsSiteLabel": "guía",
+    "docsSiteTitle": "Abrir sitio de documentación (VitePress)"
   },
   "chat": {
     "title": "chatea con tu base de conocimiento",
@@ -39,7 +42,8 @@
     "errorGeneric": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "errorUnreachable": "No se puede alcanzar el modelo. ¿Está Ollama en marcha?",
     "errorUnauthorized": "API key inválida o ausente. Revisa la configuración del proveedor.",
-    "errorRateLimit": "Límite de peticiones alcanzado. Espera un momento e inténtalo de nuevo.",
+    "errorRateLimit": "Límite de peticiones alcanzado. Añade tu propia API key en Ajustes para eliminar este límite.",
+    "errorRateLimitCta": "Ir a Ajustes",
     "errorModel": "Error del proveedor del modelo",
     "sources": "fuentes",
     "showRetrieval": "ver recuperación",
@@ -148,7 +152,18 @@
     "savedOk": "Se guardó {section}. Los cambios aplican al instante, sin reiniciar.",
     "savedFail": "No se pudo guardar. Comprueba el token de administrador e inténtalo otra vez.",
     "resetOk": "Restaurado a los valores de .env; se eliminaron las sobreescrituras en la base de datos.",
-    "resetFail": "No se pudo restaurar. Comprueba el token e inténtalo otra vez."
+    "resetFail": "No se pudo restaurar. Comprueba el token e inténtalo otra vez.",
+    "userTitle": "// ajustes personales",
+    "userSubtitle": "Tus sobreescrituras aplican solo a tu cuenta y vuelven al valor del sistema cuando están vacías.",
+    "userReset": "[ limpiar mis ajustes ]",
+    "userResetOk": "Sobreescrituras de {section} eliminadas — volviendo a los valores del sistema.",
+    "userResetFail": "No se pudieron limpiar las sobreescrituras. Inténtalo de nuevo.",
+    "rateLimitBanner": "límite de uso alcanzado",
+    "rateLimitBannerHint": "Añade tu propia API key para saltarte el límite compartido. Tu clave se cifra en reposo y nunca se comparte.",
+    "ownKey": "tu clave ✓",
+    "systemDefault": "valor del sistema",
+    "privacyTitle": "nota de privacidad",
+    "privacyBody": "Tus claves se cifran con AES-256-GCM antes de guardarse. El servidor las descifra solo al hacer peticiones en tu nombre. Los administradores no pueden ver los valores de tus claves."
   },
   "common": {
     "loading": "cargando…",

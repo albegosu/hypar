@@ -45,7 +45,7 @@
           :detail="embedDetail"
         />
         <p v-if="stepStatus(2) === 'active'" class="ml-7 text-[10px] wz-faint font-mono">
-          {{ embeddingDims }}-dim · batches of 32 · provider: {{ llmProvider }}
+          {{ embeddingDims }}-dim · provider: {{ embeddingProvider }}
         </p>
         <p v-if="stepStatus(2) === 'active'" class="ml-7 text-[10px] wz-faint font-mono">
           each chunk → a vector that captures its semantic meaning
@@ -130,6 +130,7 @@ const { currentStep, elapsedMs, chunkCount, finalStatus, errorMessage, start } =
 
 // Config values from search-params endpoint
 const embeddingDims = ref(768)
+const embeddingProvider = ref('—')
 const llmProvider = ref('—')
 const chunkSize = ref(400)
 const chunkOverlap = ref(60)
@@ -138,6 +139,7 @@ onMounted(() => {
   start()
   useSearchParams().then((p) => {
     embeddingDims.value = p.embeddingDims
+    embeddingProvider.value = p.embeddingProvider ?? p.llmProvider
     llmProvider.value = p.llmProvider
   }).catch(() => {})
 })
@@ -179,7 +181,7 @@ const chunkDetail = computed(() => {
 
 const embedDetail = computed(() => {
   if (currentStep.value > 2 || finalStatus.value === 'ready')
-    return `${embeddingDims.value}-dim · provider: ${llmProvider.value}`
+    return `${embeddingDims.value}-dim · provider: ${embeddingProvider.value}`
   return undefined
 })
 

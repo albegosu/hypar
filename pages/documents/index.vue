@@ -84,6 +84,16 @@
         {{ t('documents.uploadCta') }} ▶
       </NuxtLink>
     </div>
+
+    <ConfirmModal
+      v-model="showDeleteModal"
+      :title="t('documents.delete')"
+      :message="pendingDeleteDoc ? t('documents.confirmDelete', { title: pendingDeleteDoc.title }) : ''"
+      :confirm-text="t('documents.delete')"
+      :cancel-text="t('common.cancel')"
+      :loading="deletingId === pendingDeleteDoc?.id"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -95,6 +105,8 @@ const store = useDocumentsStore()
 const toast = useToast()
 const searchTerm = ref('')
 const deletingId = ref(null)
+const showDeleteModal = ref(false)
+const pendingDeleteDoc = ref(null)
 
 onMounted(() => {
   store.fetchDocuments()
@@ -110,11 +122,18 @@ const filteredDocuments = computed(() => {
 })
 
 async function onDelete(doc) {
-  if (!confirm(t('documents.confirmDelete', { title: doc.title }))) return
-  deletingId.value = doc.id
+  pendingDeleteDoc.value = doc
+  showDeleteModal.value = true
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteDoc.value) return
+  deletingId.value = pendingDeleteDoc.value.id
   try {
-    await store.deleteDocument(doc.id)
+    await store.deleteDocument(pendingDeleteDoc.value.id)
     toast.add({ title: t('documents.deleted') })
+    showDeleteModal.value = false
+    pendingDeleteDoc.value = null
   } catch (err) {
     toast.add({ title: t('documents.deleteFailed'), description: err?.message ?? '', color: 'red' })
   } finally {

@@ -17,7 +17,7 @@ model Document {
   title        String
   content      String   // Full original content
   sourceType   String   // 'text', 'markdown', 'pdf', 'web'
-  userId       String
+  workspaceId  String
   metadata     Json?    // Flexible metadata
   ingestStatus String   @default("pending") // 'pending' | 'processing' | 'ready' | 'failed'
   ingestError  String?
@@ -26,8 +26,9 @@ model Document {
   updatedAt    DateTime @updatedAt
 
   chunks       Chunk[]
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
+  @@index([workspaceId])
   @@index([ingestStatus])
 }
 
@@ -53,15 +54,16 @@ model Chunk {
 
 // Conversation = a chat session, optionally per user
 model Conversation {
-  id        String    @id @default(uuid())
-  userId    String
-  title     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(uuid())
+  workspaceId String
+  title       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  messages  Message[]
+  messages    Message[]
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@index([userId, updatedAt])
+  @@index([workspaceId, updatedAt])
 }
 
 // Message = one turn in a conversation. Persists Vercel AI SDK UIMessage parts.
@@ -80,6 +82,35 @@ model Message {
   @@index([conversationId, createdAt])
 }
 
+// Workspace = shared scope for documents and conversations
+model Workspace {
+  id            String            @id @default(cuid())
+  name          String
+  ownerId       String
+  createdAt     DateTime          @default(now())
+
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members       WorkspaceMember[]
+  documents     Document[]
+  conversations Conversation[]
+
+  @@index([ownerId])
+}
+
+// WorkspaceMember = user ↔ workspace membership
+model WorkspaceMember {
+  workspaceId String
+  userId      String
+  role        String   @default("editor") // owner | editor | viewer
+  createdAt   DateTime @default(now())
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId])
+  @@index([userId])
+}
+
 // Runtime-editable configuration. Overrides env vars when set.
 // category is one of: embeddings | chunking | search | rag
 model Setting {
@@ -89,6 +120,20 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@index([category])
+}
+
+// Per-user settings overrides. Resolution order: UserSetting → Setting → env.
+// Secret values (API keys) are AES-256-GCM encrypted at rest.
+model UserSetting {
+  userId    String
+  key       String
+  value     String
+  category  String   @default("general")
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, key])
+  @@index([userId, category])
 }
 
 // ── better-auth tables ────────────────────────────────────────
@@ -108,8 +153,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  sessions      Session[]
-  accounts      Account[]
+  sessions          Session[]
+  accounts          Account[]
+  ownedWorkspaces   Workspace[]
+  workspaceMemberships WorkspaceMember[]
 }
 
 model Session {

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RAG mockup · 01 baseline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+<style>
+:root {
+  --term-bg:#0a0e0d;
+  --term-bg-elevated:rgba(0,0,0,.40);
+  --term-bg-input:#000;
+  --term-bg-soft:rgba(0,0,0,.30);
+  --term-accent:#34d399;
+  --term-accent-strong:#10b981;
+  --term-accent-soft:rgba(52,211,153,.10);
+  --term-accent-line:rgba(52,211,153,.30);
+  --term-accent-faint:rgba(52,211,153,.15);
+  --term-header-bg:rgba(0,0,0,.40);
+  --term-text:#d1fae5;
+  --term-text-strong:#a7f3d0;
+  --term-text-muted:rgba(167,243,208,.70);
+  --term-text-faint:rgba(167,243,208,.30);
+  --term-radius:6px;
+  --term-font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --term-font-sans:'Inter',ui-sans-serif,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--term-font-mono);
+  background-color:var(--term-bg);
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%,rgba(16,185,129,.18),transparent 60%),
+    radial-gradient(900px 500px at -10% 20%,rgba(52,211,153,.12),transparent 60%),
+    repeating-linear-gradient(0deg,rgba(52,211,153,.02) 0,rgba(52,211,153,.02) 1px,transparent 1px,transparent 3px);
+  background-attachment:fixed;
+  color:var(--term-text);
+  font-size:14px;
+  line-height:1.5;
+}
+/* === App header === */
+.app-header{
+  position:sticky;top:0;z-index:10;
+  background-color:var(--term-header-bg);
+  backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--term-accent-line);
+}
+.app-header-inner{
+  max-width:80rem;margin:0 auto;padding:0.75rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.brand{display:flex;align-items:center;gap:.6rem}
+.brand-mark{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.75rem;height:1.75rem;border-radius:.4rem;
+  background:var(--term-accent-soft);
+  border:1px solid var(--term-accent-line);
+  color:var(--term-accent-strong);font-weight:700;
+}
+.brand-title{color:var(--term-text-strong);font-weight:600;letter-spacing:.02em}
+.header-actions{display:flex;align-items:center;gap:.5rem;font-size:11px}
+.wz-btn-ghost{
+  color:var(--term-accent-strong);background:transparent;
+  padding:.35rem .6rem;border:none;border-radius:var(--term-radius);
+  font-family:var(--term-font-mono);cursor:pointer;
+}
+.wz-btn-ghost:hover{background-color:var(--term-accent-soft);color:var(--term-text-strong)}
+.wz-theme-toggle{
+  border:1px solid var(--term-accent-line);border-radius:999px;
+  padding:.2rem .55rem;background:var(--term-accent-soft);
+  font-size:11px;color:var(--term-text-muted);font-family:var(--term-font-mono);
+}
+/* === Main shell === */
+.shell{max-width:64rem;margin:0 auto;padding:1rem 1rem 0;display:flex;flex-direction:column;gap:1rem;height:calc(100vh - 4rem)}
+.wz-panel{border:1px solid var(--term-accent-line);background-color:var(--term-bg-elevated);border-radius:var(--term-radius)}
+.wz-panel-header{
+  border-bottom:1px solid var(--term-accent-faint);
+  background-color:var(--term-accent-soft);
+  padding:.5rem 1rem;font-size:12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.wz-label{color:var(--term-accent-strong)}
+.wz-accent{color:var(--term-accent)}
+.wz-muted{color:var(--term-text-muted)}
+.wz-faint{color:var(--term-text-faint)}
+.wz-strong{color:var(--term-text-strong)}
+.panel-body{padding:1rem}
+.panel-body h1{font-size:1.125rem;font-weight:600;color:var(--term-text-strong)}
+.panel-body p{font-size:12px;color:var(--term-text-muted);margin-top:.25rem}
+/* === Chat area === */
+.chat-row{flex:1;min-height:0;display:flex;gap:1.25rem}
+.messages-col{flex:3;min-width:0;display:flex;flex-direction:column}
+.aside-col{flex:1;min-width:260px;display:flex;flex-direction:column;gap:.75rem}
+.messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.75rem;padding-bottom:1rem}
+.msg{display:flex}
+.msg.user{justify-content:flex-end}
+.msg.assistant{justify-content:flex-start}
+.bubble{max-width:90%;border-radius:var(--term-radius);padding:.6rem .8rem;font-size:14px;line-height:1.55;white-space:pre-wrap}
+.bubble-user{background:var(--term-accent-soft);border:1px solid var(--term-accent-line);color:var(--term-text-strong)}
+.bubble-assistant{background:var(--term-bg-soft);border:1px solid var(--term-accent-faint);color:var(--term-text)}
+.bubble strong{color:var(--term-text-strong);font-weight:600}
+.bubble code{background:var(--term-accent-soft);color:var(--term-text-strong);padding:0 .3rem;border-radius:3px;border:1px solid var(--term-accent-faint);font-family:var(--term-font-mono)}
+/* sidebar panels */
+.aside-col .wz-panel{display:flex;flex-direction:column}
+.chunk{padding:.55rem .8rem;font-size:11px;border-top:1px solid var(--term-accent-faint);display:flex;justify-content:space-between;gap:.5rem;color:var(--term-text-muted)}
+.chunk:first-of-type{border-top:none}
+.chunk-num{color:var(--term-accent-strong)}
+/* input */
+.input-row{
+  margin-top:auto;
+  display:flex;gap:.5rem;align-items:flex-end;
+  border:1px solid var(--term-accent-line);
+  border-radius:var(--term-radius);
+  background-color:var(--term-bg-input);
+  padding:.5rem;
+}
+.input-row textarea{
+  flex:1;background:transparent;border:none;outline:none;resize:none;
+  color:var(--term-text-strong);font-family:var(--term-font-mono);font-size:14px;
+  min-height:36px;max-height:120px;
+}
+.input-row textarea::placeholder{color:var(--term-text-faint)}
+.wz-btn-primary{
+  background-color:var(--term-accent-strong);color:#000;font-weight:700;
+  padding:.5rem 1rem;border-radius:var(--term-radius);border:none;cursor:pointer;
+  font-family:var(--term-font-mono);
+}
+.wz-btn-primary:hover{background-color:var(--term-accent)}
+/* footer note */
+.footer-note{padding:.6rem 1rem;color:var(--term-text-faint);font-size:11px;text-align:center}
+.pulse-dots span{display:inline-block;width:.35rem;height:.35rem;background:var(--term-accent);border-radius:50%;margin-right:.25rem;animation:pulse 1.2s ease-in-out infinite}
+.pulse-dots span:nth-child(2){animation-delay:.15s}
+.pulse-dots span:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+</style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand">
+        <span class="brand-mark">$_</span>
+        <span class="brand-title">hypar</span>
+      </div>
+      <div class="header-actions">
+        <button class="wz-btn-ghost">› docs</button>
+        <span class="wz-theme-toggle">ES · dark</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- Header panel -->
+    <section class="wz-panel">
+      <div class="wz-panel-header">
+        <div>
+          <span class="wz-accent">$</span>
+          <span class="wz-label" style="margin-left:.4rem">chat --mode=rag --stream</span>
+        </div>
+        <span class="wz-faint">7 docs · ctx</span>
+      </div>
+      <div class="panel-body">
+        <h1>// chat</h1>
+        <p>Pregunta sobre tu base de conocimiento — respuestas con citas.</p>
+      </div>
+    </section>
+
+    <!-- Chat row -->
+    <div class="chat-row">
+      <div class="messages-col">
+        <div class="messages">
+          <div class="msg user">
+            <div class="bubble bubble-user">¿Qué chunk size usa el ingestor por defecto y por qué?</div>
+          </div>
+          <div class="msg assistant">
+            <div class="bubble bubble-assistant">El ingestor usa <strong>400 tokens</strong> con un <code>chunkOverlap</code> de <strong>60</strong>. Este tamaño balancea precisión de recall y coste de embedding: chunks demasiado grandes diluyen la señal en la búsqueda vectorial; demasiado pequeños fragmentan ideas. El overlap del 15% reduce el riesgo de cortar frases clave entre chunks.</div>
+          </div>
+          <div class="msg user">
+            <div class="bubble bubble-user">¿Y para PDFs técnicos densos?</div>
+          </div>
+          <div class="msg assistant">
+            <div class="bubble bubble-assistant">Para PDFs técnicos densos conviene subir <code>CHUNK_SIZE</code> a <strong>600–800</strong>, con <code>CHUNK_STRATEGY=sentence-aware</code> para no cortar definiciones. <span class="pulse-dots"><span></span><span></span><span></span></span></div>
+          </div>
+        </div>
+        <div class="input-row">
+          <textarea placeholder="› escribe tu pregunta…"></textarea>
+          <button class="wz-btn-primary">send ↵</button>
+        </div>
+        <div class="footer-note">retrieval: top-k 5 · threshold 0.2 · hybrid off</div>
+      </div>
+
+      <aside class="aside-col">
+        <div class="wz-panel">
+          <div class="wz-panel-header">
+            <span class="wz-label">retrieved</span>
+            <span class="wz-faint">5</span>
+          </div>
+          <div class="chunk"><span><span class="chunk-num">#1</span> ingest-document.ts</span><span>0.91</span></div>
+          <div class="chunk"><span><span class="chunk-num">#2</span> docs/guide/chunking.md</span><span>0.87</span></div>
+          <div class="chunk"><span><span class="chunk-num">#3</span> README.md</span><span>0.74</span></div>
+          <div class="chunk"><span><span class="chunk-num">#4</span> CONTRIBUTING.md</span><span>0.66</span></div>
+          <div class="chunk"><span><span class="chunk-num">#5</span> .env.example</span><span>0.58</span></div>
+        </div>
+        <div class="wz-panel">
+          <div class="wz-panel-header">
+            <span class="wz-label">conversations</span>
+            <span class="wz-faint">3</span>
+          </div>
+          <div class="chunk"><span>chunking defaults</span><span>now</span></div>
+          <div class="chunk"><span>embedding cache TTL</span><span>2h</span></div>
+          <div class="chunk"><span>railway deploy</span><span>1d</span></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

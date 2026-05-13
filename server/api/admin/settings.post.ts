@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { requireAuthOrAdminApiKey } from '../../utils/admin-auth'
+import { requireAdmin } from '../../utils/admin-auth'
 import { upsertSetting } from '../../utils/settings.service'
 
 const VALID_CATEGORIES = ['apis', 'vectorDb', 'embeddings', 'chunking', 'search', 'rag', 'general']
@@ -11,7 +11,7 @@ const bodySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  requireAuthOrAdminApiKey(event)
+  requireAdmin(event)
 
   const body = await readBody(event)
   const parsed = bodySchema.safeParse(body)
@@ -20,6 +20,12 @@ export default defineEventHandler(async (event) => {
   }
 
   const { key, value, category } = parsed.data
+
+  // If the client echoes back a masked value, the secret was not changed — skip write
+  if (value.startsWith('••••')) {
+    return { ok: true, key, skipped: true }
+  }
+
   await upsertSetting(key, value, category)
 
   return { ok: true, key, value, category }

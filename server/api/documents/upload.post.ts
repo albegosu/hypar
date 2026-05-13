@@ -40,7 +40,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const userId = requireSessionUserId(event)
+  requireSessionUserId(event)
+  const workspaceId = event.context.workspaceId
+  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
 
   return ingestFromFile(
     {
@@ -49,6 +51,6 @@ export default defineEventHandler(async (event) => {
       mimetype: filePart.type ?? 'application/octet-stream',
       size: filePart.data.length,
     },
-    { userId },
+    { workspaceId },
   )
 })
