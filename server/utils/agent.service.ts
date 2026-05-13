@@ -127,7 +127,13 @@ export async function getLlmModel(modelOverride?: string): Promise<LanguageModel
   }
 
   // ollama-cloud, ollama-local, or default
-  const baseURL = normalizeOllamaNativeHost(cfg.ollamaUrl).replace(/\/+$/, '') + '/v1'
+  // Guardrail: if provider is ollama-cloud, force the cloud endpoint regardless
+  // of any OLLAMA_URL inherited from a local docker-compose setup (e.g. http://ollama:11434).
+  const ollamaHost = provider === 'ollama-cloud'
+    && !/^https:\/\/api\.ollama\.com\b/i.test(cfg.ollamaUrl.trim())
+      ? 'https://api.ollama.com'
+      : cfg.ollamaUrl
+  const baseURL = normalizeOllamaNativeHost(ollamaHost).replace(/\/+$/, '') + '/v1'
   const ollama = createOpenAI({
     apiKey: cfg.ollamaApiKey || 'ollama',
     baseURL,
