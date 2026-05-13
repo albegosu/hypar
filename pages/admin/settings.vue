@@ -144,6 +144,10 @@ async function saveTab() {
     await Promise.all(
       getStepFields(step)
         .filter((field) => field.envKey)
+        .filter((field) => {
+          if (!field.dependsOn) return true
+          return formValues.value[field.dependsOn.field] === field.dependsOn.equals
+        })
         .map((field) => {
           const val = formValues.value[field.id]
           const value = Array.isArray(val) ? (val as string[]).join(',') : String(val ?? '')

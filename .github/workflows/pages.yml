@@ -46,6 +46,8 @@ jobs:
       - name: Build VitePress (docs)
         env:
           VITEPRESS_BASE: ${{ steps.pages.outputs.base_path }}/
+          # Optional: override hosted Nuxt app URL for nav + social icon (default in docs/.vitepress/demo-app-url.ts).
+          VITEPRESS_DEMO_URL: ${{ vars.VITEPRESS_DEMO_URL }}
         run: pnpm run docs:build
 
       - name: Upload artifact

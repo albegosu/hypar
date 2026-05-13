@@ -16,16 +16,18 @@ function messageFromWorkflowTerminalError(err: unknown): string {
 }
 
 export default defineEventHandler(async (event) => {
-  const userId = requireSessionUserId(event)
+  requireSessionUserId(event)
+  const workspaceId = event.context.workspaceId
+  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
   const id = getRouterParam(event, 'id')!
   const { runId } = await getValidatedQuery(event, querySchema.parse)
 
   const doc = await prisma.document.findUnique({
     where: { id },
-    select: { id: true, userId: true, ingestStatus: true, ingestError: true, chunkCount: true },
+    select: { id: true, workspaceId: true, ingestStatus: true, ingestError: true, chunkCount: true },
   })
   if (!doc) throw createError({ statusCode: 404, statusMessage: 'Document not found' })
-  if (doc.userId && doc.userId !== userId) throw createError({ statusCode: 404, statusMessage: 'Document not found' })
+  if (doc.workspaceId !== workspaceId) throw createError({ statusCode: 404, statusMessage: 'Document not found' })
 
   let runStatus: string | null = null
 

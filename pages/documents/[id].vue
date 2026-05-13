@@ -27,7 +27,7 @@
         <div class="p-4">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
-              <h1 class="text-lg font-semibold wz-strong break-words">{{ doc.title }}</h1>
+              <h1 class="text-lg font-semibold wz-strong wrap-break-word">{{ doc.title }}</h1>
               <div class="mt-2 flex flex-wrap items-center gap-2 text-xs wz-muted">
                 <span class="wz-pill flex items-center gap-1">
                   <UIcon :name="iconForType(doc.sourceType)" class="w-3.5 h-3.5" />
@@ -105,10 +105,20 @@
           // {{ t('document.originalContent') }}
         </h2>
         <div class="wz-panel p-3">
-          <pre class="text-xs wz-muted whitespace-pre-wrap break-words font-mono max-h-96 overflow-y-auto">{{ doc.content }}</pre>
+          <pre class="text-xs wz-muted whitespace-pre-wrap wrap-break-word font-mono max-h-96 overflow-y-auto">{{ doc.content }}</pre>
         </div>
       </section>
     </div>
+
+    <ConfirmModal
+      v-model="showDeleteModal"
+      :title="t('documents.delete')"
+      :message="doc ? t('documents.confirmDelete', { title: doc.title }) : ''"
+      :confirm-text="t('documents.delete')"
+      :cancel-text="t('common.cancel')"
+      :loading="deleting"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
 
@@ -124,6 +134,7 @@ const toast = useToast()
 const doc = ref<DocumentDetail | null>(null)
 const loading = ref(true)
 const deleting = ref(false)
+const showDeleteModal = ref(false)
 const reprocessing = ref(false)
 const reprocessDocumentId = ref('')
 const reprocessRunId = ref('')
@@ -145,11 +156,16 @@ onMounted(load)
 
 async function onDelete() {
   if (!doc.value) return
-  if (!confirm(t('documents.confirmDelete', { title: doc.value.title }))) return
+  showDeleteModal.value = true
+}
+
+async function confirmDelete() {
+  if (!doc.value) return
   deleting.value = true
   try {
     await store.deleteDocument(documentId.value)
     toast.add({ title: t('documents.deleted') })
+    showDeleteModal.value = false
     await navigateTo('/documents')
   } catch (err: any) {
     toast.add({ title: t('documents.deleteFailed'), description: err?.message ?? '', color: 'error' })

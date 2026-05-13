@@ -141,7 +141,7 @@ export async function getLlmModel(modelOverride?: string): Promise<LanguageModel
  * can persist the actual chunks the model retrieved (for citations + audit).
  */
 function buildKbTools(
-  userId: string | undefined,
+  workspaceId: string | undefined,
   limit: number,
   bucket: SearchResult[],
   hydeModel: LanguageModel | undefined,
@@ -160,7 +160,7 @@ function buildKbTools(
       execute: async ({ query }) => {
         const safeQuery = truncate(query.trim(), 512)
         const t0 = Date.now()
-        const { results, sources, context } = await rag(safeQuery, limit, userId, hydeModel)
+        const { results, sources, context } = await rag(safeQuery, limit, workspaceId, hydeModel)
         const latencyMs = Date.now() - t0
         for (const r of results) bucket.push(r)
         const truncatedContext = truncate(context || '(no matching passages found)', cfg.ragMaxContext)
@@ -180,7 +180,7 @@ export type SearchMode = 'auto' | 'search' | 'direct'
 
 export interface AgentStreamInput {
   messages: UIMessage[]
-  userId?: string
+  workspaceId?: string
   limit?: number
   /** Chunks the model retrieved during this turn are pushed here. */
   retrievedChunks: SearchResult[]
@@ -191,7 +191,7 @@ export interface AgentStreamInput {
 export async function agentStreamText(
   input: AgentStreamInput,
 ): Promise<StreamTextResult<ToolSet, never>> {
-  const { messages, userId, retrievedChunks } = input
+  const { messages, workspaceId, retrievedChunks } = input
   const limit = input.limit ?? 8
   const searchMode = input.searchMode ?? 'auto'
   const cfg = await getRagCfg()
@@ -256,7 +256,7 @@ export async function agentStreamText(
     system,
     messages: modelMessages,
     ...(searchMode !== 'direct' && {
-      tools: buildKbTools(userId, limit, retrievedChunks, model, cfg),
+      tools: buildKbTools(workspaceId, limit, retrievedChunks, model, cfg),
       stopWhen: stepCountIs(cfg.agentMaxSteps),
       ...(searchMode === 'search' && { toolChoice: 'required' }),
     }),
@@ -269,7 +269,8 @@ export async function agentStreamText(
 
 export async function runMemoryCommand(
   cmd: MemoryCommand & {
-    userId?: string
+    userId: string
+    workspaceId: string
     startedAt: number
     queryText: string
     limit: number
@@ -277,10 +278,10 @@ export async function runMemoryCommand(
     conversationId?: string
   },
 ): Promise<string> {
-  const { type, userId, startedAt, queryText, conversationId } = cmd
+  const { type, userId, workspaceId, startedAt, queryText, conversationId } = cmd
 
   if (type === 'list') {
-    const items = await listChatMemories(userId)
+    const items = await listChatMemories(workspaceId)
     const reply = items.length
       ? `Memoria local (${items.length}):\n${items.map((m, i) => `${i + 1}. ${m}`).join('\n')}`
       : 'No tienes nada guardado en memoria local.'
@@ -293,7 +294,7 @@ export async function runMemoryCommand(
 
   if (type === 'search') {
     const query = (cmd as { type: 'search'; query: string }).query
-    const results = await search(query, { userId, limit: cmd.limit ?? 5 })
+    const results = await search(query, { workspaceId, limit: cmd.limit ?? 5 })
     const reply = results.length
       ? `Resultados para "${query}":\n\n${results.map((r, i) =>
           `**${i + 1}. ${r.documentTitle}** (score: ${r.score.toFixed(2)})\n${r.content.slice(0, 300)}…`
@@ -325,7 +326,7 @@ export async function runMemoryCommand(
   if (type === 'remember') {
     const content = (cmd as { type: 'remember'; content: string }).content
     if (!content?.trim()) return 'No encontré ningún texto para guardar. Usa `/remember <texto>`.'
-    const doc = await createChatMemory(userId, content)
+    const doc = await createChatMemory(workspaceId, content)
     const reply = doc ? 'Listo. Lo guardé en tu memoria local.' : 'No se guardó nada (texto vacío).'
     await logRagQuery({
       queryText, responseText: reply, results: [], latencyMs: Date.now() - startedAt,
@@ -336,7 +337,7 @@ export async function runMemoryCommand(
 
   if (type === 'forget') {
     const term = (cmd as { type: 'forget'; term?: string }).term
-    const deleted = await deleteChatMemories(userId, term)
+    const deleted = await deleteChatMemories(workspaceId, term)
     const reply = `Ok. Eliminé memorias locales que coinciden con "${term}". (filas: ${deleted})`
     await logRagQuery({
       queryText, responseText: reply, results: [], latencyMs: Date.now() - startedAt,
@@ -345,7 +346,7 @@ export async function runMemoryCommand(
     return reply
   }
 
-  const deleted = await deleteChatMemories(userId, undefined)
+  const deleted = await deleteChatMemories(workspaceId, undefined)
   const reply = `Ok. Borré tu memoria local. (filas: ${deleted})`
   await logRagQuery({
     queryText, responseText: reply, results: [], latencyMs: Date.now() - startedAt,

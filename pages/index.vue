@@ -142,6 +142,12 @@
                 <button type="button" class="ml-auto wz-btn-ghost text-[10px]" @click="dismissError">✕</button>
               </div>
               <p class="wz-muted text-xs">{{ chatErrorMessage }}</p>
+              <NuxtLink
+                v-if="isRateLimitError"
+                to="/settings?reason=ratelimit"
+                class="inline-block text-[11px] wz-accent underline"
+                @click="dismissError"
+              >{{ t('chat.errorRateLimitCta') }} →</NuxtLink>
             </div>
           </div>
         </div>
@@ -313,7 +319,7 @@
 
       <!-- Sidebar: conversations + recent documents (each list scrolls independently) -->
       <section
-        class="mt-4 pt-4 hairline-t min-h-0 flex flex-col flex-[2] gap-4 lg:flex-none lg:flex-col lg:gap-6 lg:mt-0 lg:pt-0 lg:pl-6 lg:border-l lg:border-[color:var(--term-accent-line)] lg:border-t-0 lg:w-80 w-full"
+        class="mt-4 pt-4 hairline-t min-h-0 flex flex-col flex-[2] gap-4 lg:flex-none lg:flex-col lg:gap-6 lg:mt-0 lg:pt-0 lg:pl-6 lg:border-t-0 lg:w-80 w-full"
       >
         <div class="flex flex-col min-h-0 flex-1 basis-0 lg:flex-[1_1_0]">
           <div class="flex items-center justify-between mb-3 shrink-0">
@@ -602,6 +608,10 @@ const isSearching = computed(() => {
 
 const dismissedError = ref<unknown>(null)
 const visibleChatError = computed(() => chat.error && chat.error !== dismissedError.value)
+const isRateLimitError = computed(() => {
+  const err = chat.error
+  return APICallError.isInstance(err) && err.statusCode === 429
+})
 
 function dismissError() {
   dismissedError.value = chat.error

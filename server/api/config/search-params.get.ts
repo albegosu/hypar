@@ -9,11 +9,12 @@ const DEFAULT_OVERFETCH = 3
 export default defineEventHandler(async () => {
   const config = useRuntimeConfig()
 
-  const [topKStr, thresholdStr, hybridStr, rerankStr] = await Promise.all([
+  const [topKStr, thresholdStr, hybridStr, rerankStr, embeddingProvider] = await Promise.all([
     getSetting('SEARCH_TOP_K', String(config.searchTopK ?? DEFAULT_LIMIT)),
     getSetting('SEARCH_THRESHOLD', String(config.searchThreshold ?? DEFAULT_MIN_SCORE)),
     getSetting('SEARCH_HYBRID', String(config.searchHybrid ?? false)),
     getSetting('SEARCH_RERANK', String(config.searchRerank ?? false)),
+    getSetting('EMBEDDING_PROVIDER', String(config.embeddingProvider ?? '')),
   ])
 
   const hybridEnabled = getBoolSetting(hybridStr, false)
@@ -38,6 +39,7 @@ export default defineEventHandler(async () => {
     hybridAlpha: hybridEnabled ? DEFAULT_HYBRID_ALPHA : 1.0,
     mmrLambda: DEFAULT_MMR_LAMBDA,
     embeddingDims: Number(config.embeddingDimensions ?? 768),
+    embeddingProvider: embeddingProvider || 'ollama',
     hybridEnabled,
     rerankEnabled,
     overFetch: DEFAULT_OVERFETCH,

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { prisma } from '../../../utils/prisma'
-import { requireAuthOrAdminApiKey } from '../../../utils/admin-auth'
+import { requireAdmin } from '../../../utils/admin-auth'
 
 const schema = z.object({
   role: z.string().optional(),
@@ -8,7 +8,7 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  requireAuthOrAdminApiKey(event)
+  requireAdmin(event)
   const id = getRouterParam(event, 'id')!
   const body = await readValidatedBody(event, schema.parse)
 

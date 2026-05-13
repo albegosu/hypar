@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ingestFromText } from '../../utils/documents.service'
+import { enforceRateLimit } from '../../utils/rate-limit'
 
 const schema = z.object({
   title: z.string().min(1).max(500),
@@ -9,7 +10,10 @@ const schema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  const userId = requireSessionUserId(event)
+  requireSessionUserId(event)
+  await enforceRateLimit(event)
+  const workspaceId = event.context.workspaceId
+  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
   const body = await readValidatedBody(event, schema.parse)
-  return ingestFromText({ ...body, userId })
+  return ingestFromText({ ...body, workspaceId })
 })

@@ -7,6 +7,7 @@ import {
 import { z } from 'zod'
 import { getMessageText, parseMemoryCommand } from '../utils/agent-commands'
 import { agentStreamText, runMemoryCommand } from '../utils/agent.service'
+import { enforceRateLimit } from '../utils/rate-limit'
 import { logRagQuery, type SearchResult } from '../utils/search.service'
 import {
   ensureConversation,
@@ -77,6 +78,9 @@ export default defineEventHandler(async (event) => {
   validateMessageSize(messages)
 
   const userId = requireSessionUserId(event)
+  await enforceRateLimit(event)
+  const workspaceId = event.context.workspaceId
+  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
 
   const lastUser = [...messages].reverse().find((m) => m.role === 'user')
   const lastUserText = lastUser ? getMessageText(lastUser) : ''
@@ -88,7 +92,7 @@ export default defineEventHandler(async (event) => {
   // conversation so the user can see the command + reply in their history.
   const convMeta = await ensureConversation(
     body.conversationId,
-    userId,
+    workspaceId,
     lastUserText,
   )
   const conversationId = convMeta.id
@@ -107,6 +111,7 @@ export default defineEventHandler(async (event) => {
     const reply = await runMemoryCommand({
       ...memoryCmd,
       userId,
+      workspaceId,
       startedAt,
       queryText: lastUserText,
       limit: body.limit ?? 8,
@@ -150,7 +155,7 @@ export default defineEventHandler(async (event) => {
   try {
     result = await agentStreamText({
       messages,
-      userId,
+      workspaceId,
       limit: body.limit ?? 8,
       retrievedChunks,
       modelOverride: body.model,

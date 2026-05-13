@@ -55,13 +55,9 @@ export async function refreshConversationTitleFromUserPrompt(
   }
 }
 
-export async function listConversations(userId: string | undefined): Promise<ConversationSummary[]> {
-  const where: Prisma.ConversationWhereInput = userId?.trim()
-    ? { userId: userId.trim() }
-    : { userId: 'legacy' }
-
+export async function listConversations(workspaceId: string): Promise<ConversationSummary[]> {
   const rows = await prisma.conversation.findMany({
-    where,
+    where: { workspaceId },
     orderBy: { updatedAt: 'desc' },
     take: 100,
     select: {
@@ -82,22 +78,22 @@ export async function listConversations(userId: string | undefined): Promise<Con
   }))
 }
 
-export async function getConversation(id: string, userId: string | undefined) {
+export async function getConversation(id: string, workspaceId: string) {
   const conv = await prisma.conversation.findUnique({
     where: { id },
     include: { messages: { orderBy: { createdAt: 'asc' } } },
   })
   if (!conv) throw notFound('Conversation not found')
-  if (conv.userId !== (userId?.trim() || 'legacy')) {
-    throw notFound('Conversation not found') // hide existence from other users
+  if (conv.workspaceId !== workspaceId) {
+    throw notFound('Conversation not found') // hide existence from other workspaces
   }
   return conv
 }
 
-export async function deleteConversation(id: string, userId: string | undefined): Promise<void> {
-  const conv = await prisma.conversation.findUnique({ where: { id }, select: { userId: true } })
+export async function deleteConversation(id: string, workspaceId: string): Promise<void> {
+  const conv = await prisma.conversation.findUnique({ where: { id }, select: { workspaceId: true } })
   if (!conv) throw notFound('Conversation not found')
-  if (conv.userId !== (userId?.trim() || 'legacy')) {
+  if (conv.workspaceId !== workspaceId) {
     throw notFound('Conversation not found')
   }
   await prisma.conversation.delete({ where: { id } })
@@ -105,16 +101,16 @@ export async function deleteConversation(id: string, userId: string | undefined)
 
 export async function ensureConversation(
   conversationId: string | undefined,
-  userId: string | undefined,
+  workspaceId: string,
   firstUserText: string,
 ): Promise<{ id: string; created: boolean }> {
   if (conversationId) {
     const existing = await prisma.conversation.findUnique({
       where: { id: conversationId },
-      select: { id: true, userId: true },
+      select: { id: true, workspaceId: true },
     })
     if (!existing) throw notFound('Conversation not found')
-    if ((existing.userId ?? null) !== (userId?.trim() || null)) {
+    if (existing.workspaceId !== workspaceId) {
       throw notFound('Conversation not found')
     }
     return { id: existing.id, created: false }
@@ -122,7 +118,7 @@ export async function ensureConversation(
 
   const created = await prisma.conversation.create({
     data: {
-      userId: userId?.trim() || 'legacy',
+      workspaceId,
       title: deriveTitle(firstUserText),
     },
     select: { id: true },

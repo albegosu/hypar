@@ -92,7 +92,12 @@ export default defineNuxtConfig({
     memoryScope: process.env.MEMORY_SCOPE ?? 'local_per_user',
     memoryProactive: process.env.MEMORY_PROACTIVE === 'true',
     adminApiKey: process.env.ADMIN_API_KEY ?? '',
-    public: {},
+    public: {
+      /** Published docs / marketing (VitePress on GitHub Pages, etc.) — header link in the Nuxt app */
+      docsSiteUrl:
+        process.env.NUXT_PUBLIC_DOCS_SITE_URL?.trim()
+        || 'https://albegosu.github.io/from-zero-rag/',
+    },
   },
 
   typescript: {

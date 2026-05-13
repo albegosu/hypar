@@ -10,19 +10,81 @@
         </div>
       </NuxtLink>
 
-      <div class="flex items-center gap-1 min-w-0">
+      <NuxtLink
+        v-if="docsSiteUrl"
+        :to="docsSiteUrl"
+        external
+        target="_blank"
+        rel="noopener noreferrer"
+        class="wz-btn-ghost inline-flex items-center gap-1.5 shrink-0 ml-1 sm:ml-2 px-2"
+        :title="t('nav.docsSiteTitle')"
+      >
+        <MicroGlyph name="tutorial" decorative class="w-4 h-4 wz-accent" />
+        <span class="hidden sm:inline text-[10px] wz-faint">{{ t('nav.docsSiteLabel') }}</span>
+      </NuxtLink>
+
+      <div class="flex items-center gap-1 min-w-0 ml-auto">
+        <!-- workspace selector (custom dropdown) -->
+        <div v-if="user && workspaces.length" ref="wsDropdownRef" class="relative hidden sm:block shrink-0 mr-1">
+          <button
+            type="button"
+            class="wz-btn-ghost text-[10px] flex items-center gap-1"
+            @click="wsOpen = !wsOpen"
+          >
+            <span class="wz-faint">ws/</span>
+            <span class="wz-muted max-w-[90px] truncate">{{ activeWorkspaceName }}</span>
+            <span class="wz-faint" :class="wsOpen ? 'rotate-180' : ''" style="display:inline-block;transition:transform .15s">▾</span>
+          </button>
+
+          <div
+            v-if="wsOpen"
+            class="absolute right-0 top-full mt-1 z-60 glass hairline border border-[var(--wz-border)] rounded min-w-[160px] py-1 shadow-lg"
+          >
+            <button
+              v-for="ws in workspaces"
+              :key="ws.id"
+              type="button"
+              class="w-full text-left px-3 py-1.5 text-[10px] flex items-center gap-2 hover:bg-[var(--wz-hover)] transition-colors"
+              :class="ws.id === activeWorkspaceId ? 'wz-strong' : 'wz-muted'"
+              :disabled="ws.id === activeWorkspaceId"
+              @click="selectWorkspace(ws.id)"
+            >
+              <span class="wz-faint shrink-0">{{ ws.id === activeWorkspaceId ? '●' : '○' }}</span>
+              <span class="truncate">{{ ws.name }}</span>
+              <span v-if="ws.id === activeWorkspaceId" class="ml-auto wz-faint shrink-0">active</span>
+            </button>
+            <div class="hairline-t mt-1 pt-1">
+              <NuxtLink
+                to="/workspaces"
+                class="block px-3 py-1.5 text-[10px] wz-faint hover:wz-muted transition-colors"
+                @click="wsOpen = false"
+              >
+                + manage workspaces
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+
         <!-- user chip -->
-        <div v-if="user" class="hidden sm:flex items-center gap-1.5 mr-2 min-w-0">
-          <span class="wz-faint shrink-0">@</span>
-          <span class="wz-muted truncate max-w-[120px]">{{ userLabel }}</span>
+        <div v-if="user" class="hidden sm:flex items-center gap-1 mr-1 min-w-0 shrink-0">
+          <span class="wz-faint">@</span>
+          <span class="wz-muted truncate max-w-[90px]">{{ userLabel }}</span>
         </div>
 
         <NuxtLink
-          v-if="user"
+          v-if="user && !isAdmin"
+          to="/settings"
+          class="wz-btn-ghost text-[10px] shrink-0"
+        >
+          [ settings ]
+        </NuxtLink>
+
+        <NuxtLink
+          v-if="user && isAdmin"
           to="/admin"
           class="wz-btn-ghost text-[10px] shrink-0"
         >
-          [ dashboard ]
+          [ admin ]
         </NuxtLink>
 
         <button
@@ -78,12 +140,60 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import MicroGlyph from '~/components/micro/MicroGlyph.vue'
 import { signOut } from '~/utils/auth-client'
 
 const { t } = useI18n({ useScope: 'global' })
 const { theme, locale, toggleTheme, setLocale } = useTerminalPrefs()
-const { user } = useAuth()
+const { user, isAdmin } = useAuth()
 const route = useRoute()
+
+// ── Workspace selector ──────────────────────────────────────────────────────
+interface Workspace { id: string; name: string; active: boolean }
+const workspaces = ref<Workspace[]>([])
+const activeWorkspaceId = ref<string>('')
+const wsOpen = ref(false)
+const wsDropdownRef = ref<HTMLElement | null>(null)
+
+const activeWorkspaceName = computed(
+  () => workspaces.value.find((w) => w.id === activeWorkspaceId.value)?.name ?? '…'
+)
+
+async function fetchWorkspaces() {
+  if (!user.value) return
+  try {
+    const data = await $fetch<Workspace[]>('/api/workspaces')
+    workspaces.value = data
+    activeWorkspaceId.value = data.find((w) => w.active)?.id ?? data[0]?.id ?? ''
+  } catch {}
+}
+
+async function selectWorkspace(id: string) {
+  if (!id || id === activeWorkspaceId.value) { wsOpen.value = false; return }
+  await $fetch(`/api/workspaces/${id}/activate`, { method: 'POST' })
+  wsOpen.value = false
+  window.location.reload()
+}
+
+function onClickOutside(e: MouseEvent) {
+  if (wsDropdownRef.value && !wsDropdownRef.value.contains(e.target as Node)) {
+    wsOpen.value = false
+  }
+}
+
+watch(wsOpen, (open) => {
+  if (open) document.addEventListener('click', onClickOutside, { capture: true })
+  else document.removeEventListener('click', onClickOutside, { capture: true })
+})
+
+onUnmounted(() => document.removeEventListener('click', onClickOutside, { capture: true }))
+
+watch(() => user.value, (u) => { if (u) fetchWorkspaces() }, { immediate: true })
+
+const docsSiteUrl = computed(() => {
+  const u = useRuntimeConfig().public.docsSiteUrl
+  return typeof u === 'string' && u.trim() ? u.trim() : ''
+})
 
 const loggingOut = ref(false)
 const confirmLogout = ref(false)

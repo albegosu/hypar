@@ -18,7 +18,7 @@ export interface SearchResult {
 
 export interface SearchOptions {
   limit?: number
-  userId?: string
+  workspaceId?: string
   /** Similarity floor; results below are dropped. Default 0.2. */
   minScore?: number
   /** Over-fetch factor for MMR diversification. Default 3. */
@@ -110,9 +110,9 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   if (options.documentId) {
     conditions.push(Prisma.sql`d.id = ${options.documentId}`)
   } else {
-    if (memoryScope === 'local_per_user' && options.userId?.trim()) {
+    if (memoryScope === 'local_per_user' && options.workspaceId) {
       conditions.push(
-        Prisma.sql`(d."userId" = ${options.userId.trim()} OR d."userId" IS NULL)`,
+        Prisma.sql`d."workspaceId" = ${options.workspaceId}`,
       )
     }
     if (memoryScope === 'disabled') {
@@ -195,7 +195,7 @@ export type RagSource = Pick<SearchResult, 'chunkId' | 'documentId' | 'documentT
 export async function rag(
   query: string,
   limit = DEFAULT_LIMIT,
-  userId?: string,
+  workspaceId?: string,
   hydeModel?: LanguageModel,
 ): Promise<{
   query: string
@@ -203,7 +203,7 @@ export async function rag(
   context: string
   sources: RagSource[]
 }> {
-  const results = await search(query, { limit, userId, hydeModel })
+  const results = await search(query, { limit, workspaceId, hydeModel })
   const context = results.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n')
   const sources: RagSource[] = [
     ...new Map(

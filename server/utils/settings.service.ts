@@ -1,6 +1,47 @@
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:crypto'
 import { prisma } from './prisma.ts'
 
 const CACHE_TTL_MS = 60_000
+
+// Keys whose values are encrypted when stored in UserSetting
+export const SECRET_SETTING_KEYS = new Set([
+  'OPENAI_API_KEY',
+  'ANTHROPIC_API_KEY',
+  'GOOGLE_API_KEY',
+  'MISTRAL_API_KEY',
+  'OLLAMA_API_KEY',
+  'VOYAGE_API_KEY',
+  'DB_PASSWORD',
+])
+
+function getEncryptionKey(): Buffer {
+  const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || 'dev-secret-change-me'
+  return scryptSync(secret, 'user-settings-salt', 32) as Buffer
+}
+
+export function encryptSecret(plaintext: string): string {
+  const iv = randomBytes(12)
+  const key = getEncryptionKey()
+  const cipher = createCipheriv('aes-256-gcm', key, iv)
+  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
+  const tag = cipher.getAuthTag()
+  return Buffer.concat([iv, tag, encrypted]).toString('base64')
+}
+
+export function decryptSecret(ciphertext: string): string {
+  try {
+    const buf = Buffer.from(ciphertext, 'base64')
+    const iv = buf.subarray(0, 12)
+    const tag = buf.subarray(12, 28)
+    const encrypted = buf.subarray(28)
+    const key = getEncryptionKey()
+    const decipher = createDecipheriv('aes-256-gcm', key, iv)
+    decipher.setAuthTag(tag)
+    return decipher.update(encrypted) + decipher.final('utf8')
+  } catch {
+    return ''
+  }
+}
 
 interface CacheEntry {
   value: string
@@ -36,11 +77,11 @@ export async function getSetting(key: string, fallback: string): Promise<string>
   try {
     const row = await prisma.setting.findUnique({ where: { key } })
     // Empty string means "reset to env/default" — treat as not set
-    const value = row?.value ? row.value : fallback
+    const value = row?.value ? row.value : (process.env[key] || fallback)
     toCache(key, value)
     return value
   } catch {
-    return fallback
+    return process.env[key] || fallback
   }
 }
 
@@ -77,4 +118,43 @@ export function getBoolSetting(value: string, fallback: boolean): boolean {
   if (value === 'true') return true
   if (value === 'false') return false
   return fallback
+}
+
+/**
+ * Resolves a setting with per-user override support.
+ * Resolution order: UserSetting → global Setting → env → fallback
+ */
+export async function getEffectiveSetting(key: string, userId: string, fallback = ''): Promise<string> {
+  try {
+    const userRow = await prisma.userSetting.findUnique({ where: { userId_key: { userId, key } } })
+    if (userRow?.value) {
+      return userRow.encrypted ? decryptSecret(userRow.value) : userRow.value
+    }
+  } catch {
+    // fall through to global
+  }
+  return getSetting(key, fallback)
+}
+
+export async function upsertUserSetting(userId: string, key: string, value: string, category: string): Promise<void> {
+  const shouldEncrypt = SECRET_SETTING_KEYS.has(key)
+  const storedValue = shouldEncrypt ? encryptSecret(value) : value
+  await prisma.userSetting.upsert({
+    where: { userId_key: { userId, key } },
+    update: { value: storedValue, category, encrypted: shouldEncrypt },
+    create: { userId, key, value: storedValue, category, encrypted: shouldEncrypt },
+  })
+}
+
+export async function deleteUserSetting(userId: string, key: string): Promise<void> {
+  await prisma.userSetting.deleteMany({ where: { userId, key } })
+}
+
+export async function getUserSettings(userId: string, category: string): Promise<Record<string, string>> {
+  const rows = await prisma.userSetting.findMany({ where: { userId, category } })
+  const result: Record<string, string> = {}
+  for (const row of rows) {
+    result[row.key] = row.encrypted ? decryptSecret(row.value) : row.value
+  }
+  return result
 }
