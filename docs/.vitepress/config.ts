@@ -12,10 +12,12 @@ function vitepressBase(): string {
   return withLeading.endsWith('/') ? withLeading : `${withLeading}/`
 }
 
+const siteBase = vitepressBase()
+
 export default defineConfig({
   title: 'hypar',
   description: 'Production-ready Retrieval-Augmented Generation app built with Nuxt 3, pgvector and the Vercel AI SDK.',
-  base: vitepressBase(),
+  base: siteBase,
 
   vite: {
     define: {
@@ -27,9 +29,9 @@ export default defineConfig({
   ignoreDeadLinks: [/^http:\/\/localhost/, /^http:\/\/127\.0\.0\.1/],
 
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-    ['link', { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
-    ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${siteBase}favicon.svg` }],
+    ['link', { rel: 'icon', type: 'image/x-icon', href: `${siteBase}favicon.ico` }],
+    ['link', { rel: 'apple-touch-icon', href: `${siteBase}apple-touch-icon.png` }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     [
