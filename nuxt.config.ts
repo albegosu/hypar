@@ -83,6 +83,8 @@ export default defineNuxtConfig({
     searchThreshold: Number(process.env.SEARCH_THRESHOLD ?? 0.2),
     searchHybrid: process.env.SEARCH_HYBRID === 'true',
     searchRerank: process.env.SEARCH_RERANK === 'true',
+    searchHyde: process.env.SEARCH_HYDE !== 'false',
+    conversationTitleLlm: process.env.CONVERSATION_TITLE_LLM !== 'false',
     // Step 6 - RAG
     ragTemperature: Number(process.env.RAG_TEMPERATURE ?? 0.3),
     ragCitations: process.env.RAG_CITATIONS !== 'false',

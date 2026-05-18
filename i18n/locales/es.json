@@ -43,6 +43,11 @@
     "errorUnreachable": "No se puede alcanzar el modelo. ¿Está Ollama en marcha?",
     "errorUnauthorized": "API key inválida o ausente. Revisa la configuración del proveedor.",
     "errorRateLimit": "Límite de peticiones alcanzado. Añade tu propia API key en Ajustes para eliminar este límite.",
+    "errorAppRateLimit": "Límite de peticiones alcanzado. Añade tu propia API key en Ajustes para eliminar este límite.",
+    "errorAppRateLimitCta": "Ir a Ajustes",
+    "errorProviderQuota": "Límite del proveedor alcanzado (p. ej. Gemini gratis). Espera {seconds} segundos e inténtalo de nuevo — o activa facturación, cambia de modelo o de proveedor.",
+    "errorProviderQuotaNoWait": "Límite del proveedor alcanzado. Espera un minuto e inténtalo de nuevo — o revisa facturación y uso en tu proveedor, o cambia de modelo en Ajustes.",
+    "errorProviderQuotaCta": "Límites del proveedor",
     "errorRateLimitCta": "Ir a Ajustes",
     "errorModel": "Error del proveedor del modelo",
     "sources": "fuentes",
@@ -160,6 +165,8 @@
     "userResetFail": "No se pudieron limpiar las sobreescrituras. Inténtalo de nuevo.",
     "rateLimitBanner": "límite de uso alcanzado",
     "rateLimitBannerHint": "Añade tu propia API key para saltarte el límite compartido. Tu clave se cifra en reposo y nunca se comparte.",
+    "providerQuotaBanner": "cuota del proveedor del modelo alcanzada",
+    "providerQuotaBannerHint": "Tu API key está activa, pero el proveedor (p. ej. Gemini gratis) limita peticiones por minuto. Espera y reintenta, activa facturación en Google AI o cambia de modelo o proveedor abajo.",
     "ownKey": "tu clave ✓",
     "systemDefault": "valor del sistema",
     "privacyTitle": "nota de privacidad",
@@ -297,7 +304,7 @@
         "dashboard": "abrir dashboard"
       },
       "geminiApiKey": {
-        "helpText": "Se usa para embeddings con Gemini"
+        "helpText": "Se usa para embeddings y chat con Gemini. El plan gratis limita peticiones de chat (p. ej. ~20/min en gemini-2.5-flash); activa facturación o SEARCH_HYDE=false para reducir uso."
       },
       "openaiApiKey": {
         "helpText": "Se usa para embeddings/chat de OpenAI"

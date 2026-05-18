@@ -25,6 +25,8 @@ import {
 import { truncate } from './text'
 import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-commands'
 import { sanitizeUIMessagesForAgent } from './agent-messages'
+import { isProviderQuotaError } from './llm-errors'
+import { markProviderQuotaHit } from './llm-quota-guard'
 
 async function getLlmCfg() {
   const config = useRuntimeConfig()
@@ -76,13 +78,14 @@ async function getLlmCfg() {
 
 async function getRagCfg() {
   const config = useRuntimeConfig()
-  const [tempStr, citationsStr, maxCtxStr, langStr, promptStr, maxStepsStr] = await Promise.all([
+  const [tempStr, citationsStr, maxCtxStr, langStr, promptStr, maxStepsStr, searchHydeStr] = await Promise.all([
     getSetting('RAG_TEMPERATURE', String(config.ragTemperature ?? 0.3)),
     getSetting('RAG_CITATIONS', String(config.ragCitations ?? true)),
     getSetting('RAG_MAX_CONTEXT', String(config.ragMaxContext ?? 4096)),
     getSetting('RAG_RESPONSE_LANG', String(config.ragResponseLang ?? 'auto')),
     getSetting('RAG_SYSTEM_PROMPT', String(config.ragSystemPrompt ?? '')),
     getSetting('AGENT_MAX_STEPS', String(config.agentMaxSteps ?? 5)),
+    getSetting('SEARCH_HYDE', String(config.searchHyde ?? true)),
   ])
   return {
     ragTemperature: getNumericSetting(tempStr, 0.3),
@@ -91,6 +94,7 @@ async function getRagCfg() {
     ragResponseLang: langStr || 'auto',
     ragSystemPrompt: promptStr,
     agentMaxSteps: Math.max(1, Math.min(20, getNumericSetting(maxStepsStr, 5))),
+    searchHyde: getBoolSetting(searchHydeStr, true),
   }
 }
 
@@ -166,7 +170,8 @@ function buildKbTools(
       execute: async ({ query }) => {
         const safeQuery = truncate(query.trim(), 512)
         const t0 = Date.now()
-        const { results, sources, context } = await rag(safeQuery, limit, workspaceId, hydeModel)
+        const hyde = hydeModel && ragCfg.searchHyde ? hydeModel : undefined
+        const { results, sources, context } = await rag(safeQuery, limit, workspaceId, hyde)
         const latencyMs = Date.now() - t0
         for (const r of results) bucket.push(r)
         const truncatedContext = truncate(context || '(no matching passages found)', cfg.ragMaxContext)
@@ -243,6 +248,7 @@ export async function agentStreamText(
     model,
     system,
     messages: modelMessages,
+    maxRetries: 0,
     ...(searchMode !== 'direct' && {
       tools: buildKbTools(workspaceId, limit, retrievedChunks, model, cfg),
       stopWhen: stepCountIs(cfg.agentMaxSteps),
@@ -250,6 +256,7 @@ export async function agentStreamText(
     }),
     temperature: cfg.ragTemperature,
     onError: ({ error }) => {
+      if (isProviderQuotaError(error)) markProviderQuotaHit(error)
       console.error('[agent] streamText error:', error)
     },
   })

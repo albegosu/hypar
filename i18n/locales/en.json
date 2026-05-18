@@ -43,6 +43,11 @@
     "errorUnreachable": "Cannot reach the model. Is Ollama running?",
     "errorUnauthorized": "API key invalid or missing. Check your provider configuration.",
     "errorRateLimit": "Rate limit reached. Add your own API key in Settings to remove this limit.",
+    "errorAppRateLimit": "Rate limit reached. Add your own API key in Settings to remove this limit.",
+    "errorAppRateLimitCta": "Go to Settings",
+    "errorProviderQuota": "Model provider limit reached (e.g. Gemini free tier). Wait {seconds} seconds, then try again — or enable billing, switch model, or use another provider.",
+    "errorProviderQuotaNoWait": "Model provider limit reached. Wait about a minute, then try again — or check billing and usage at your provider, or switch model in Settings.",
+    "errorProviderQuotaCta": "Provider usage limits",
     "errorRateLimitCta": "Go to Settings",
     "errorModel": "Model provider error",
     "sources": "sources",
@@ -160,6 +165,8 @@
     "userResetFail": "Could not clear overrides. Try again.",
     "rateLimitBanner": "rate limit reached",
     "rateLimitBannerHint": "Add your own API key below to bypass the shared usage limit. Your key is encrypted at rest and never shared.",
+    "providerQuotaBanner": "model provider quota reached",
+    "providerQuotaBannerHint": "Your API key is active, but the provider (e.g. Gemini free tier) limits requests per minute. Wait and retry, enable billing at Google AI, or switch to another model or provider below.",
     "ownKey": "your key ✓",
     "systemDefault": "system default",
     "privacyTitle": "privacy note",
@@ -297,7 +304,7 @@
         "dashboard": "open dashboard"
       },
       "geminiApiKey": {
-        "helpText": "Used for embeddings with Gemini"
+        "helpText": "Used for embeddings and chat with Gemini. Free tier limits chat requests (e.g. ~20/min for gemini-2.5-flash); enable billing or use SEARCH_HYDE=false to reduce usage."
       },
       "openaiApiKey": {
         "helpText": "Used for OpenAI embeddings/chat"

@@ -16,6 +16,12 @@ import {
   refreshConversationTitleFromUserPrompt,
 } from '../utils/conversations.service'
 import { scheduleRefineConversationTitle } from '../utils/conversation-title-llm'
+import {
+  classifyLlmError,
+  formatAppRateLimitMessage,
+  formatProviderQuotaMessage,
+} from '../utils/llm-errors'
+import { markProviderQuotaHit } from '../utils/llm-quota-guard'
 
 const MAX_MESSAGES = 50
 const MAX_TEXT_PER_PART = 64 * 1024
@@ -45,18 +51,34 @@ const bodySchema = z.object({
 })
 
 function classifyError(error: unknown): { statusCode: number; message: string } {
-  if (APICallError.isInstance(error)) {
-    const code = error.statusCode ?? 502
-    if (code === 401) return { statusCode: 401, message: 'Model API key is invalid or missing.' }
-    if (code === 429) return { statusCode: 429, message: 'Model rate limit reached. Please wait and try again.' }
-    if (code >= 500) return { statusCode: 502, message: `Model provider returned ${code}. Try again later.` }
-    return { statusCode: code, message: error.message }
+  const classified = classifyLlmError(error)
+  switch (classified.kind) {
+    case 'app_rate_limit':
+      return { statusCode: 429, message: formatAppRateLimitMessage() }
+    case 'provider_quota':
+      return {
+        statusCode: 429,
+        message: formatProviderQuotaMessage(classified.retryAfterSeconds),
+      }
+    case 'unauthorized':
+      return { statusCode: 401, message: 'Model API key is invalid or missing.' }
+    case 'unreachable':
+      return { statusCode: 503, message: 'Cannot reach the model. Is Ollama running?' }
+    case 'model':
+      if (APICallError.isInstance(error)) {
+        const code = error.statusCode ?? 502
+        if (code >= 500) {
+          return { statusCode: 502, message: `Model provider returned ${code}. Try again later.` }
+        }
+        return { statusCode: code, message: error.message }
+      }
+      return { statusCode: classified.statusCode, message: classified.rawMessage || 'Model provider error.' }
+    default:
+      return {
+        statusCode: classified.statusCode,
+        message: classified.rawMessage || 'Unexpected model error.',
+      }
   }
-  const msg = error instanceof Error ? error.message : String(error)
-  if (msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || msg.includes('ENOTFOUND')) {
-    return { statusCode: 503, message: 'Cannot reach the model. Is Ollama running?' }
-  }
-  return { statusCode: 502, message: msg || 'Unexpected model error.' }
 }
 
 function validateMessageSize(messages: UIMessage[]): void {
@@ -165,6 +187,7 @@ export default defineEventHandler(async (event) => {
     // Stream setup failed (e.g. bad API key, unreachable Ollama). The user
     // message has NOT been persisted yet, so there's no orphan to clean up.
     console.error('[chat] pre-stream error:', error)
+    if (classifyLlmError(error).kind === 'provider_quota') markProviderQuotaHit(error)
     const { statusCode, message } = classifyError(error)
     throw createError({ statusCode, statusMessage: message })
   }

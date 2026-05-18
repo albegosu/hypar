@@ -76,6 +76,7 @@ async function expandQueryHyDE(query: string, model: LanguageModel): Promise<str
         `Write a short paragraph (2–3 sentences) that directly answers the following question. ` +
         `Be factual and specific. Do not begin with "Based on" or similar hedging.\n\nQuestion: ${query}\n\nAnswer:`,
       maxOutputTokens: 150,
+      maxRetries: 0,
     })
     return text.trim() || query
   } catch {
