@@ -424,6 +424,11 @@ interface KbToolOutput {
   latencyMs?: number
 }
 
+/** Persisted on reload so citations render without synthetic tool parts in the API payload. */
+interface ChatMessageMetadata {
+  sources?: ConverseSource[]
+}
+
 const { t } = useI18n()
 const store = useDocumentsStore()
 const input = ref('')
@@ -543,27 +548,14 @@ async function loadConversation(id: string) {
           ? (m.parts as Array<{ type: string }>)
           : [{ type: 'text', text: m.content }]
 
-      // Inject a synthetic tool-output part for assistant messages that have
-      // stored sources but no tool call in their parts (e.g. older messages).
       const storedSources = Array.isArray(m.sources) ? (m.sources as ConverseSource[]) : []
-      const hasTool = rawParts.some((p) => p.type.startsWith('tool-'))
-      if (m.role === 'assistant' && storedSources.length > 0 && !hasTool) {
-        rawParts.push({
-          type: 'tool-searchKnowledgeBase',
-          state: 'output-available',
-          output: {
-            context: '',
-            sources: storedSources,
-            results: storedSources,
-            count: storedSources.length,
-          },
-        } as { type: string })
-      }
+      const partsForApi = rawParts.filter((p) => !p.type.startsWith('tool-') && p.type !== 'dynamic-tool')
 
       return {
         id: m.id,
         role: m.role as 'user' | 'assistant' | 'system',
-        parts: rawParts,
+        parts: partsForApi,
+        metadata: storedSources.length ? { sources: storedSources } satisfies ChatMessageMetadata : undefined,
       }
     }) as unknown as UIMessage[]
     expandedSet.clear()
@@ -691,7 +683,9 @@ const displayMessages = computed<DisplayMessage[]>(() => {
       m.role === 'assistant' && !text.trim() && toolOutput != null && toolCalled
     const displayText = assistantNoTextButRetrieved ? t('chat.noModelReply') : text
 
-    const sources = normalizeToolSources(toolOutput?.sources)
+    const metaSources = (m.metadata as ChatMessageMetadata | undefined)?.sources
+    const sources = normalizeToolSources(toolOutput?.sources ?? metaSources)
+    const hadKbSearch = toolCalled || (metaSources?.length ?? 0) > 0
     // The assistant "cited" only if its text actually contains a [n] reference
     // matching one of the returned sources. Retrieving chunks alone isn't enough.
     const cited = m.role === 'assistant'
@@ -704,7 +698,7 @@ const displayMessages = computed<DisplayMessage[]>(() => {
       html: m.role === 'assistant' ? renderMarkdown(displayText) : '',
       sources,
       results: toolOutput?.results,
-      searched: m.role === 'assistant' ? (toolCalled ? true : (text ? false : null)) : null,
+      searched: m.role === 'assistant' ? (hadKbSearch ? true : (text ? false : null)) : null,
       cited,
       latencyMs: toolOutput?.latencyMs,
     }

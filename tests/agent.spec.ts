@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { parseMemoryCommand, getMessageText } from '../server/utils/agent-commands'
+import { sanitizeUIMessagesForAgent } from '../server/utils/agent-messages'
 import type { UIMessage } from 'ai'
 
 describe('parseMemoryCommand', () => {
@@ -53,5 +54,62 @@ describe('getMessageText', () => {
       parts: [{ type: 'tool-foo', state: 'output' } as unknown as { type: string }],
     } as unknown as UIMessage
     expect(getMessageText(m)).toBe('')
+  })
+})
+
+describe('sanitizeUIMessagesForAgent', () => {
+  it('drops assistant messages with only in-progress tool parts', () => {
+    const messages = [
+      { id: '1', role: 'user', parts: [{ type: 'text', text: 'hi' }] },
+      {
+        id: '2',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'tool-searchKnowledgeBase',
+            state: 'input-streaming',
+            toolCallId: 'call-1',
+          },
+        ],
+      },
+    ] as unknown as UIMessage[]
+    expect(sanitizeUIMessagesForAgent(messages)).toEqual([messages[0]])
+  })
+
+  it('drops synthetic tool parts without toolCallId', () => {
+    const messages = [
+      { id: '1', role: 'user', parts: [{ type: 'text', text: 'q' }] },
+      {
+        id: '2',
+        role: 'assistant',
+        parts: [
+          { type: 'text', text: 'answer with [1]' },
+          {
+            type: 'tool-searchKnowledgeBase',
+            state: 'output-available',
+            output: { sources: [{ chunkId: 'c1' }] },
+          },
+        ],
+      },
+    ] as unknown as UIMessage[]
+    const out = sanitizeUIMessagesForAgent(messages)
+    expect(out).toHaveLength(2)
+    expect(out[1].parts).toEqual([{ type: 'text', text: 'answer with [1]' }])
+  })
+
+  it('keeps completed tool parts that include toolCallId', () => {
+    const toolPart = {
+      type: 'tool-searchKnowledgeBase',
+      state: 'output-available',
+      toolCallId: 'call-1',
+      input: { query: 'test' },
+      output: { context: 'ctx', sources: [], results: [], count: 0 },
+    }
+    const messages = [
+      { id: '1', role: 'user', parts: [{ type: 'text', text: 'q' }] },
+      { id: '2', role: 'assistant', parts: [toolPart] },
+    ] as unknown as UIMessage[]
+    const out = sanitizeUIMessagesForAgent(messages)
+    expect(out[1].parts).toContainEqual(toolPart)
   })
 })
