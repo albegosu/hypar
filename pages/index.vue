@@ -143,11 +143,19 @@
               </div>
               <p class="wz-muted text-xs">{{ chatErrorMessage }}</p>
               <NuxtLink
-                v-if="isRateLimitError"
+                v-if="isAppRateLimitError"
                 to="/settings?reason=ratelimit"
                 class="inline-block text-[11px] wz-accent underline"
                 @click="dismissError"
-              >{{ t('chat.errorRateLimitCta') }} →</NuxtLink>
+              >{{ t('chat.errorAppRateLimitCta') }} →</NuxtLink>
+              <a
+                v-else-if="isProviderQuotaError"
+                href="https://ai.dev/rate-limit"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-block text-[11px] wz-accent underline"
+                @click="dismissError"
+              >{{ t('chat.errorProviderQuotaCta') }} →</a>
             </div>
           </div>
         </div>
@@ -415,6 +423,7 @@ import { marked } from 'marked'
 import type { SearchResult, ConverseSource } from '~/stores/documents'
 import { useSearchParams, type SearchParamsConfig } from '~/composables/useSearchParams'
 import { fetchLlmModels, getPersistedModel, persistModel, type LlmModelsConfig } from '~/composables/useLlmModels'
+import { classifyLlmError } from '~/utils/llm-errors'
 
 interface KbToolOutput {
   context: string
@@ -600,29 +609,43 @@ const isSearching = computed(() => {
 
 const dismissedError = ref<unknown>(null)
 const visibleChatError = computed(() => chat.error && chat.error !== dismissedError.value)
-const isRateLimitError = computed(() => {
+
+const classifiedChatError = computed(() => {
   const err = chat.error
-  return APICallError.isInstance(err) && err.statusCode === 429
+  return err ? classifyLlmError(err) : null
 })
+
+const isAppRateLimitError = computed(() => classifiedChatError.value?.kind === 'app_rate_limit')
+const isProviderQuotaError = computed(() => classifiedChatError.value?.kind === 'provider_quota')
 
 function dismissError() {
   dismissedError.value = chat.error
 }
 
 const chatErrorMessage = computed(() => {
-  const err = chat.error
-  if (!err) return ''
-  if (APICallError.isInstance(err)) {
-    if (err.statusCode === 401) return t('chat.errorUnauthorized')
-    if (err.statusCode === 429) return t('chat.errorRateLimit')
-    if (err.statusCode === 503) return t('chat.errorUnreachable')
-    return `${t('chat.errorModel')} (${err.statusCode}): ${err.message}`
+  const classified = classifiedChatError.value
+  if (!classified) return ''
+
+  switch (classified.kind) {
+    case 'app_rate_limit':
+      return t('chat.errorAppRateLimit')
+    case 'provider_quota':
+      if (classified.retryAfterSeconds != null) {
+        return t('chat.errorProviderQuota', { seconds: classified.retryAfterSeconds })
+      }
+      return t('chat.errorProviderQuotaNoWait')
+    case 'unauthorized':
+      return t('chat.errorUnauthorized')
+    case 'unreachable':
+      return t('chat.errorUnreachable')
+    case 'model':
+      if (APICallError.isInstance(chat.error)) {
+        return `${t('chat.errorModel')} (${chat.error.statusCode}): ${chat.error.message}`
+      }
+      return classified.rawMessage || t('chat.errorGeneric')
+    default:
+      return classified.rawMessage || t('chat.errorGeneric')
   }
-  const msg = err instanceof Error ? err.message : String(err)
-  if (msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || msg.includes('503')) {
-    return t('chat.errorUnreachable')
-  }
-  return msg || t('chat.errorGeneric')
 })
 
 interface DisplayMessage {
@@ -858,6 +881,15 @@ watch(
   () => isBusy.value,
   (busy, wasBusy) => {
     if (wasBusy === true && busy === false) focusChatInput()
+  },
+)
+
+watch(
+  () => chat.error,
+  (err) => {
+    if (err && classifyLlmError(err).kind === 'provider_quota' && typeof window !== 'undefined') {
+      window.sessionStorage.setItem('rag-ui:providerQuotaAt', String(Date.now()))
+    }
   },
 )
 

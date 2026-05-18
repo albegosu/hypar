@@ -10,6 +10,15 @@
       <p class="wz-muted">{{ t('settings.rateLimitBannerHint') }}</p>
     </div>
 
+    <div
+      v-if="showProviderQuotaBanner"
+      class="mb-5 wz-panel p-4 text-xs space-y-1"
+      style="border-color: var(--term-accent);"
+    >
+      <p class="wz-accent font-mono">⚡ {{ t('settings.providerQuotaBanner') }}</p>
+      <p class="wz-muted">{{ t('settings.providerQuotaBannerHint') }}</p>
+    </div>
+
     <div class="mb-6">
       <h1 class="text-lg font-semibold wz-strong">{{ t('settings.userTitle') }}</h1>
       <p class="text-xs wz-faint mt-1">{{ t('settings.userSubtitle') }}</p>
@@ -100,6 +109,7 @@ const { t } = useI18n()
 const route = useRoute()
 
 const showRateLimitBanner = computed(() => route.query.reason === 'ratelimit')
+const showProviderQuotaBanner = computed(() => route.query.reason === 'provider-quota')
 
 const activeTab = ref('apis')
 const saving = ref(false)

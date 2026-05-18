@@ -376,13 +376,15 @@ export const step5: WizardStep = {
     { id: 'similarityThreshold', label: 'SEARCH_THRESHOLD', type: 'slider', envKey: 'SEARCH_THRESHOLD', defaultValue: 0.2, min: 0, max: 1, step: 0.05 },
     { id: 'useHybridSearch', label: 'SEARCH_HYBRID', type: 'checkbox', envKey: 'SEARCH_HYBRID', advanced: true, defaultValue: false, helpText: 'combine vector + keyword' },
     { id: 'rerankResults', label: 'SEARCH_RERANK', type: 'checkbox', envKey: 'SEARCH_RERANK', advanced: true, defaultValue: false, helpText: 'second-pass scoring' },
+    { id: 'useHyde', label: 'SEARCH_HYDE', type: 'checkbox', envKey: 'SEARCH_HYDE', advanced: true, defaultValue: true, helpText: 'extra LLM call per KB search (better recall; uses more quota)' },
   ],
 
   envSnippet: (cfg) => `# Similarity search
 SEARCH_TOP_K=${get(cfg, 'search', 'topK', 5)}
 SEARCH_THRESHOLD=${get(cfg, 'search', 'similarityThreshold', 0.2)}
 SEARCH_HYBRID=${get(cfg, 'search', 'useHybridSearch', false)}
-SEARCH_RERANK=${get(cfg, 'search', 'rerankResults', false)}`,
+SEARCH_RERANK=${get(cfg, 'search', 'rerankResults', false)}
+SEARCH_HYDE=${get(cfg, 'search', 'useHyde', true)}`,
 
   hasCodePreview: true,
   codeSnippet: {
@@ -455,6 +457,15 @@ export const step6: WizardStep = {
       max: 20,
       helpText: 'max tool-call rounds the agent can make per message',
     },
+    {
+      id: 'conversationTitleLlm',
+      label: 'CONVERSATION_TITLE_LLM',
+      type: 'checkbox',
+      envKey: 'CONVERSATION_TITLE_LLM',
+      advanced: true,
+      defaultValue: true,
+      helpText: 'LLM-generated thread titles (extra API call after some replies)',
+    },
   ],
 
   envSnippet: (cfg) => `# RAG generation
@@ -463,7 +474,8 @@ RAG_CITATIONS=${get(cfg, 'rag', 'citationsEnabled', true)}
 RAG_MAX_CONTEXT=${get(cfg, 'rag', 'maxContextTokens', 4096)}
 RAG_RESPONSE_LANG=${get(cfg, 'rag', 'responseLanguage', 'auto')}
 RAG_SYSTEM_PROMPT="${get(cfg, 'rag', 'systemPromptTemplate', '').replace(/"/g, '\\"')}"
-AGENT_MAX_STEPS=${get(cfg, 'rag', 'agentMaxSteps', 5)}`,
+AGENT_MAX_STEPS=${get(cfg, 'rag', 'agentMaxSteps', 5)}
+CONVERSATION_TITLE_LLM=${get(cfg, 'rag', 'conversationTitleLlm', true)}`,
 
   hasCodePreview: true,
   codeSnippet: {

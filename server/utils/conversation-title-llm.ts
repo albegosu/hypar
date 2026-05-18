@@ -2,6 +2,9 @@ import { generateText } from 'ai'
 import { prisma } from './prisma'
 import { stripNul, truncate } from './text'
 import { getLlmModel } from './agent.service'
+import { getSetting, getBoolSetting } from './settings.service.ts'
+import { isProviderQuotaError } from './llm-errors'
+import { markProviderQuotaHit, shouldSuppressOptionalLlmCalls } from './llm-quota-guard'
 
 const TITLE_MAX = 80
 const TRANSCRIPT_MSG_CAP = 16
@@ -21,8 +24,17 @@ export function scheduleRefineConversationTitle(conversationId: string): void {
   void refineConversationTitleFromTranscript(conversationId)
 }
 
+async function isConversationTitleLlmEnabled(): Promise<boolean> {
+  const config = useRuntimeConfig()
+  const raw = await getSetting('CONVERSATION_TITLE_LLM', String(config.conversationTitleLlm ?? true))
+  return getBoolSetting(raw, true)
+}
+
 async function refineConversationTitleFromTranscript(conversationId: string): Promise<void> {
   try {
+    if (!(await isConversationTitleLlmEnabled())) return
+    if (shouldSuppressOptionalLlmCalls()) return
+
     const assistantN = await prisma.message.count({
       where: { conversationId, role: 'assistant' },
     })
@@ -52,6 +64,7 @@ async function refineConversationTitleFromTranscript(conversationId: string): Pr
       prompt: `Transcript:\n---\n${transcript}\n---\nTitle:`,
       maxOutputTokens: 48,
       temperature: 0.2,
+      maxRetries: 0,
     })
 
     const line = stripNul(text ?? '')
@@ -67,7 +80,8 @@ async function refineConversationTitleFromTranscript(conversationId: string): Pr
       where: { id: conversationId },
       data: { title },
     })
-  } catch {
+  } catch (err) {
+    if (isProviderQuotaError(err)) markProviderQuotaHit(err)
     /* optional refinement */
   }
 }
