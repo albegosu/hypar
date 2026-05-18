@@ -24,6 +24,7 @@ import {
 } from './documents.service'
 import { truncate } from './text'
 import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-commands'
+import { sanitizeUIMessagesForAgent } from './agent-messages'
 
 async function getLlmCfg() {
   const config = useRuntimeConfig()
@@ -234,26 +235,8 @@ export async function agentStreamText(
     else if (cfg.ragResponseLang === 'en') system += '\n- Respond always in English.'
   }
 
-  const validMessages = messages.filter((m) => {
-    if (m.role !== 'assistant') return true
-    const textParts = (m.parts ?? []).filter(
-      (p): p is { type: 'text'; text: string } => p.type === 'text',
-    )
-    const hasText = textParts.some((p) => p.text.trim().length > 0)
-    const hasCompletedTool = (m.parts ?? []).some((p) => {
-      if (!p.type.startsWith('tool-')) return false
-      const state = (p as { state?: string }).state
-      return (
-        state === 'output-available' ||
-        state === 'output-error' ||
-        state === 'output-denied' ||
-        state === 'output'
-      )
-    })
-    return hasText || hasCompletedTool
-  })
-
-  const modelMessages = await convertToModelMessages(validMessages)
+  const sanitizedMessages = sanitizeUIMessagesForAgent(messages)
+  const modelMessages = await convertToModelMessages(sanitizedMessages)
   const model = await getLlmModel(input.modelOverride)
 
   return streamText({
