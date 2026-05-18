@@ -2,12 +2,20 @@ import { z } from 'zod'
 import { requireAdmin } from '../../utils/admin-auth'
 import { upsertSetting } from '../../utils/settings.service'
 
-const VALID_CATEGORIES = ['apis', 'vectorDb', 'embeddings', 'chunking', 'search', 'rag', 'general']
+const SETTING_CATEGORIES = [
+  'apis',
+  'vectorDb',
+  'embeddings',
+  'chunking',
+  'search',
+  'rag',
+  'general',
+] as const
 
 const bodySchema = z.object({
   key: z.string().min(1).max(100),
   value: z.string().max(2000),
-  category: z.enum(['apis', 'vectorDb', 'embeddings', 'chunking', 'search', 'rag', 'general']).default('general'),
+  category: z.enum(SETTING_CATEGORIES).default('general'),
 })
 
 export default defineEventHandler(async (event) => {

@@ -1,5 +1,9 @@
 import { requireAdmin } from '../../utils/admin-auth'
-import { getSettings } from '../../utils/settings.service'
+import {
+  getSetting,
+  getRuntimeConfigFallback,
+  stringifyWizardDefault,
+} from '../../utils/settings.service'
 import { step1, step2, step3, step4, step5, step6 } from '~/utils/setup/wizard-steps'
 import type { WizardStep } from '~/utils/setup/wizard-types'
 
@@ -29,27 +33,21 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: `Invalid category. Valid: ${VALID_CATEGORIES.join(', ')}` })
   }
 
-  const dbValues = await getSettings(category)
   const step = STEPS[category]
-  if (!step) return dbValues
+  if (!step) return {}
 
   const result: Record<string, string> = {}
 
   for (const field of step.configFields ?? []) {
     if (!field.envKey) continue
 
-    // Resolve: DB first, then env
-    const dbVal = dbValues[field.envKey] as string | undefined
-    const envVal = process.env[field.envKey]
-    const resolved = dbVal ?? (envVal !== undefined && envVal !== '' ? envVal : '')
+    // Same resolution as runtime: DB → process.env → runtimeConfig default
+    const fallback =
+      getRuntimeConfigFallback(field.envKey) || stringifyWizardDefault(field.defaultValue)
+    const resolved = await getSetting(field.envKey, fallback)
 
     // Never send secret values to the client — return a mask instead
     result[field.envKey] = field.secret ? maskSecret(resolved) : resolved
-  }
-
-  // Include any non-field DB values (non-secret config like booleans, numbers)
-  for (const [k, v] of Object.entries(dbValues)) {
-    if (!(k in result)) result[k] = v as string
   }
 
   return result

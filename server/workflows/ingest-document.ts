@@ -31,30 +31,30 @@ export async function ingestDocument(documentId: string, content: string): Promi
   }
 }
 
-export async function parseChunks(content: string): Promise<Chunk[]> {
+export async function parseChunks(_content: string): Promise<Chunk[]> {
   'use step'
   throw new Error('Step not registered')
 }
 
-export async function embedChunksWithRetry(texts: string[]): Promise<number[][]> {
+export async function embedChunksWithRetry(_texts: string[]): Promise<number[][]> {
   'use step'
   throw new Error('Step not registered')
 }
 
 export async function persistChunks(
-  documentId: string,
-  chunks: Chunk[],
-  embeddings: number[][],
+  _documentId: string,
+  _chunks: Chunk[],
+  _embeddings: number[][],
 ): Promise<void> {
   'use step'
   throw new Error('Step not registered')
 }
 
 export async function markStatus(
-  documentId: string,
-  status: 'ready' | 'failed',
-  chunkCount: number,
-  error: string | null,
+  _documentId: string,
+  _status: 'ready' | 'failed',
+  _chunkCount: number,
+  _error: string | null,
 ): Promise<void> {
   'use step'
   throw new Error('Step not registered')

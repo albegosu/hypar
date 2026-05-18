@@ -23,7 +23,7 @@ import {
   listChatMemories,
 } from './documents.service'
 import { truncate } from './text'
-import { parseMemoryCommand, getMessageText, type MemoryCommand } from './agent-commands'
+import type { MemoryCommand } from './agent-commands'
 import { sanitizeUIMessagesForAgent } from './agent-messages'
 import { isProviderQuotaError } from './llm-errors'
 import { markProviderQuotaHit } from './llm-quota-guard'

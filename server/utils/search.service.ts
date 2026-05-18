@@ -292,7 +292,8 @@ export async function logRagQuery(input: {
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function stripEmbedding(r: SearchResult): SearchResult {
-  const { embedding: _e, ...rest } = r
+  const { embedding, ...rest } = r
+  void embedding
   return rest
 }
 

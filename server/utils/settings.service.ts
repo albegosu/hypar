@@ -142,6 +142,57 @@ export function getBoolSetting(value: string, fallback: boolean): boolean {
   return fallback
 }
 
+/** Wizard field default → string for getSetting() fallback. */
+export function stringifyWizardDefault(def: unknown): string {
+  if (def === undefined || def === null) return ''
+  if (Array.isArray(def)) return def.join(',')
+  return String(def)
+}
+
+/**
+ * Same fallback chain the app uses at runtime (nuxt runtimeConfig defaults),
+ * for admin settings display via getSetting().
+ */
+export function getRuntimeConfigFallback(envKey: string): string {
+  const config = useRuntimeConfig()
+  const map: Record<string, () => string> = {
+    EMBEDDING_PROVIDER: () => String(config.embeddingProvider ?? ''),
+    EMBEDDING_MODEL: () => String(config.embeddingModel ?? ''),
+    EMBEDDING_DIMENSIONS: () => String(config.embeddingDimensions ?? 768),
+    EMBEDDING_BATCH_SIZE: () => String(config.embeddingBatchSize ?? 32),
+    EMBEDDING_CACHE_ENABLED: () => String(config.embeddingCacheEnabled ?? true),
+    EMBEDDING_CACHE_TTL: () => String(config.embeddingCacheTtl ?? 3600),
+    EMBEDDING_RETRY_ATTEMPTS: () => String(config.embeddingRetryAttempts ?? 3),
+    LLM_PROVIDER: () => String(config.llmProvider ?? ''),
+    OLLAMA_URL: () => String(config.ollamaUrl ?? ''),
+    OLLAMA_MODEL: () => String(config.ollamaModel ?? ''),
+    OLLAMA_LLM_MODEL: () => String(config.ollamaLlmModel ?? ''),
+    ANTHROPIC_MODEL: () => String(config.anthropicModel ?? ''),
+    OPENAI_LLM_MODEL: () => String(config.openaiLlmModel ?? ''),
+    MISTRAL_MODEL: () => String(config.mistralModel ?? ''),
+    GOOGLE_LLM_MODEL: () => String(config.googleLlmModel ?? ''),
+    CHUNK_SIZE: () => String(config.chunkSize ?? 400),
+    CHUNK_OVERLAP: () => String(config.chunkOverlap ?? 60),
+    CHUNK_STRATEGY: () => String(config.chunkStrategy ?? 'sentence-aware'),
+    MAX_DOC_SIZE_MB: () => String(config.maxDocSizeMb ?? 10),
+    ALLOWED_FORMATS: () => String(config.allowedFormats ?? 'pdf,md,txt'),
+    SEARCH_TOP_K: () => String(config.searchTopK ?? 5),
+    SEARCH_THRESHOLD: () => String(config.searchThreshold ?? 0.2),
+    SEARCH_HYBRID: () => String(config.searchHybrid ?? false),
+    SEARCH_RERANK: () => String(config.searchRerank ?? false),
+    SEARCH_HYDE: () => String(config.searchHyde ?? true),
+    RAG_TEMPERATURE: () => String(config.ragTemperature ?? 0.3),
+    RAG_CITATIONS: () => String(config.ragCitations ?? true),
+    RAG_MAX_CONTEXT: () => String(config.ragMaxContext ?? 4096),
+    RAG_RESPONSE_LANG: () => String(config.ragResponseLang ?? 'auto'),
+    RAG_SYSTEM_PROMPT: () => String(config.ragSystemPrompt ?? ''),
+    AGENT_MAX_STEPS: () => String(config.agentMaxSteps ?? 5),
+    CONVERSATION_TITLE_LLM: () => String(config.conversationTitleLlm ?? true),
+    MEMORY_SCOPE: () => String(config.memoryScope ?? 'local_per_user'),
+  }
+  return map[envKey]?.() ?? ''
+}
+
 /**
  * Resolves a setting with per-user override support.
  * Resolution order: UserSetting → global Setting → env → fallback

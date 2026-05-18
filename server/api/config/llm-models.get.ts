@@ -1,4 +1,5 @@
 import { LLM_MODELS_BY_PROVIDER, type LlmModelOption } from '../../utils/llm-models'
+import { resolveOllamaCloudHost } from '../../utils/ollama'
 import { getSetting } from '../../utils/settings.service'
 import { requireSessionUserId } from '../../utils/session'
 
@@ -133,16 +134,25 @@ async function fetchModels(
   }
 
   if (provider === 'ollama' || provider === 'ollama-cloud' || provider === 'ollama-local') {
-    const ollamaUrl = (config.ollamaUrl as string) || 'http://localhost:11434'
+    const configuredUrl = (config.ollamaUrl as string) || 'http://localhost:11434'
+    const ollamaHost = provider === 'ollama-cloud'
+      ? resolveOllamaCloudHost(configuredUrl)
+      : configuredUrl.replace(/\/+$/, '')
     const ollamaApiKey = config.ollamaApiKey as string | undefined
-    return withCache(provider, async () => {
-      const baseURL = ollamaUrl.replace(/\/+$/, '')
+    const cacheKey = `${provider}:${ollamaHost}`
+    return withCache(cacheKey, async () => {
       const headers: Record<string, string> = {}
       if (ollamaApiKey) headers['Authorization'] = `Bearer ${ollamaApiKey}`
-      const res = await fetch(`${baseURL}/api/tags`, { headers })
+      const res = await fetch(`${ollamaHost}/api/tags`, { headers })
       if (!res.ok) throw new Error(`${res.status}`)
       const data = await res.json() as { models: Array<{ name: string }> }
-      return data.models.map((m) => ({ value: m.name, label: m.name }))
+      const models = data.models.map((m) => ({ value: m.name, label: m.name }))
+      // Cloud account may list local-style names; prefer :cloud tags when present.
+      if (provider === 'ollama-cloud') {
+        const cloudOnly = models.filter((m) => m.value.includes(':cloud'))
+        return cloudOnly.length ? cloudOnly : models
+      }
+      return models
     }, fallback)
   }
 

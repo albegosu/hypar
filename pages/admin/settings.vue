@@ -113,8 +113,10 @@ async function loadTab(tabId: string) {
     const overlay: Record<string, unknown> = {}
     for (const field of getStepFields(step)) {
       defaults[field.id] = field.defaultValue
-      if (field.envKey && data[field.envKey] !== undefined) {
-        overlay[field.id] = parseFieldValue(data[field.envKey], field.type)
+      const raw = field.envKey ? data[field.envKey] : undefined
+      // Empty string means "unset" — keep wizard default; do not parse as 0/false.
+      if (raw !== undefined && raw !== '') {
+        overlay[field.id] = parseFieldValue(raw, field.type)
       }
     }
     const merged = { ...defaults, ...overlay }
