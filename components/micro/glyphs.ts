@@ -25,4 +25,6 @@ export const GLYPH_PATHS = {
   /** Section rule with center accent (decorative) */
   sectionRule:
     '<path d="M2 12h6"/><path d="M10 12h4"/><path d="M16 12h6"/><path d="M12 10v4"/>',
+  /** Brand: shell prompt (chevron + underscore) */
+  brandPrompt: '<path d="M7 10l3.5 2-3.5 2"/><path d="M11 16h9"/>',
 } as const

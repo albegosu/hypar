@@ -49,6 +49,11 @@ function bootLandingAnimations(root: HTMLElement) {
       { autoAlpha: 0, y: 8, x: -2, duration: 0.46, ease: 'power2.out' },
       '-=0.2',
     )
+    .from(
+      root.querySelector('.home-demo'),
+      { autoAlpha: 0, y: 20, duration: 0.55, ease: 'power3.out' },
+      '-=0.12',
+    )
 
   const featuresRoot = root.querySelector('.VPFeatures')
   const featureItems = featuresRoot?.querySelectorAll('.item') ?? []
@@ -63,21 +68,6 @@ function bootLandingAnimations(root: HTMLElement) {
       y: 22,
       duration: 0.52,
       stagger: 0.12,
-      ease: 'power3.out',
-    })
-  }
-
-  const demoEl = root.querySelector('.home-demo')
-  if (demoEl) {
-    gsap.from(demoEl, {
-      scrollTrigger: {
-        trigger: demoEl,
-        start: 'top 88%',
-        once: true,
-      },
-      autoAlpha: 0,
-      y: 20,
-      duration: 0.55,
       ease: 'power3.out',
     })
   }

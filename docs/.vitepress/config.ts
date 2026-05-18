@@ -1,5 +1,8 @@
 import { defineConfig } from 'vitepress'
-import { demoAppUrl } from './demo-app-url'
+import { DEFAULT_DEMO_APP } from './demo-app-url'
+
+const demoAppUrl = process.env.VITEPRESS_DEMO_URL?.trim() || DEFAULT_DEMO_APP
+const demoUrlFromEnv = process.env.VITEPRESS_DEMO_URL?.trim() ?? ''
 
 /** GitHub Pages project site: set in CI (e.g. `/from-zero-rag/`). Local dev: omit or `/`. */
 function vitepressBase(): string {
@@ -14,11 +17,19 @@ export default defineConfig({
   description: 'Production-ready Retrieval-Augmented Generation app built with Nuxt 3, pgvector and the Vercel AI SDK.',
   base: vitepressBase(),
 
+  vite: {
+    define: {
+      'import.meta.env.VITEPRESS_DEMO_URL': JSON.stringify(demoUrlFromEnv),
+    },
+  },
+
   /** Localhost and legacy archive URLs are intentional in prose. */
   ignoreDeadLinks: [/^http:\/\/localhost/, /^http:\/\/127\.0\.0\.1/],
 
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    ['link', { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     [
@@ -47,7 +58,7 @@ export default defineConfig({
       { text: 'Roadmap', link: '/roadmap' },
       {
         text: 'Chat app',
-        link: demoAppUrl(),
+        link: demoAppUrl,
         target: '_blank',
         rel: 'noopener noreferrer',
       },
@@ -101,7 +112,7 @@ export default defineConfig({
           /* VPSocialLink.css sets `fill: currentColor` on svg — stroke-only icons become a solid square. */
           svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 5v14h16V5"/><path d="M8 9l2 2-2 2"/><path d="M12 13h4"/></svg>',
         },
-        link: demoAppUrl(),
+        link: demoAppUrl,
         ariaLabel: 'Open hosted hypar chat app',
       },
       { icon: 'github', link: 'https://github.com/albegosu/from-zero-rag' },

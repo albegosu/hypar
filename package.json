@@ -23,7 +23,8 @@
     "reingest": "tsx scripts/reingest-all.ts",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "demo:poster": "npx -p playwright@1.49.0 node scripts/capture-demo-poster.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.74",

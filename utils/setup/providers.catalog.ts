@@ -228,7 +228,7 @@ export const llmProviders: ProviderDefinition[] = [
       'ollama-cloud',
     ),
     envLines: (cfg) => [
-      `OLLAMA_URL=https://api.ollama.com`,
+      `OLLAMA_URL=https://ollama.com`,
       `OLLAMA_API_KEY=${getApi(cfg, 'ollamaApiKey', '<your-ollama-api-key>')}`,
       `OLLAMA_LLM_MODEL=${getApi(cfg, 'ollamaModel', 'kimi-k2.5:cloud')}`,
     ],
