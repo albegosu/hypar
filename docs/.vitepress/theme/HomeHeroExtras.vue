@@ -1,60 +1,17 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { withBase } from 'vitepress'
-import MicroGlyph from '../../../components/micro/MicroGlyph.vue'
+import { computed } from 'vue'
+import { useData } from 'vitepress'
 import { demoAppUrl } from '../demo-app-url'
-import posterBundled from '../../public/demo/poster.png?url'
+import screenshotDark from '../../public/demo/hypar-chat-dark.png?url'
+import screenshotLight from '../../public/demo/hypar-chat-light.png?url'
 
 const demoUrl = demoAppUrl()
-const posterSrc = posterBundled
-const videoSrc = withBase('/demo/hero-demo.webm')
+const { isDark } = useData()
 
-type MediaKind = 'poster' | 'video'
-
-const kind = ref<MediaKind>('poster')
-const videoEl = ref<HTMLVideoElement | null>(null)
-const isPlaying = ref(false)
-
-/** Dev server returns 200 + text/html for missing files; require a real video MIME. */
-async function hasDemoVideo(): Promise<boolean> {
-  try {
-    const res = await fetch(videoSrc, { method: 'HEAD' })
-    if (!res.ok) return false
-    const type = res.headers.get('content-type') ?? ''
-    return type.startsWith('video/')
-  } catch {
-    return false
-  }
-}
-
-onMounted(async () => {
-  if (await hasDemoVideo()) kind.value = 'video'
-})
+const screenshotSrc = computed(() => (isDark.value ? screenshotDark : screenshotLight))
 
 function openDemo() {
   window.open(demoUrl, '_blank', 'noopener,noreferrer')
-}
-
-function onMediaClick() {
-  if (kind.value === 'video' && videoEl.value) {
-    if (videoEl.value.paused) {
-      void videoEl.value.play()
-      isPlaying.value = true
-    } else {
-      videoEl.value.pause()
-      isPlaying.value = false
-    }
-    return
-  }
-  openDemo()
-}
-
-function onVideoPlay() {
-  isPlaying.value = true
-}
-
-function onVideoPause() {
-  isPlaying.value = false
 }
 </script>
 
@@ -64,35 +21,19 @@ function onVideoPause() {
       <button
         type="button"
         class="home-demo__media"
-        :aria-label="kind === 'video' ? 'Play or pause demo screencast' : 'Open live demo'"
-        @click="onMediaClick"
+        :class="{ 'home-demo__media--dark': isDark }"
+        aria-label="Open live hypar chat demo"
+        @click="openDemo"
       >
-        <video
-          v-if="kind === 'video'"
-          ref="videoEl"
-          class="home-demo__video"
-          :src="videoSrc"
-          :poster="posterSrc"
-          muted
-          loop
-          playsinline
-          preload="metadata"
-          @play="onVideoPlay"
-          @pause="onVideoPause"
-        />
         <img
-          v-else
-          class="home-demo__poster"
-          :src="posterSrc"
-          alt="hypar chat with hybrid RAG citations"
-          width="1200"
-          height="675"
+          class="home-demo__shot"
+          :src="screenshotSrc"
+          alt="hypar chat — RAG pipeline, conversations, and document sidebar"
+          width="3588"
+          height="1896"
           loading="eager"
           decoding="async"
         />
-        <span class="home-demo__overlay" :class="{ 'home-demo__overlay--hidden': kind === 'video' && isPlaying }">
-          <MicroGlyph name="play" decorative class="home-demo__play" />
-        </span>
         <a
           class="home-demo__live"
           :href="demoUrl"
@@ -117,6 +58,8 @@ function onVideoPause() {
 }
 .home-demo__inner {
   margin: 8px 0 0;
+  width: min(100%, 1120px);
+  margin-inline: auto;
 }
 .home-demo__media {
   position: relative;
@@ -124,35 +67,30 @@ function onVideoPause() {
   border: none;
   padding: 0;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  background: var(--vp-c-bg-soft);
+  background: #f5f1e8;
   display: block;
   text-align: inherit;
   font: inherit;
+  /* Slightly tighter than the raw capture — crops empty side margins */
   aspect-ratio: 16 / 9;
-  max-height: min(52vh, 420px);
+  max-height: clamp(300px, 58vh, 560px);
+  border: 1px solid color-mix(in srgb, var(--vp-c-divider) 80%, transparent);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--vp-c-text-1) 6%, transparent) inset,
+    0 20px 48px -24px color-mix(in srgb, var(--vp-c-bg) 35%, #000 25%);
 }
-.home-demo__video,
-.home-demo__poster {
+.home-demo__media--dark {
+  background: #0a0e0d;
+}
+.home-demo__shot {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 44%;
   vertical-align: middle;
-}
-.home-demo__overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, var(--vp-c-bg) 35%, transparent);
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-.home-demo__overlay--hidden {
-  opacity: 0;
 }
 .home-demo__live {
   position: absolute;
@@ -173,11 +111,6 @@ function onVideoPause() {
   color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
 }
-.home-demo__play {
-  width: 32px;
-  height: 32px;
-  color: color-mix(in srgb, var(--vp-c-text-1) 90%, transparent);
-}
 @media (min-width: 640px) {
   .home-demo {
     padding: 0 48px;
@@ -186,6 +119,9 @@ function onVideoPause() {
 @media (min-width: 960px) {
   .home-demo {
     padding: 0 64px;
+  }
+  .home-demo__shot {
+    object-position: 50% 42%;
   }
 }
 </style>
