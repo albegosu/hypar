@@ -48,7 +48,7 @@ When `search()` is called with a **`hydeModel`** (a `LanguageModel` from the AI 
 ### Where HyDE is used
 
 - **Agentic chat** — `buildKbTools()` passes the same chat model into `rag(…, hydeModel)`, so tool-based KB search uses HyDE.  
-- **`POST /api/search/inspect`** — uses `search()` **without** `hydeModel` (raw-query embedding), useful for debugging embedding + latency only.
+- **`POST /api/search/inspect`** — requires auth; workspace-scoped; uses `search()` **without** `hydeModel` (raw-query embedding), useful for debugging embedding + latency only.
 
 ---
 

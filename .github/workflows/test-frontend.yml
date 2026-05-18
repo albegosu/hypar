@@ -38,6 +38,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
+      BETTER_AUTH_SECRET: ci-test-secret-minimum-32-characters-long
+      GOOGLE_API_KEY: ci-placeholder-key
+      SKIP_ENV_VALIDATION: 'true'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

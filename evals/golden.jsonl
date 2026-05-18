@@ -1,0 +1,3 @@
+{"query":"What is RAG?","expected_doc_ids":[],"notes":"Schema validation sample — link doc IDs when corpus is seeded"}
+{"query":"How does hybrid search work?","expected_doc_ids":[],"notes":"Retrieval regression placeholder"}
+{"query":"Explain embedding dimensions","expected_doc_ids":[],"notes":"Embedding pipeline smoke question"}

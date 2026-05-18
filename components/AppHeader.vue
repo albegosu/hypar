@@ -23,7 +23,7 @@
         <span class="hidden sm:inline text-[10px] wz-faint">{{ t('nav.docsSiteLabel') }}</span>
       </NuxtLink>
 
-      <div class="flex items-center gap-1 min-w-0 ml-auto">
+      <div class="flex flex-1 items-center gap-1 min-w-0 ml-auto justify-end">
         <!-- workspace selector (custom dropdown) -->
         <div v-if="user && workspaces.length" ref="wsDropdownRef" class="relative hidden sm:block shrink-0 mr-1">
           <button
@@ -31,9 +31,9 @@
             class="wz-btn-ghost text-[10px] flex items-center gap-1"
             @click="wsOpen = !wsOpen"
           >
-            <span class="wz-faint">ws/</span>
-            <span class="wz-muted max-w-[90px] truncate">{{ activeWorkspaceName }}</span>
-            <span class="wz-faint" :class="wsOpen ? 'rotate-180' : ''" style="display:inline-block;transition:transform .15s">▾</span>
+            <span class="wz-faint shrink-0">ws/</span>
+            <span class="wz-muted whitespace-nowrap">{{ activeWorkspaceName }}</span>
+            <span class="wz-faint shrink-0" :class="wsOpen ? 'rotate-180' : ''" style="display:inline-block;transition:transform .15s">▾</span>
           </button>
 
           <div
@@ -65,12 +65,6 @@
           </div>
         </div>
 
-        <!-- user chip -->
-        <div v-if="user" class="hidden sm:flex items-center gap-1 mr-1 min-w-0 shrink-0">
-          <span class="wz-faint">@</span>
-          <span class="wz-muted truncate max-w-[90px]">{{ userLabel }}</span>
-        </div>
-
         <NuxtLink
           v-if="user && !isAdmin"
           to="/settings"
@@ -89,16 +83,16 @@
 
         <button
           type="button"
-          class="wz-btn-ghost text-[10px]"
+          class="wz-btn-ghost text-[10px] shrink-0"
           :class="{ 'opacity-50': locale !== 'en' }"
           @click="setLocale('en')"
         >
           EN
         </button>
-        <span class="wz-faint">/</span>
+        <span class="wz-faint shrink-0">/</span>
         <button
           type="button"
-          class="wz-btn-ghost text-[10px]"
+          class="wz-btn-ghost text-[10px] shrink-0"
           :class="{ 'opacity-50': locale !== 'es' }"
           @click="setLocale('es')"
         >
@@ -112,6 +106,11 @@
         >
           {{ theme === 'light' ? '[ light ]' : '[ dark ]' }}
         </button>
+
+        <div v-if="user" class="hidden sm:flex items-center gap-1 ml-1 min-w-0 shrink-0">
+          <span class="wz-faint shrink-0">@</span>
+          <span class="wz-muted truncate max-w-[120px]">{{ userLabel }}</span>
+        </div>
 
         <template v-if="user">
           <button

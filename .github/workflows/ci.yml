@@ -1,29 +1,13 @@
-name: CI - Test Backend
+name: CI
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'server/**'
-      - 'prisma/**'
-      - 'init-scripts/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/test-backend.yml'
   pull_request:
     branches: [main]
-    paths:
-      - 'server/**'
-      - 'prisma/**'
-      - 'init-scripts/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/test-backend.yml'
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
 
     services:
@@ -48,16 +32,13 @@ jobs:
       SKIP_ENV_VALIDATION: 'true'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
@@ -71,11 +52,21 @@ jobs:
       - name: Run migrations
         run: pnpm exec prisma migrate deploy
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
       - name: Typecheck
         run: pnpm exec vue-tsc --noEmit
 
-      - name: Run unit tests
-        run: pnpm test
+      - name: Unit tests with coverage
+        run: pnpm test:coverage
 
-      - name: Build (Nitro server smoke)
+      - name: Eval harness (schema)
+        run: pnpm eval
+
+      - name: Build
         run: pnpm build

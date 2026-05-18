@@ -1,7 +1,6 @@
 import type { H3Event } from 'h3'
 import { prisma } from './prisma'
-
-const windows = new Map<string, number[]>()
+import { slidingWindowAllow } from './distributed-store'
 
 // In-memory cache: userId → whether they have their own LLM key (TTL 5 min)
 const ownKeyCache = new Map<string, { value: boolean; expiresAt: number }>()
@@ -50,15 +49,8 @@ export async function enforceRateLimit(
   // Users using their own keys are exempt — they pay for their own calls
   if (await userHasOwnLlmKey(user.id)) return
 
-  const now = Date.now()
-  const cutoff = now - 60_000
-
-  const hits = windows.get(user.id) ?? []
-  const recent = hits.filter((t) => t > cutoff)
-  recent.push(now)
-  windows.set(user.id, recent)
-
-  if (recent.length > perMinute) {
+  const allowed = await slidingWindowAllow(`user:${user.id}`, 60_000, perMinute)
+  if (!allowed) {
     throw createError({
       statusCode: 429,
       statusMessage: `Rate limit exceeded. Max ${perMinute} requests per minute. Add your own API key in Settings to remove this limit.`,
