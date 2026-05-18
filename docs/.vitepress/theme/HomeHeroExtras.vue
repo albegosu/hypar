@@ -1,37 +1,34 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { withBase } from 'vitepress'
 import MicroGlyph from '../../../components/micro/MicroGlyph.vue'
 import { demoAppUrl } from '../demo-app-url'
+import posterBundled from '../../public/demo/poster.png?url'
 
 const demoUrl = demoAppUrl()
-const posterSrc = '/demo/poster.webp'
-const videoSrc = '/demo/hero-demo.webm'
+const posterSrc = posterBundled
+const videoSrc = withBase('/demo/hero-demo.webm')
 
-type MediaKind = 'loading' | 'placeholder' | 'poster' | 'video'
+type MediaKind = 'poster' | 'video'
 
-const kind = ref<MediaKind>('loading')
+const kind = ref<MediaKind>('poster')
 const videoEl = ref<HTMLVideoElement | null>(null)
 const isPlaying = ref(false)
 
-async function assetExists(url: string): Promise<boolean> {
+/** Dev server returns 200 + text/html for missing files; require a real video MIME. */
+async function hasDemoVideo(): Promise<boolean> {
   try {
-    const res = await fetch(url, { method: 'HEAD' })
-    return res.ok
+    const res = await fetch(videoSrc, { method: 'HEAD' })
+    if (!res.ok) return false
+    const type = res.headers.get('content-type') ?? ''
+    return type.startsWith('video/')
   } catch {
     return false
   }
 }
 
 onMounted(async () => {
-  if (await assetExists(videoSrc)) {
-    kind.value = 'video'
-    return
-  }
-  if (await assetExists(posterSrc)) {
-    kind.value = 'poster'
-    return
-  }
-  kind.value = 'placeholder'
+  if (await hasDemoVideo()) kind.value = 'video'
 })
 
 function openDemo() {
@@ -64,30 +61,7 @@ function onVideoPause() {
 <template>
   <section class="home-demo">
     <div class="home-demo__inner">
-      <div
-        v-if="kind === 'loading'"
-        class="home-demo__placeholder home-demo__placeholder--loading"
-        aria-busy="true"
-      />
-
       <button
-        v-else-if="kind === 'placeholder'"
-        type="button"
-        class="home-demo__placeholder"
-        :aria-label="`Open live demo at ${demoUrl}`"
-        @click="openDemo"
-      >
-        <MicroGlyph name="bracketBl" decorative class="home-demo__corner home-demo__corner--bl" />
-        <MicroGlyph name="bracketTr" decorative class="home-demo__corner home-demo__corner--tr" />
-        <div class="home-demo__center">
-          <MicroGlyph name="play" decorative class="home-demo__play" />
-          <p>Demo screenshot or 30-second screencast</p>
-          <span class="home-demo__hint">pnpm demo:poster · add hero-demo.webm</span>
-        </div>
-      </button>
-
-      <button
-        v-else
         type="button"
         class="home-demo__media"
         :aria-label="kind === 'video' ? 'Play or pause demo screencast' : 'Open live demo'"
@@ -144,7 +118,6 @@ function onVideoPause() {
 .home-demo__inner {
   margin: 8px 0 0;
 }
-.home-demo__placeholder,
 .home-demo__media {
   position: relative;
   width: 100%;
@@ -157,20 +130,6 @@ function onVideoPause() {
   display: block;
   text-align: inherit;
   font: inherit;
-}
-.home-demo__placeholder {
-  height: 240px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: var(--vp-c-text-2);
-}
-.home-demo__placeholder--loading {
-  cursor: default;
-  animation: home-demo-pulse 1.2s ease-in-out infinite;
-}
-.home-demo__media {
   aspect-ratio: 16 / 9;
   max-height: min(52vh, 420px);
 }
@@ -214,45 +173,10 @@ function onVideoPause() {
   color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
 }
-.home-demo__corner {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  color: color-mix(in srgb, var(--vp-c-text-3) 55%, transparent);
-  pointer-events: none;
-}
-.home-demo__corner--bl {
-  left: 12px;
-  bottom: 12px;
-}
-.home-demo__corner--tr {
-  right: 12px;
-  top: 12px;
-}
-.home-demo__center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  z-index: 1;
-}
 .home-demo__play {
   width: 32px;
   height: 32px;
   color: color-mix(in srgb, var(--vp-c-text-1) 90%, transparent);
-}
-.home-demo__placeholder p {
-  font-size: 13px;
-  margin: 0;
-}
-.home-demo__hint {
-  font-size: 11px;
-  opacity: 0.65;
-  font-family: var(--vp-font-family-mono);
-}
-@keyframes home-demo-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
 }
 @media (min-width: 640px) {
   .home-demo {

@@ -98,4 +98,46 @@
 <body>
   <div class="wrap">
     <div class="panel">
-      <motion-capture class="panel-header">
+      <div class="panel-header">
+        <span><span class="accent">$</span> chat --mode=auto --stream</span>
+        <span>3 docs · ctx</span>
+      </div>
+      <div class="panel-body">
+        <p class="title">// Chat con tu corpus</p>
+        <p class="subtitle">Híbrido pgvector + BM25 · citas [1][2] · agente decide cuándo buscar</p>
+      </div>
+    </div>
+
+    <div class="messages">
+      <div class="row user">
+        <div class="bubble bubble-user">
+          <div class="meta">&gt; user</div>
+          <p>¿Qué establece el artículo 14 de la Constitución sobre la igualdad ante la ley?</p>
+        </div>
+      </div>
+      <div class="row agent">
+        <div class="bubble bubble-assistant">
+          <div class="meta">
+            <span>&lt; agent</span>
+            <span class="pill">searched</span>
+            <span class="pill">cited</span>
+          </div>
+          <p>
+            Los españoles son <strong>iguales ante la ley</strong>, sin que pueda prevalecer discriminación
+            por nacimiento, raza, sexo, religión u otra condición personal o social
+            <span class="cite">[1]</span>. El Estado garantiza la <strong>igualdad efectiva</strong> de
+            derechos entre mujeres y hombres <span class="cite">[2]</span>.
+          </p>
+          <div class="sources">
+            Sources:
+            <a href="#">Constitución Española (BOE)</a>,
+            <a href="#">Título I — De los derechos fundamentales</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">Pregunta sobre tus documentos…</div>
+  </div>
+</body>
+</html>

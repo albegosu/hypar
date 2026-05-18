@@ -13,7 +13,7 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createMistral } from '@ai-sdk/mistral'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { z } from 'zod'
-import { normalizeOllamaNativeHost } from './ollama'
+import { normalizeOllamaNativeHost, resolveOllamaCloudHost } from './ollama'
 import { resolveModelOverride } from './llm-models'
 import { rag, search, logRagQuery, type SearchResult } from './search.service'
 import { getSetting, getNumericSetting, getBoolSetting } from './settings.service.ts'
@@ -127,12 +127,11 @@ export async function getLlmModel(modelOverride?: string): Promise<LanguageModel
   }
 
   // ollama-cloud, ollama-local, or default
-  // Guardrail: if provider is ollama-cloud, force the cloud endpoint regardless
-  // of any OLLAMA_URL inherited from a local docker-compose setup (e.g. http://ollama:11434).
+  // Guardrail: docker-compose often sets OLLAMA_URL=http://ollama:11434; cloud chat
+  // must use https://ollama.com (api.ollama.com returns 401 on /v1/chat/completions).
   const ollamaHost = provider === 'ollama-cloud'
-    && !/^https:\/\/api\.ollama\.com\b/i.test(cfg.ollamaUrl.trim())
-      ? 'https://api.ollama.com'
-      : cfg.ollamaUrl
+    ? resolveOllamaCloudHost(cfg.ollamaUrl)
+    : cfg.ollamaUrl
   const baseURL = normalizeOllamaNativeHost(ollamaHost).replace(/\/+$/, '') + '/v1'
   const ollama = createOpenAI({
     apiKey: cfg.ollamaApiKey || 'ollama',

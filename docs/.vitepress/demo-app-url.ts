@@ -1,12 +1,11 @@
 /**
- * Hosted Nuxt chat app URL for the docs site (landing).
- * Override at build: `VITEPRESS_DEMO_URL=... pnpm docs:build`.
- * Keep the same default in `docs/index.md` hero → Try demo link.
+ * Hosted Nuxt chat app URL — safe for VitePress client components (no `process`).
+ * Nav/config uses `demoAppUrlFromEnv()` in config.ts (Node only).
  */
-const DEFAULT_DEMO_APP = 'https://from-zero-rag-production.up.railway.app/'
+export const DEFAULT_DEMO_APP = 'https://from-zero-rag-production.up.railway.app/'
 
 export function demoAppUrl(): string {
-  const fromEnv = process.env.VITEPRESS_DEMO_URL?.trim()
-  if (fromEnv) return fromEnv
+  const injected = import.meta.env.VITEPRESS_DEMO_URL
+  if (typeof injected === 'string' && injected.trim()) return injected.trim()
   return DEFAULT_DEMO_APP
 }
