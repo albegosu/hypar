@@ -4,6 +4,7 @@ export interface SearchParamsConfig {
   hybridAlpha: number
   mmrLambda: number
   embeddingDims: number
+  embeddingProvider: string
   hybridEnabled: boolean
   rerankEnabled: boolean
   overFetch: number

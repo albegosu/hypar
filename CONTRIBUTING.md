@@ -59,15 +59,23 @@ from-zero-rag/
 1. **Fork** the repository
 2. **Create a branch** from `main`: `git checkout -b feat/your-feature`
 3. **Make your changes**
-4. **Verify** before pushing:
+4. **Verify** before pushing (same checks as [CI](.github/workflows/ci.yml)):
 
 ```bash
-# Production build (includes type checking via Nuxt build)
-pnpm build
+# Full pipeline (lint, typecheck, tests, eval, build)
+pnpm ci:check
+```
 
-# Unit tests (chunking, text utils, agent commands)
-pnpm test
+Git hooks run automatically after `pnpm install` (via [Husky](https://typicode.github.io/husky/)):
 
+| Hook | Command |
+|------|---------|
+| `pre-commit` | `lint-staged` + `typecheck` |
+| `pre-push` | `pnpm ci:check` |
+
+Optional [pre-commit](https://pre-commit.com/) (Python): `pip install pre-commit && pre-commit install && pre-commit install --hook-type pre-push` — uses `.pre-commit-config.yaml` with the same commands.
+
+```bash
 # Docs site (if you change docs/**)
 pnpm docs:build
 

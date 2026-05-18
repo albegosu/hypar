@@ -9,7 +9,9 @@
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
     "generate": "nuxt generate",
+    "prepare": "husky",
     "postinstall": "nuxt prepare && prisma generate",
+    "ci:check": "pnpm lint && pnpm typecheck && pnpm test && pnpm eval && SKIP_ENV_VALIDATION=true pnpm build",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
@@ -56,22 +58,24 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@nuxt/devtools": "latest",
-    "@vitest/coverage-v8": "^2.1.0",
-    "eslint": "^9.22.0",
-    "globals": "^16.0.0",
-    "redis": "^4.7.0",
-    "typescript-eslint": "^8.26.0",
     "@tailwindcss/vite": "^4.2.4",
     "@types/node": "^20.10.0",
     "@types/pdf-parse": "^1.1.4",
     "@types/uuid": "^9.0.7",
+    "@vitest/coverage-v8": "^2.1.0",
     "dotenv": "^17.4.2",
+    "eslint": "^9.22.0",
+    "globals": "^16.0.0",
     "gsap": "^3.15.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.5",
     "nuxt": "^3.15.3",
     "prisma": "^7.8.0",
+    "redis": "^4.7.0",
     "tailwindcss": "^4.2.4",
     "tsx": "^4.19.0",
     "typescript": "^5.3.3",
+    "typescript-eslint": "^8.26.0",
     "vitepress": "^1.6.3",
     "vitest": "^2.1.0",
     "vue-tsc": "^3.2.7"
@@ -90,5 +94,10 @@
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=10.0.0"
+  },
+  "lint-staged": {
+    "server/**/*.ts": "eslint --fix",
+    "tests/**/*.ts": "eslint --fix",
+    "scripts/**/*.ts": "eslint --fix"
   }
 }

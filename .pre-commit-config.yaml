@@ -1,0 +1,21 @@
+# Optional Python runner: pip install pre-commit && pre-commit install && pre-commit install --hook-type pre-push
+# Default: Husky hooks installed via `pnpm install` (see .husky/)
+repos:
+  - repo: local
+    hooks:
+      - id: lint-staged
+        name: lint-staged
+        entry: pnpm exec lint-staged
+        language: system
+        pass_filenames: false
+      - id: typecheck
+        name: typecheck
+        entry: pnpm typecheck
+        language: system
+        pass_filenames: false
+      - id: ci-check
+        name: ci:check (mirror GitHub Actions)
+        entry: pnpm ci:check
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
