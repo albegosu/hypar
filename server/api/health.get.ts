@@ -1,4 +1,5 @@
 import { prisma } from '../utils/prisma'
+import { checkEmbeddingProvider } from '../utils/health-checks'
 
 export default defineEventHandler(async (event) => {
   const checks: Record<string, boolean> = { db: false, embedding: false }
@@ -9,9 +10,7 @@ export default defineEventHandler(async (event) => {
   } catch {}
 
   try {
-    const cfg = useRuntimeConfig()
-    await $fetch(`${cfg.ollamaUrl}/api/tags`, { timeout: 3000 } as Parameters<typeof $fetch>[1])
-    checks.embedding = true
+    checks.embedding = await checkEmbeddingProvider()
   } catch {}
 
   const ok = checks.db

@@ -42,9 +42,7 @@ const buckets = new Map<string, Bucket>()
 function clientKey(event: H3Event): string {
   const xff = getHeader(event, 'x-forwarded-for') ?? ''
   const ip = xff.split(',')[0].trim() || event.node.req.socket?.remoteAddress || 'unknown'
-  // Best-effort userId: query, header, or anonymous.
-  const url = getRequestURL(event)
-  const userId = url.searchParams.get('userId') ?? getHeader(event, 'x-user-id') ?? 'anon'
+  const userId = event.context.auth?.user?.id ?? 'anon'
   return `${ip}|${userId}`
 }
 

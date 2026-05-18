@@ -8,6 +8,12 @@ if [ -z "$DATABASE_URL" ]; then
   exit 1
 fi
 
+if [ -z "$BETTER_AUTH_SECRET" ] && [ -z "$AUTH_SECRET" ]; then
+  echo "Error: BETTER_AUTH_SECRET or AUTH_SECRET is required in production."
+  echo "Generate one with: openssl rand -hex 32"
+  exit 1
+fi
+
 # Run database migrations before starting the server
 echo "Running database migrations..."
 npx prisma migrate deploy

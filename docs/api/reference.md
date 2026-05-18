@@ -10,8 +10,8 @@ All routes are **same-origin** Nitro handlers under **`/api/*`**. Request bodies
 | --- | --- |
 | Base URL | Same host as the Nuxt app (e.g. `http://localhost:3000`). |
 | Errors | Typical `4xx` / `5xx` with JSON `{ statusMessage, message }` where applicable. |
-| Admin auth | `GET/POST /api/admin/*` use `requireAuthOrAdminApiKey`: any **signed-in** `better-auth` session, **or** `Authorization: Bearer <ADMIN_API_KEY>` / `x-admin-key` when `ADMIN_API_KEY` is set. When the key is set, the header can be used without a session. Tighten role checks before multi-tenant exposure — see root `README.md`. |
-| Rate limits | In-memory token bucket per **IP + optional `userId`**: chat `POST /api/chat` **30/min**; `POST /api/documents/upload` **10/min**; other document `POST`/`DELETE` **30/min** (`server/middleware/rate-limit.ts`). |
+| Admin auth | `GET/POST /api/admin/*` use `requireAdmin`: session with **`role === 'admin'`**, **or** `Authorization: Bearer <ADMIN_API_KEY>` / `x-admin-key` when `ADMIN_API_KEY` is set. |
+| Rate limits | In-memory token bucket per **IP + session user id**: chat `POST /api/chat` **30/min**; `POST /api/documents/upload` **10/min**; other document `POST`/`DELETE` **30/min** (`server/middleware/rate-limit.ts`). Optional `REDIS_URL` for multi-instance (`server/utils/distributed-store.ts`). |
 
 ---
 
@@ -136,7 +136,7 @@ Poll until status is terminal (`completed` / `failed` / etc. — see handler).
 
 ### `POST /api/search/inspect`
 
-**Body:** `{ query: string, limit?: number }`.
+**Auth:** signed-in session (workspace-scoped). **Body:** `{ query: string, limit?: number }`.
 
 **Response:** embedding preview (first dims), per-phase **latency**, `results`, `sources` — debug endpoint.
 
@@ -144,7 +144,11 @@ Poll until status is terminal (`completed` / `failed` / etc. — see handler).
 
 ## Admin
 
-Uses `requireAuthOrAdminApiKey` (see conventions).
+Uses `requireAdmin` (see conventions).
+
+### `GET /api/admin/metrics`
+
+Prometheus text exposition (`text/plain`) — request counters and span latency summaries from `server/utils/metrics.ts`.
 
 ### `GET /api/admin/stats`
 

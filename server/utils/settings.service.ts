@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'node:crypto'
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
 import { prisma } from './prisma.ts'
 
 const CACHE_TTL_MS = 60_000
@@ -14,9 +14,24 @@ export const SECRET_SETTING_KEYS = new Set([
   'DB_PASSWORD',
 ])
 
+/** Global Setting rows that must be encrypted at rest. */
+export const GLOBAL_SECRET_SETTING_KEYS = new Set([
+  ...SECRET_SETTING_KEYS,
+  'DATABASE_URL',
+  'wizard.state',
+])
+
+export function getAuthSecret(): string {
+  const secret = process.env.BETTER_AUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim() || ''
+  if (secret) return secret
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('[settings] BETTER_AUTH_SECRET or AUTH_SECRET is required in production')
+  }
+  return 'dev-secret-local-only-not-for-production'
+}
+
 function getEncryptionKey(): Buffer {
-  const secret = process.env.BETTER_AUTH_SECRET || process.env.AUTH_SECRET || 'dev-secret-change-me'
-  return scryptSync(secret, 'user-settings-salt', 32) as Buffer
+  return scryptSync(getAuthSecret(), 'user-settings-salt', 32) as Buffer
 }
 
 export function encryptSecret(plaintext: string): string {
@@ -41,6 +56,11 @@ export function decryptSecret(ciphertext: string): string {
   } catch {
     return ''
   }
+}
+
+function resolveStoredValue(row: { value: string; encrypted: boolean }): string {
+  if (!row.value) return ''
+  return row.encrypted ? decryptSecret(row.value) : row.value
 }
 
 interface CacheEntry {
@@ -76,8 +96,7 @@ export async function getSetting(key: string, fallback: string): Promise<string>
 
   try {
     const row = await prisma.setting.findUnique({ where: { key } })
-    // Empty string means "reset to env/default" — treat as not set
-    const value = row?.value ? row.value : (process.env[key] || fallback)
+    const value = row?.value ? resolveStoredValue(row) : (process.env[key] || fallback)
     toCache(key, value)
     return value
   } catch {
@@ -90,8 +109,9 @@ export async function getSettings(category: string): Promise<Record<string, stri
     const rows = await prisma.setting.findMany({ where: { category } })
     const result: Record<string, string> = {}
     for (const row of rows) {
-      result[row.key] = row.value
-      toCache(row.key, row.value)
+      const value = resolveStoredValue(row)
+      result[row.key] = value
+      toCache(row.key, value)
     }
     return result
   } catch {
@@ -100,10 +120,12 @@ export async function getSettings(category: string): Promise<Record<string, stri
 }
 
 export async function upsertSetting(key: string, value: string, category: string): Promise<void> {
+  const shouldEncrypt = GLOBAL_SECRET_SETTING_KEYS.has(key) && value.length > 0
+  const storedValue = shouldEncrypt ? encryptSecret(value) : value
   await prisma.setting.upsert({
     where: { key },
-    update: { value, category },
-    create: { key, value, category },
+    update: { value: storedValue, category, encrypted: shouldEncrypt },
+    create: { key, value: storedValue, category, encrypted: shouldEncrypt },
   })
   if (value) toCache(key, value)
   else invalidateCache(key)
@@ -157,4 +179,14 @@ export async function getUserSettings(userId: string, category: string): Promise
     result[row.key] = row.encrypted ? decryptSecret(row.value) : row.value
   }
   return result
+}
+
+/** Constant-time comparison for API keys. */
+export function safeCompareStrings(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  try {
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b))
+  } catch {
+    return false
+  }
 }

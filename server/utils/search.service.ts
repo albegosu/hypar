@@ -4,6 +4,7 @@ import { prisma } from './prisma'
 import { generateEmbedding } from './embedding'
 import { truncate } from './text'
 import { getSetting, getNumericSetting, getBoolSetting } from './settings.service.ts'
+import { withSpan } from './metrics.ts'
 
 export interface SearchResult {
   chunkId: string
@@ -83,6 +84,7 @@ async function expandQueryHyDE(query: string, model: LanguageModel): Promise<str
 }
 
 export async function search(query: string, options: SearchOptions = {}): Promise<SearchResult[]> {
+  return withSpan('search', async () => {
   const cfg = await getSearchConfig()
   const limit = options.limit ?? cfg.topK
   const minScore = options.minScore ?? cfg.minScore
@@ -187,6 +189,7 @@ export async function search(query: string, options: SearchOptions = {}): Promis
   if (filtered.length <= limit || skipMmr) return filtered.slice(0, limit).map(stripEmbedding)
 
   return mmrRank(queryEmbedding, filtered, limit, mmrLambda).map(stripEmbedding)
+  })
 }
 
 /** Distinct documents in a retrieval set (same shape as chat `ConverseSource` citations). */
@@ -221,11 +224,11 @@ export async function rag(
   return { query, results, context, sources }
 }
 
-export async function inspect(query: string, limit = DEFAULT_LIMIT) {
+export async function inspect(query: string, limit = DEFAULT_LIMIT, workspaceId?: string) {
   const t0 = Date.now()
   const queryEmbedding = await generateEmbedding(truncate(query, QUERY_MAX_CHARS))
   const tEmbed = Date.now()
-  const results = await search(query, { limit })
+  const results = await search(query, { limit, workspaceId })
   const tRetrieve = Date.now()
 
   const context = results.map((r, i) => `[${i + 1}] ${r.content}`).join('\n\n')

@@ -73,7 +73,7 @@ This repo wires all three stages with knobs you can change live (chunk size, top
 
 ### Multi-user & auth
 - **Per-user documents & conversations** — every doc, chat, and memory is scoped to its owner
-- **Admin dashboard** — `/admin/*` (stats, settings, users, usage) uses the `admin` route middleware (**signed-in session**). The first user created via `/setup` is promoted to `admin`; others can be promoted in `/admin/users`. **Note:** `/api/admin/*` handlers currently accept **any authenticated session** or optional `ADMIN_API_KEY` (see `server/utils/admin-auth.ts`); role-based enforcement on those routes is not wired yet — lock down before untrusted multi-tenant use.
+- **Admin dashboard** — `/admin/*` (stats, settings, users, usage) uses the `admin` route middleware (**signed-in session**). The first user created via `/setup` is promoted to `admin`; others can be promoted in `/admin/users`. **`/api/admin/*`** requires **`role === 'admin'`** or `ADMIN_API_KEY` (`requireAdmin` in `server/utils/admin-auth.ts`).
 
 ### Runtime configuration (`/admin/settings`)
 - **Live tuning** — change chunking, search, hybrid α, RAG temperature, system prompt, agent max steps without restarting

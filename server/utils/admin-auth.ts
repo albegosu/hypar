@@ -1,11 +1,13 @@
 import type { H3Event } from 'h3'
+import { safeCompareStrings } from './settings.service'
 
 function checkAdminApiKey(event: H3Event): boolean {
   const apiKey = (useRuntimeConfig().adminApiKey as string) || ''
   if (!apiKey) return false
   const header = getHeader(event, 'authorization') ?? getHeader(event, 'x-admin-key') ?? ''
   const provided = header.startsWith('Bearer ') ? header.slice(7) : header
-  return provided === apiKey
+  if (!provided) return false
+  return safeCompareStrings(provided, apiKey)
 }
 
 /** Requires admin role or ADMIN_API_KEY header. */

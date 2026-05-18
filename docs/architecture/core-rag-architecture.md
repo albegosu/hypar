@@ -168,7 +168,7 @@ GET  /api/admin/settings         query: ?category=...
 POST /api/admin/settings         body: { key, value, category }
 ```
 
-Auth uses `requireAuthOrAdminApiKey`: any **signed-in** `better-auth` session, **or** `Authorization: Bearer <ADMIN_API_KEY>` / `x-admin-key` when `ADMIN_API_KEY` is set. See [API reference](/api/reference) and `server/utils/admin-auth.ts`.
+Auth uses `requireAdmin`: session with **`role === 'admin'`**, **or** `Authorization: Bearer <ADMIN_API_KEY>` / `x-admin-key` when `ADMIN_API_KEY` is set. See [API reference](/api/reference) and `server/utils/admin-auth.ts`.
 
 ---
 
@@ -211,7 +211,8 @@ Document ingestion uses the [Vercel Workflow SDK](https://github.com/vercel/work
 - File uploads are validated for MIME type and capped at 10MB in `server/api/documents/upload.post.ts`
 - All route inputs are validated with zod schemas (`readValidatedBody`)
 - Secrets are read via `useRuntimeConfig()` — never from `process.env` directly in route handlers
-- Admin `/api/admin/*` routes use `requireAuthOrAdminApiKey` — signed-in session and/or `ADMIN_API_KEY` when configured (see `server/utils/admin-auth.ts`)
+- Admin `/api/admin/*` routes use `requireAdmin` — admin role and/or `ADMIN_API_KEY` when configured (see `server/utils/admin-auth.ts`)
+- Global `Setting` secrets are AES-256-GCM encrypted at rest (`server/utils/settings.service.ts`)
 - No CORS configuration needed (same-origin)
 
 ---

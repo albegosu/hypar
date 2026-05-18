@@ -117,6 +117,7 @@ model Setting {
   key       String   @id
   value     String
   category  String   @default("general")
+  encrypted Boolean  @default(false)
   updatedAt DateTime @updatedAt
 
   @@index([category])

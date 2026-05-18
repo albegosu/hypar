@@ -16,7 +16,7 @@ hypar is a substantial, production-shaped **multi-user** RAG application on **Nu
 
 - A **`pnpm eval`** golden-set harness (hit-rate, MRR, latency) checked into the repo and run in CI.
 - A **Monaco “learning quest”** UI and `/learn` routes (the old monorepo had a separate playground; the unified app has not reintroduced it).
-- **Strict `admin`-role enforcement** on every `/api/admin/*` handler (today, authenticated session or optional `ADMIN_API_KEY` — see `server/utils/admin-auth.ts`).
+- **Strict `admin`-role enforcement** on every `/api/admin/*` handler — **done** via `requireAdmin()` (admin role or `ADMIN_API_KEY`; see `server/utils/admin-auth.ts`).
 
 That is the foundation. The rest of 2026 is about turning a working app into a piece of work that *clearly demonstrates professional-grade engineering*: observability, advanced retrieval techniques, security hardening, public benchmarks, a contributor-friendly surface, and a tutorial worth following. None of the items below restart what already works — they harden, generalise, measure, and explain it.
 
