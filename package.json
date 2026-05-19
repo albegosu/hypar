@@ -26,7 +26,8 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "demo:poster": "npx -p playwright@1.49.0 node scripts/capture-demo-poster.mjs"
+    "demo:poster": "npx -p playwright@1.49.0 node scripts/capture-demo-poster.mjs",
+    "release": "changelogen --release"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.74",
@@ -63,6 +64,7 @@
     "@types/pdf-parse": "^1.1.4",
     "@types/uuid": "^9.0.7",
     "@vitest/coverage-v8": "^2.1.0",
+    "changelogen": "^0.6.2",
     "dotenv": "^17.4.2",
     "eslint": "^9.22.0",
     "globals": "^16.0.0",
