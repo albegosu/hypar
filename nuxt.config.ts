@@ -100,7 +100,7 @@ export default defineNuxtConfig({
       /** Published docs / marketing (VitePress on GitHub Pages, etc.) — header link in the Nuxt app */
       docsSiteUrl:
         process.env.NUXT_PUBLIC_DOCS_SITE_URL?.trim()
-        || 'https://albegosu.github.io/from-zero-rag/',
+        || 'https://albegosu.github.io/hypar/',
     },
   },
 

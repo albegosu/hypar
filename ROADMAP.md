@@ -63,7 +63,9 @@ A feature is highest-priority when it advances all three tracks at once. Most do
 
 Each month has a single **theme** that anchors the work. Inside the theme, deliverables are split across the three tracks. Time estimates are realistic given competing life demands; if a month runs over, the *theme* matters more than any single deliverable, so trim the lowest-impact items first.
 
-### May 2026 — Observability & honest measurement *(theme: see what your RAG is actually doing)*
+### May 2026 — Observability & honest measurement *(theme: see what your RAG is actually doing)* 🚧
+
+> **Status (mid-May 2026):** this month's deliverables are in progress. Auth hardening (`requireAdmin`, encrypted user keys) and docs polish landed first; Langfuse/OpenLLMetry instrumentation and the eval golden set are next.
 
 The retrieval and generation logic is sophisticated but mostly invisible at runtime. Before adding new techniques, instrument what is there so any change can be measured. **Library:** integrate Langfuse (preferred — open-source, self-hostable) or OpenLLMetry tracing across `search.service`, `agent.service`, and the ingest workflow; emit spans with retrieval scores, MMR drops, embedding/LLM token counts, and per-provider cost. Add a `/metrics` Prometheus endpoint behind the admin key. **Tutorial:** new VitePress chapter "Observing a RAG" — what to log, why, with screenshots from hypar's own traces. **Portfolio:** expand `evals/golden.jsonl` to ~50 questions covering both English and Spanish, run weekly via a GitHub Action and commit the JSON results so improvements are visible in git history.
 

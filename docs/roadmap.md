@@ -110,4 +110,4 @@ The following are interesting but deferred to avoid crowding the three-track pol
 
 ## Contributing
 
-Want to help ship one of these items? Open an issue on [GitHub](https://github.com/albegosu/from-zero-rag/issues) to discuss scope before starting, then follow the [Contributing guide](/contributing).
+Want to help ship one of these items? Open an issue on [GitHub](https://github.com/albegosu/hypar/issues) to discuss scope before starting, then follow the [Contributing guide](/contributing).

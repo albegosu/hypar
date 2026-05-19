@@ -18,8 +18,8 @@ hypar runs as a **single Nuxt 3 process** — frontend, API routes and backgroun
 
 ```bash
 # 1. Clone
-git clone https://github.com/albegosu/from-zero-rag.git
-cd from-zero-rag
+git clone https://github.com/albegosu/hypar.git
+cd hypar
 
 # 2. Configure
 cp .env.example .env
@@ -45,8 +45,8 @@ docker compose --profile full down
 
 ```bash
 # 1. Clone & install
-git clone https://github.com/albegosu/from-zero-rag.git
-cd from-zero-rag
+git clone https://github.com/albegosu/hypar.git
+cd hypar
 pnpm install
 
 # 2. Configure

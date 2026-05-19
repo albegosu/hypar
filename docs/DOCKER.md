@@ -1,5 +1,7 @@
 # Docker Deployment Guide
 
+> **See also:** the shorter [Docker (development)](/guide/docker) guide in the sidebar covers the essentials. This page is the expanded reference with all environment variables, troubleshooting, and production notes.
+
 ## Architecture
 
 ```
@@ -20,7 +22,8 @@ Everything in one container — no separate frontend/backend split.
 
 ```bash
 cp .env.example .env
-# Edit .env — set GOOGLE_API_KEY (or OLLAMA_API_KEY+OLLAMA_URL) at minimum
+# Edit .env — set GOOGLE_API_KEY (recommended) or OPENAI_API_KEY at minimum
+# For Ollama Cloud: set OLLAMA_API_KEY + OLLAMA_URL (local Ollama needs no key)
 # Optional: uncomment COMPOSE_PROFILES=full in .env so `docker compose up -d --build`
 # starts app + postgres + ollama without passing --profile each time.
 ```

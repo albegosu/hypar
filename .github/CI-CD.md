@@ -52,8 +52,8 @@ Entrypoint: `docker-entrypoint.sh` runs `prisma migrate deploy` before starting 
 Test locally:
 
 ```bash
-docker build -t from-zero-rag:test .
-docker run -p 3000:3000 --env-file .env from-zero-rag:test
+docker build -t hypar:test .
+docker run -p 3000:3000 --env-file .env hypar:test
 ```
 
 The CI workflow (`docker-build.yml`) publishes images to `ghcr.io/<owner>/<repo>/app` tagged with the branch, PR number, semver (on `v*` tags) and short SHA.

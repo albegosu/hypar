@@ -134,7 +134,7 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
         <div class="hfx__stats" aria-label="Project meta">
           <div class="hfx__stat"><p class="hfx__stat-value">MIT</p><p class="hfx__stat-label">License</p></div>
           <div class="hfx__stat"><p class="hfx__stat-value">v0.4</p><p class="hfx__stat-label">Latest</p></div>
-          <a class="hfx__stat hfx__stat--link" href="https://github.com/albegosu/from-zero-rag" target="_blank" rel="noopener">
+          <a class="hfx__stat hfx__stat--link" href="https://github.com/albegosu/hypar" target="_blank" rel="noopener">
             <p class="hfx__stat-value">GitHub</p><p class="hfx__stat-label">Source</p>
           </a>
         </div>

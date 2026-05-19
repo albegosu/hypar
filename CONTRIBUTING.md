@@ -15,8 +15,8 @@ Thanks for your interest in contributing! This is primarily a learning project, 
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/albegosu/from-zero-rag.git
-cd from-zero-rag
+git clone https://github.com/albegosu/hypar.git
+cd hypar
 
 # 2. Install dependencies
 pnpm install
@@ -41,7 +41,7 @@ Open http://localhost:3000.
 ## Project Structure
 
 ```
-from-zero-rag/
+hypar/
 ├── pages/              # App routes (/, /documents, /upload, /setup, /auth/*, /admin/*)
 ├── components/         # Vue components
 ├── stores/             # Pinia stores
@@ -125,4 +125,4 @@ GitHub Pages runs `pnpm docs:build` on pushes to `main` when files under `docs/*
 
 ## Questions?
 
-Open an [issue](https://github.com/albegosu/from-zero-rag/issues) before starting large changes — it helps align effort.
+Open an [issue](https://github.com/albegosu/hypar/issues) before starting large changes — it helps align effort.

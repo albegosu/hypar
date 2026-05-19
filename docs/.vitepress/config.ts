@@ -4,7 +4,7 @@ import { DEFAULT_DEMO_APP } from './demo-app-url'
 const demoAppUrl = process.env.VITEPRESS_DEMO_URL?.trim() || DEFAULT_DEMO_APP
 const demoUrlFromEnv = process.env.VITEPRESS_DEMO_URL?.trim() ?? ''
 
-/** GitHub Pages project site: set in CI (e.g. `/from-zero-rag/`). Local dev: omit or `/`. */
+/** GitHub Pages project site: set in CI (e.g. `/hypar/`). Local dev: omit or `/`. */
 function vitepressBase(): string {
   const raw = process.env.VITEPRESS_BASE?.trim()
   if (!raw || raw === '/') return '/'
@@ -66,7 +66,7 @@ export default defineConfig({
       },
       {
         text: 'GitHub',
-        link: 'https://github.com/albegosu/from-zero-rag',
+        link: 'https://github.com/albegosu/hypar',
         target: '_blank',
       },
     ],
@@ -87,7 +87,7 @@ export default defineConfig({
           { text: 'RAG Pipeline', link: '/features/rag-pipeline' },
           { text: 'Hybrid Search & HyDE', link: '/features/search' },
           { text: 'Memory & Commands', link: '/features/memory' },
-          { text: 'Learning Quest', link: '/features/learning-quest' },
+          { text: 'Learning Quest (legacy)', link: '/features/learning-quest' },
         ],
       },
       {
@@ -117,7 +117,7 @@ export default defineConfig({
         link: demoAppUrl,
         ariaLabel: 'Open hosted hypar chat app',
       },
-      { icon: 'github', link: 'https://github.com/albegosu/from-zero-rag' },
+      { icon: 'github', link: 'https://github.com/albegosu/hypar' },
     ],
 
     search: { provider: 'local' },
@@ -128,7 +128,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/albegosu/from-zero-rag/edit/main/docs/:path',
+      pattern: 'https://github.com/albegosu/hypar/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
   },

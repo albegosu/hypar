@@ -58,7 +58,7 @@ What you learn: how to reason about security in LLM systems, where input is neve
 
 ### Stage 5 — Pluggable: stop being a monolith
 
-The project is called *from-zero-rag* and has accidentally become very pgvector-centric. A library worth the name defines interfaces and turns the current implementation into one of several.
+The project (originally *from-zero-rag*, now **hypar**) has accidentally become very pgvector-centric. A library worth the name defines interfaces and turns the current implementation into one of several.
 
 The central interface is `VectorStore`: four methods (`upsert`, `query`, `delete`, `count`) behind which pgvector, Qdrant, Weaviate, Pinecone, or an in-memory mock for tests can live. The pgvector implementation is refactored to satisfy it; the second implementation (Qdrant is the pragmatic choice — single binary, gRPC, easy to bring up) proves the abstraction isn't a fiction. Then the same evals run against both backends and the numbers get published — that contrast is the asset.
 

@@ -54,4 +54,4 @@ Historical session/progress reports live under [`docs/archive/progress/`](./arch
 
 ## Repo root scratch
 
-[`agents-plans/`](https://github.com/albegosu/from-zero-rag/tree/main/agents-plans) at the repository root holds **internal** agent/session notes, not part of this VitePress site. See [`agents-plans/README.md`](https://github.com/albegosu/from-zero-rag/blob/main/agents-plans/README.md).
+[`agents-plans/`](https://github.com/albegosu/hypar/tree/main/agents-plans) at the repository root holds **internal** agent/session notes, not part of this VitePress site. See [`agents-plans/README.md`](https://github.com/albegosu/hypar/blob/main/agents-plans/README.md).

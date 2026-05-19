@@ -20,9 +20,9 @@ FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat dumb-init
 WORKDIR /app
 
-LABEL org.opencontainers.image.title="from-zero-rag" \
+LABEL org.opencontainers.image.title="hypar" \
       org.opencontainers.image.description="Unified Nuxt 3 app — RAG UI, multi-user auth, and server API" \
-      org.opencontainers.image.source="https://github.com/albegosu/from-zero-rag" \
+      org.opencontainers.image.source="https://github.com/albegosu/hypar" \
       org.opencontainers.image.licenses="MIT"
 
 ENV NODE_ENV=production

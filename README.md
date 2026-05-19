@@ -1,12 +1,14 @@
 # hypar
 
+> **hypar** — production-ready RAG, built to learn from.
+
 A learning-focused, full-stack **Retrieval-Augmented Generation (RAG)** app built as a single Nuxt 3 project. Upload documents, chat with an agent over your own knowledge base, and tune every layer of the pipeline at runtime from the admin settings.
 
 > Designed to be **read like a tutorial**: every step (chunking, embedding, hybrid search, MMR, agentic tool-calling) is a small, named file you can open in your editor and follow end-to-end.
 
 ![Banner](https://github.com/user-attachments/assets/a2125d39-9f24-498c-b84e-b19ca6fbe45d)
 <br>
-[![Docker Build](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml/badge.svg)](https://github.com/albegosu/from-zero-rag/actions/workflows/docker-build.yml)
+[![Docker Build](https://github.com/albegosu/hypar/actions/workflows/docker-build.yml/badge.svg)](https://github.com/albegosu/hypar/actions/workflows/docker-build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-20-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)](https://www.typescriptlang.org/)
@@ -159,10 +161,10 @@ Embeddings (`nomic-embed-text`, 768 dims) work well as-is.
 
 ### Admin endpoints
 
-`/api/admin/*` (`stats`, `usage`, `users`, `settings`) accept **any signed-in
-user** or a matching **`ADMIN_API_KEY`** header (see `.env.example`). The first
-account from `/setup` is given the `admin` role for **user management** in the
-UI; tighten API access before exposing the app to untrusted users.
+`/api/admin/*` (`stats`, `usage`, `users`, `settings`) require **`role === 'admin'`**
+(session) or a matching **`ADMIN_API_KEY`** header (see `.env.example`). The first
+account from `/setup` is automatically promoted to `admin`; additional users can
+be promoted in `/admin/users`.
 
 ---
 
@@ -199,12 +201,13 @@ UI; tighten API access before exposing the app to untrusted users.
 
 ```bash
 # 1. Clone
-git clone https://github.com/albegosu/from-zero-rag.git
-cd from-zero-rag
+git clone https://github.com/albegosu/hypar.git
+cd hypar
 
 # 2. Configure
 cp .env.example .env
-# Edit .env — set GOOGLE_API_KEY or OLLAMA_API_KEY + OLLAMA_URL at minimum
+# Edit .env — set GOOGLE_API_KEY (recommended) or OPENAI_API_KEY at minimum
+# For Ollama Cloud: set OLLAMA_API_KEY + OLLAMA_URL (local Ollama needs no key)
 # Optional: uncomment COMPOSE_PROFILES=full in .env so `docker compose up -d --build`
 # starts app + postgres + ollama without passing --profile each time.
 
@@ -234,8 +237,8 @@ docker compose --profile full down
 
 ```bash
 # 1. Clone & install
-git clone https://github.com/albegosu/from-zero-rag.git
-cd from-zero-rag
+git clone https://github.com/albegosu/hypar.git
+cd hypar
 pnpm install
 
 # 2. Configure
@@ -331,7 +334,7 @@ POST /api/admin/settings  # update a runtime setting
 ## Project Structure
 
 ```
-from-zero-rag/
+hypar/
 ├── nuxt.config.ts          # modules, runtimeConfig
 ├── app.vue / app.config.ts
 ├── prisma/
@@ -392,10 +395,10 @@ from-zero-rag/
 ## Further reading
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — branch naming, commits, dev workflow
-- [ROADMAP.md](ROADMAP.md) — month-by-month plan
-- [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md) — stage-based product evolution
+- [ROADMAP.md](ROADMAP.md) — month-by-month calendar plan (May → Dec 2026, with version targets)
+- [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md) — stage-based product vision (no dates, ordered by technical dependency)
 - [.github/CI-CD.md](.github/CI-CD.md) — CI pipeline + Docker build
-- **Published docs (GitHub Pages)** — full VitePress site at [https://albegosu.github.io/from-zero-rag/](https://albegosu.github.io/from-zero-rag/) (Guide, Features, API, Architecture, Roadmap, ADRs/RFCs). Build with `pnpm docs:build`; deploy on push to `main` when `docs/**` changes (see `.github/workflows/pages.yml`).
+- **Published docs (GitHub Pages)** — full VitePress site at [https://albegosu.github.io/hypar/](https://albegosu.github.io/hypar/) (Guide, Features, API, Architecture, Roadmap, ADRs/RFCs). Build with `pnpm docs:build`; deploy on push to `main` when `docs/**` changes (see `.github/workflows/pages.yml`).
 
 ---
 

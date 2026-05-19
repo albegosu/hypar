@@ -10,7 +10,7 @@
 
 If you discover a security issue, please **do not** open a public GitHub issue.
 
-1. Email the maintainer with a description and reproduction steps (see repository owner on GitHub).
+1. Email **alberto@resiz.es** with a description and reproduction steps.
 2. Allow up to **7 business days** for an initial response.
 3. We will coordinate disclosure and a fix release when appropriate.
 

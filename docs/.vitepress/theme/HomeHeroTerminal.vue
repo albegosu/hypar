@@ -2,8 +2,8 @@
 import { ref } from 'vue'
 
 const copied = ref(false)
-const cmd = 'git clone https://github.com/albegosu/from-zero-rag'
-const display = 'git clone github.com/albegosu/from-zero-rag'
+const cmd = 'git clone https://github.com/albegosu/hypar'
+const display = 'git clone github.com/albegosu/hypar'
 
 function copy() {
   navigator.clipboard.writeText(cmd)

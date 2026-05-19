@@ -2,6 +2,8 @@
 
 # Docker Guide
 
+> For the full reference (all env vars, troubleshooting, production notes), see the [Docker Deployment Guide](/DOCKER).
+
 ## Architecture
 
 ```
