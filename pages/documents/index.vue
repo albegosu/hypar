@@ -147,6 +147,7 @@ function getIconForType(type) {
     markdown: 'i-heroicons-document',
     pdf: 'i-heroicons-document-arrow-down',
     web: 'i-heroicons-globe-alt',
+    spreadsheet: 'i-heroicons-table-cells',
   }
   return icons[type] || 'i-heroicons-document'
 }
