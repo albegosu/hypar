@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Ask a question
+    url: https://github.com/albegosu/hypar/discussions
+    about: Not a bug or feature? Start a discussion — questions, ideas, and show-and-tell welcome.

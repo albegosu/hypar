@@ -135,7 +135,7 @@
           <input
             ref="fileInput"
             type="file"
-            accept=".txt,.md,.pdf"
+            accept=".txt,.md,.pdf,.xls,.xlsx"
             class="hidden"
             @change="handleFileChange"
           >

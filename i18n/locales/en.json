@@ -122,7 +122,7 @@
     "fieldType": "type",
     "save": "save document",
     "dropZone": "drag and drop files here, or click to browse",
-    "supports": "supports: .txt, .md, .pdf",
+    "supports": "supports: .txt, .md, .pdf, .xls, .xlsx",
     "selectFile": "select file",
     "uploadFile": "upload file",
     "saving": "Saving…",

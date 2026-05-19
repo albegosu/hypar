@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import pdfParse from 'pdf-parse'
+import * as XLSX from 'xlsx'
 import { start } from 'workflow/api'
 import { prisma } from './prisma'
 import { ingestDocument } from '../workflows/ingest-document'
@@ -28,12 +29,31 @@ const ALLOWED_MIME = new Set([
   'text/markdown',
   'text/x-markdown',
   'application/octet-stream', // browsers sometimes send this for .md/.txt
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ])
+
+function isSpreadsheet(mime: string, filename: string): boolean {
+  const m = mime.toLowerCase()
+  const f = filename.toLowerCase()
+  return (
+    m === 'application/vnd.ms-excel' ||
+    m === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    f.endsWith('.xls') ||
+    f.endsWith('.xlsx')
+  )
+}
 
 export function isAllowedMime(mime: string, filename: string): boolean {
   if (ALLOWED_MIME.has(mime.toLowerCase())) return true
   const lower = filename.toLowerCase()
-  return lower.endsWith('.pdf') || lower.endsWith('.txt') || lower.endsWith('.md')
+  return (
+    lower.endsWith('.pdf') ||
+    lower.endsWith('.txt') ||
+    lower.endsWith('.md') ||
+    lower.endsWith('.xls') ||
+    lower.endsWith('.xlsx')
+  )
 }
 
 function detectFileType(mimetype: string, filename: string): string {
@@ -42,7 +62,35 @@ function detectFileType(mimetype: string, filename: string): string {
   if (m.includes('pdf') || f.endsWith('.pdf')) return 'pdf'
   if (m.includes('markdown') || f.endsWith('.md')) return 'markdown'
   if (m.includes('text') || f.endsWith('.txt')) return 'text'
+  if (isSpreadsheet(m, f)) return 'spreadsheet'
   return 'unknown'
+}
+
+function spreadsheetToText(buffer: Buffer): string {
+  const workbook = XLSX.read(buffer, { type: 'buffer' })
+  const parts: string[] = []
+
+  for (const sheetName of workbook.SheetNames) {
+    const sheet = workbook.Sheets[sheetName]
+    const rows = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '' })
+    if (!rows.length) continue
+
+    parts.push(`## ${sheetName}`)
+
+    const [header, ...dataRows] = rows as string[][]
+    if (!header?.length) continue
+
+    const sep = header.map(() => '---').join(' | ')
+    parts.push(header.join(' | '))
+    parts.push(sep)
+    for (const row of dataRows) {
+      const padded = header.map((_, i) => String(row[i] ?? ''))
+      parts.push(padded.join(' | '))
+    }
+    parts.push('')
+  }
+
+  return parts.join('\n')
 }
 
 async function extractTextFromUpload(file: UploadedFile): Promise<string> {
@@ -62,6 +110,10 @@ async function extractTextFromUpload(file: UploadedFile): Promise<string> {
       /* fall through to buffer decode */
     }
     return stripNul(file.buffer)
+  }
+
+  if (isSpreadsheet(mime, name)) {
+    return spreadsheetToText(file.buffer)
   }
 
   return stripNul(file.buffer)

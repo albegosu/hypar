@@ -77,7 +77,7 @@ export default defineNuxtConfig({
     chunkOverlap: Number(process.env.CHUNK_OVERLAP ?? 60),
     chunkStrategy: process.env.CHUNK_STRATEGY ?? 'sentence-aware',
     maxDocSizeMb: Number(process.env.MAX_DOC_SIZE_MB ?? 10),
-    allowedFormats: process.env.ALLOWED_FORMATS ?? 'pdf,md,txt',
+    allowedFormats: process.env.ALLOWED_FORMATS ?? 'pdf,md,txt,xls,xlsx',
     // Step 5 - Search
     searchTopK: Number(process.env.SEARCH_TOP_K ?? 5),
     searchThreshold: Number(process.env.SEARCH_THRESHOLD ?? 0.2),

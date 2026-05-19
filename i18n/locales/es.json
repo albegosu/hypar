@@ -122,7 +122,7 @@
     "fieldType": "tipo",
     "save": "guardar documento",
     "dropZone": "arrastra archivos aquí, o haz clic para buscar",
-    "supports": "soporta: .txt, .md, .pdf",
+    "supports": "soporta: .txt, .md, .pdf, .xls, .xlsx",
     "selectFile": "seleccionar archivo",
     "uploadFile": "subir archivo",
     "saving": "Guardando…",
