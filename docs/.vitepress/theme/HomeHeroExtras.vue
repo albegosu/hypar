@@ -3,8 +3,8 @@ import { computed } from 'vue'
 import { useData } from 'vitepress'
 import { demoAppUrl } from '../demo-app-url'
 import { useI18n } from './i18n'
-import screenshotDark from '../../public/demo/hypar-chat-dark.png?url'
-import screenshotLight from '../../public/demo/hypar-chat-light.png?url'
+import screenshotDark from '/demo/hypar-chat-dark.png'
+import screenshotLight from '/demo/hypar-chat-light.png'
 
 const demoUrl = demoAppUrl()
 const { isDark } = useData()

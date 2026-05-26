@@ -34,21 +34,90 @@ summary:focus-visible {
   outline-offset: 2px;
 }
 
-/* Theme footer strip: tighter on all pages */
+/* Theme footer strip: micrographic — dense, monospaced, single horizontal line */
 .VPFooter {
-  padding: 16px 24px !important;
+  padding: 14px 24px !important;
+  border-top: 1px solid var(--vp-c-divider) !important;
 }
 @media (min-width: 768px) {
   .VPFooter {
-    padding: 18px 32px !important;
+    padding: 16px 32px !important;
   }
+}
+.VPFooter .container {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 14px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 .VPFooter .message,
 .VPFooter .copyright {
-  font-size: 12px !important;
+  font-family: var(--hpp-font-mono) !important;
+  font-size: 11px !important;
   font-weight: 500 !important;
-  line-height: 1.45 !important;
-  color: var(--vp-c-text-2) !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.04em;
+  color: var(--vp-c-text-3) !important;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.VPFooter .vpf-pair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.VPFooter .vpf-key {
+  color: var(--vp-c-text-3);
+  text-transform: lowercase;
+}
+.VPFooter .vpf-sep {
+  color: color-mix(in srgb, var(--vp-c-text-3) 55%, transparent);
+}
+.VPFooter .vpf-val {
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--vp-c-text-3) 50%, transparent);
+  transition: color .15s, border-color .15s;
+}
+.VPFooter .vpf-val:hover {
+  color: var(--vp-c-brand-1);
+  border-bottom-color: var(--vp-c-brand-1);
+}
+.VPFooter .vpf-val--brand {
+  font-family: var(--hpp-font-display);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--vp-c-text-1);
+  border-bottom-color: color-mix(in srgb, var(--vp-c-brand-1) 60%, transparent);
+}
+.VPFooter .vpf-brand {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  opacity: 0.85;
+  transition: opacity .15s;
+}
+.VPFooter .vpf-brand:hover { opacity: 1; }
+.VPFooter .vpf-brand-img {
+  height: 14px;
+  width: auto;
+  display: block;
+}
+.VPFooter .vpf-brand-img--dark { display: none; }
+html.dark .VPFooter .vpf-brand-img--light { display: none; }
+html.dark .VPFooter .vpf-brand-img--dark { display: block; }
+.VPFooter .vpf-dot {
+  color: color-mix(in srgb, var(--vp-c-text-3) 45%, transparent);
+  font-size: 11px;
+  user-select: none;
 }
 
 /* ── Navbar: match hero .name typography for site title ── */

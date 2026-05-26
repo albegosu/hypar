@@ -1,0 +1,9 @@
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  '@swc/core': true
+  cbor-extract: true
+  esbuild: true
+  prisma: true
+  vue-demi: true

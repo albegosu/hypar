@@ -65,12 +65,10 @@
 import { useI18n } from 'vue-i18n'
 import {
   SETTINGS_TABS,
-  buildWizardDefaults,
-  getStepFields,
-  parseFieldValue,
   useSettingsTabs,
   type SettingsTabId,
 } from '~/composables/useSettingsTabs'
+import { buildWizardDefaults, getStepFields, parseFieldValue } from '~/utils/settings-form'
 definePageMeta({ middleware: ['admin'] })
 
 const { t } = useI18n()

@@ -6,9 +6,24 @@
         <HyparMark />
         <div class="flex items-center gap-2">
           <span class="wz-strong font-semibold">{{ t('app.brand') }}</span>
-          <span class="wz-faint hidden sm:inline">~/{{ section }}</span>
         </div>
       </NuxtLink>
+
+      <a
+        href="https://resiz.es"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden md:inline-flex items-center gap-1.5 shrink-0 ml-2 text-[10px] wz-faint hover:opacity-100 transition-opacity opacity-80"
+        aria-label="Resizes"
+        title="Resizes"
+      >
+        <span>by</span>
+        <img
+          :src="theme === 'light' ? '/logo-resizes-black.png' : '/logo-resizes.png'"
+          alt="Resizes"
+          class="h-2.5 w-auto block"
+        >
+      </a>
 
       <NuxtLink
         v-if="docsSiteUrl"

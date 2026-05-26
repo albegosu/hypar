@@ -131,6 +131,20 @@
 .terminal-theme .wz-strong { color: var(--term-text-strong); }
 .terminal-theme .wz-accent { color: var(--term-accent); }
 
+.terminal-theme .wz-brand-tag {
+  color: var(--term-text-muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding-bottom: 1px;
+  border-bottom: 1px dotted var(--term-accent-line);
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.terminal-theme a:hover .wz-brand-tag {
+  color: var(--term-accent);
+  border-bottom-color: var(--term-accent);
+}
+
 .terminal-theme .wz-pill {
   display: inline-flex;
   align-items: center;

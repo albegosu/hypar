@@ -152,7 +152,6 @@ const highlightIcons = [
           </a>
         </div>
       </div>
-      <p class="hfx__footer-resizes">A Resizes lab_project</p>
     </div>
   </section>
 </template>

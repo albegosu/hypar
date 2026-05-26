@@ -2,8 +2,6 @@ import { step1, step2, step3, step4, step5, step6 } from '~/utils/setup/wizard-s
 import type { WizardStep } from '~/utils/setup/wizard-types'
 import { buildWizardDefaults, getStepFields, parseFieldValue, valuesEqual } from '~/utils/settings-form'
 
-export { buildWizardDefaults, getStepFields, parseFieldValue, valuesEqual }
-
 export const SETTINGS_TABS = [
   { id: 'apis', step: step1 },
   { id: 'vectorDb', step: step2 },

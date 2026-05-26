@@ -128,11 +128,10 @@ import { useI18n } from 'vue-i18n'
 import SetupWizardConfigForm from '~/components/setup/WizardConfigForm.vue'
 import {
   SETTINGS_TABS,
-  buildWizardDefaults,
-  getStepFields,
   useSettingsTabs,
   type SettingsTabId,
 } from '~/composables/useSettingsTabs'
+import { buildWizardDefaults, getStepFields } from '~/utils/settings-form'
 import { parseUserSettingsResponse, userSettingValueForSave } from '~/utils/parse-user-settings'
 
 const { t } = useI18n()
