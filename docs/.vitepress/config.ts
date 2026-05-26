@@ -45,6 +45,16 @@ const enSidebar = [
     ],
   },
   {
+    text: 'Users & access',
+    items: [
+      { text: 'Authentication', link: '/guide/auth' },
+      { text: 'Workspaces', link: '/guide/workspaces' },
+      { text: 'Roles & permissions', link: '/guide/roles-and-permissions' },
+      { text: 'Settings', link: '/guide/settings' },
+      { text: 'Admin panel', link: '/guide/admin-panel' },
+    ],
+  },
+  {
     text: 'Features',
     items: [
       { text: 'RAG Pipeline', link: '/features/rag-pipeline' },
@@ -79,6 +89,16 @@ const esSidebar = [
       { text: 'Docker (desarrollo)', link: '/guide/docker' },
       { text: 'Despliegue en producción', link: '/guide/production' },
       { text: 'Variables de entorno', link: '/guide/env' },
+    ],
+  },
+  {
+    text: 'Usuarios y acceso',
+    items: [
+      { text: 'Autenticación', link: '/guide/auth' },
+      { text: 'Workspaces', link: '/guide/workspaces' },
+      { text: 'Roles y permisos', link: '/guide/roles-and-permissions' },
+      { text: 'Settings', link: '/guide/settings' },
+      { text: 'Panel de admin', link: '/guide/admin-panel' },
     ],
   },
   {

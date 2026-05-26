@@ -15,6 +15,28 @@ All routes are **same-origin** Nitro handlers under **`/api/*`**. Request bodies
 
 ---
 
+## Authentication
+
+All `/api/auth/*` routes are served by [better-auth](https://www.better-auth.com/) via the catch-all handler `server/api/auth/[...].ts`. The shapes follow the upstream contract — most callers should use the browser client in [`utils/auth-client.ts`](utils/auth-client.ts) (`signIn`, `signUp`, `signOut`, `useSession`) rather than hand-rolling requests.
+
+| Path | Notes |
+| --- | --- |
+| `POST /api/auth/sign-up/email` | Email + password account. New users get `role = 'user'`. |
+| `POST /api/auth/sign-in/email` | Email + password sign-in. Sets the session cookie. |
+| `GET  /api/auth/sign-in/social` | OAuth start. Google / GitHub providers enabled when their env vars are set. |
+| `POST /api/auth/sign-out` | Clears the session. |
+| `GET  /api/auth/get-session` | Returns `{ user, session }` or `null`. Read on every page by `useAuth()`. |
+
+The first-run wizard has a separate completion endpoint:
+
+### `POST /api/setup/complete`
+
+Body: `{ name, email, password }`. Creates the first user, promotes them to `admin`, and writes the `app.configured` setting. Returns 409 once setup has already been completed.
+
+See [Authentication](/guide/auth) and [Roles & permissions](/guide/roles-and-permissions) for the model.
+
+---
+
 ## Health
 
 ### `GET /api/health`
@@ -172,7 +194,57 @@ Body: `{ role: 'admin' | 'user' }` — promote or demote users.
 
 ### `POST /api/admin/settings`
 
-**Body:** `{ key, value, category }` — upsert a setting.
+**Body:** `{ key, value, category }` — upsert a setting. If `value` starts with `••••` (the mask returned by the GET endpoint), the write is skipped — the real secret is preserved.
+
+---
+
+## Workspaces
+
+All workspace routes require a signed-in session. The handler reads the caller's `userId` from the session and checks `WorkspaceMember` for the right role.
+
+### `GET /api/workspaces`
+
+Lists the caller's workspaces with `role` and an `active` flag.
+
+### `POST /api/workspaces`
+
+**Body:** `{ name }` (1–100 chars). Creates a workspace and the caller is its `owner`.
+
+### `POST /api/workspaces/:id/activate`
+
+Sets the `active-workspace` cookie (httpOnly, 1-year max-age). Caller must be a member.
+
+### `POST /api/workspaces/:id/members`
+
+**Body:** `{ email, role? }` — `role` is `editor` (default) or `viewer`. **Owners only.** Invitee must already be a registered user.
+
+### `GET /api/workspaces/:id/settings`
+
+**Query:** `category` — `chunking` (default) or `general`. Returns workspace overrides plus, for `chunking`, the resolved `effective_ALLOWED_FORMATS` and a `workspaceOverride` flag.
+
+### `POST /api/workspaces/:id/settings`
+
+**Body:** `{ key, value, category? }`. Empty `value` deletes the override. **Owners and editors only.**
+
+See [Workspaces](/guide/workspaces) for the model and the active-workspace cookie semantics.
+
+---
+
+## User settings
+
+Per-user overrides on top of global `Setting` values. Requires a signed-in session.
+
+### `GET /api/user/settings`
+
+**Query:** `category` — one of `apis`, `vectorDb`, `embeddings`, `chunking`, `search`, `rag`, `general`.
+
+Returns, per field, either `{ override, system, hasOverride }` (scalars) or `{ configured, systemConfigured }` (secrets — values are never returned). For the `chunking` category and an active workspace, also returns `effective_ALLOWED_FORMATS` and `workspaceOverride_ALLOWED_FORMATS`.
+
+### `PUT /api/user/settings`
+
+**Body:** `{ key, value, category? }`. Empty `value` deletes the override. Invalidates the per-user rate-limit cache.
+
+See [Settings](/guide/settings) for the resolution order.
 
 ---
 
