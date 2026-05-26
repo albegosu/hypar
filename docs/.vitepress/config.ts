@@ -203,10 +203,10 @@ export default defineConfig({
     footer: {
       copyright:
         '<a class="vpf-brand" href="https://resiz.es" target="_blank" rel="noopener" aria-label="Resizes">'
-        + '<img class="vpf-brand-img vpf-brand-img--light" src="/logo-resizes-black.png" alt="Resizes" loading="lazy" />'
-        + '<img class="vpf-brand-img vpf-brand-img--dark" src="/logo-resizes.png" alt="Resizes" loading="lazy" />'
+        + `<img class="vpf-brand-img vpf-brand-img--light" src="${siteBase}logo-resizes-black.png" alt="Resizes" loading="lazy" />`
+        + `<img class="vpf-brand-img vpf-brand-img--dark" src="${siteBase}logo-resizes.png" alt="Resizes" loading="lazy" />`
         + '</a>'
-        + '<span class="vpf-key">lab_project</span></span>',
+        + '<span class="vpf-key">lab_project</span>',
     },
 
     editLink: {
