@@ -1,53 +1,15 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress'
 import MicroGlyph from '../../../components/micro/MicroGlyph.vue'
+import { useI18n } from './i18n'
 
-interface Highlight {
-  title: string
-  details: string
-  icon: string
-}
+const t = useI18n()
 
 interface Stage {
   num: string
   label: string
   status?: 'now' | 'next'
 }
-
-// Six highlights — what hypar actually does today. Pillars (above) explain
-// why; these explain what's inside. Keep details to one short sentence.
-const highlights: Highlight[] = [
-  {
-    title: 'Hybrid retrieval',
-    details: 'pgvector cosine similarity combined with BM25, then MMR diversification.',
-    icon: '<path d="M4 4h6v6H4z"/><path d="M14 14h6v6h-6z"/><path d="M10 10l4 4"/>',
-  },
-  {
-    title: 'Multi-provider embeddings',
-    details: 'Gemini, OpenAI or Ollama. Switch at runtime without re-ingesting.',
-    icon: '<path d="M7 7h10v10H7z"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M12 3v4"/><path d="M12 17v4"/>',
-  },
-  {
-    title: 'Durable ingestion',
-    details: 'Workflow SDK with per-step retries; status polled, never lost on restart.',
-    icon: '<path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><path d="M18 9l3 3-3 3"/>',
-  },
-  {
-    title: 'Vitest suite',
-    details: 'Chunking, text helpers, agent commands, and search utilities covered in CI.',
-    icon: '<path d="M12 2v6"/><circle cx="12" cy="14" r="8"/><path d="M9 14l2 2 4-4"/>',
-  },
-  {
-    title: 'Source citations',
-    details: 'Inline [1], [2] markers persisted on every assistant message and audited.',
-    icon: '<path d="M7 7h3v6H7z"/><path d="M14 7h3v6h-3z"/><path d="M7 17h10"/>',
-  },
-  {
-    title: 'Rate limits and admin APIs',
-    details: '30/min chat, 10/min upload. `/api/admin/*` accepts a signed-in session or optional ADMIN_API_KEY.',
-    icon: '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>',
-  },
-]
 
 const stages: Stage[] = [
   { num: '01', label: 'Traceability', status: 'now' },
@@ -63,6 +25,15 @@ const stages: Stage[] = [
 ]
 
 const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
+
+const highlightIcons = [
+  '<path d="M4 4h6v6H4z"/><path d="M14 14h6v6h-6z"/><path d="M10 10l4 4"/>',
+  '<path d="M7 7h10v10H7z"/><path d="M3 12h4"/><path d="M17 12h4"/><path d="M12 3v4"/><path d="M12 17v4"/>',
+  '<path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><path d="M18 9l3 3-3 3"/>',
+  '<path d="M12 2v6"/><circle cx="12" cy="14" r="8"/><path d="M9 14l2 2 4-4"/>',
+  '<path d="M7 7h3v6H7z"/><path d="M14 7h3v6h-3z"/><path d="M7 17h10"/>',
+  '<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/>',
+]
 </script>
 
 <template>
@@ -70,11 +41,18 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
     <!-- What's inside -->
     <div class="hfx__block">
       <p class="hfx__eyebrow hfx__eyebrow--glyph">
-        <MicroGlyph name="sparkle" decorative class="hfx__eyebrow-icon" /> What's inside
+        <MicroGlyph name="sparkle" decorative class="hfx__eyebrow-icon" /> {{ t.whatsInside }}
       </p>
       <div class="hfx__grid hfx__grid--2">
-        <div v-for="h in highlights" :key="h.title" class="hfx__highlight">
-          <span class="hfx__highlight-icon" v-html="`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>${h.icon}</svg>`" />
+        <div
+          v-for="(h, i) in t.highlights"
+          :key="h.title"
+          class="hfx__highlight"
+        >
+          <span
+            class="hfx__highlight-icon"
+            v-html="`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>${highlightIcons[i]}</svg>`"
+          />
           <div>
             <p class="hfx__highlight-title">{{ h.title }}</p>
             <p class="hfx__highlight-details">{{ h.details }}</p>
@@ -87,9 +65,9 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
     <div class="hfx__block">
       <div class="hfx__row">
         <p class="hfx__eyebrow hfx__eyebrow--glyph">
-          <MicroGlyph name="sectionRule" decorative class="hfx__eyebrow-rule" /> Roadmap — 10 stages, no calendar
+          <MicroGlyph name="sectionRule" decorative class="hfx__eyebrow-rule" /> {{ t.roadmapLabel }}
         </p>
-        <a :href="withBase('/roadmap')" class="hfx__link">View full roadmap →</a>
+        <a :href="withBase('/roadmap')" class="hfx__link">{{ t.viewRoadmap }}</a>
       </div>
       <div class="hfx__grid hfx__grid--5">
         <div
@@ -106,23 +84,41 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
       </div>
     </div>
 
-    <!-- Learner CTA -->
+    <!-- CTAs: Learner + Contributor -->
     <div class="hfx__block">
-      <a :href="withBase('/guide/getting-started')" class="hfx__learner">
-        <span class="hfx__learner-icon">
-          <MicroGlyph name="learningCap" decorative />
-        </span>
-        <div class="hfx__learner-body">
-          <p class="hfx__learner-title">Learning RAG from zero?</p>
-          <p class="hfx__learner-details">
-            Start with the getting-started guide and feature chapters here. An interactive Monaco quest used to ship with an older layout; it may return — see Learning quest.
-          </p>
-        </div>
-        <span class="hfx__learner-cta">Open the guide →</span>
-      </a>
+      <div class="hfx__cta-grid">
+        <!-- Learner -->
+        <a :href="withBase('/guide/getting-started')" class="hfx__learner">
+          <span class="hfx__learner-icon">
+            <MicroGlyph name="learningCap" decorative />
+          </span>
+          <div class="hfx__learner-body">
+            <p class="hfx__learner-title">{{ t.learner.title }}</p>
+            <p class="hfx__learner-details">{{ t.learner.details }}</p>
+          </div>
+          <span class="hfx__learner-cta">{{ t.learner.cta }}</span>
+        </a>
+
+        <!-- Contributor -->
+        <a
+          href="https://github.com/albegosu/hypar/issues"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hfx__learner"
+        >
+          <span class="hfx__learner-icon">
+            <MicroGlyph name="sparkle" decorative />
+          </span>
+          <div class="hfx__learner-body">
+            <p class="hfx__learner-title">{{ t.contributor.title }}</p>
+            <p class="hfx__learner-details">{{ t.contributor.details }}</p>
+          </div>
+          <span class="hfx__learner-cta">{{ t.contributor.cta }}</span>
+        </a>
+      </div>
     </div>
 
-    <!-- Footer: single compact band (stack + meta) -->
+    <!-- Footer: stack + meta + badges -->
     <div class="hfx__block hfx__footer">
       <div class="hfx__footer-inner">
         <div class="hfx__footer-left">
@@ -132,13 +128,31 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
           </div>
         </div>
         <div class="hfx__stats" aria-label="Project meta">
-          <div class="hfx__stat"><p class="hfx__stat-value">MIT</p><p class="hfx__stat-label">License</p></div>
-          <div class="hfx__stat"><p class="hfx__stat-value">v0.4</p><p class="hfx__stat-label">Latest</p></div>
+          <a
+            class="hfx__stat hfx__stat--link"
+            href="https://github.com/albegosu/hypar/releases"
+            target="_blank"
+            rel="noopener"
+          >
+            <p class="hfx__stat-value">v0.4</p>
+            <p class="hfx__stat-label">Release</p>
+          </a>
+          <a
+            class="hfx__stat hfx__stat--link"
+            href="https://github.com/albegosu/hypar/blob/main/LICENSE"
+            target="_blank"
+            rel="noopener"
+          >
+            <p class="hfx__stat-value">MIT</p>
+            <p class="hfx__stat-label">License</p>
+          </a>
           <a class="hfx__stat hfx__stat--link" href="https://github.com/albegosu/hypar" target="_blank" rel="noopener">
-            <p class="hfx__stat-value">GitHub</p><p class="hfx__stat-label">Source</p>
+            <p class="hfx__stat-value">GitHub</p>
+            <p class="hfx__stat-label">Source</p>
           </a>
         </div>
       </div>
+      <p class="hfx__footer-resizes">A Resizes lab_project</p>
     </div>
   </section>
 </template>
@@ -227,6 +241,18 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
 .hfx__stage--now .hfx__stage-num { color: var(--vp-c-brand-1); }
 .hfx__stage-label { font-size: 13px; font-weight: 500; margin: 0; color: var(--vp-c-text-1); }
 
+/* CTA grid — two cards side by side */
+.hfx__cta-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .hfx__cta-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .hfx__learner {
   display: flex; align-items: center; gap: 16px;
   padding: 18px;
@@ -285,7 +311,7 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
 .hfx__stats {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 14px 18px;
 }
 .hfx__stat {
@@ -315,4 +341,14 @@ const stack = ['Nuxt 3', 'pgvector', 'AI SDK', 'Workflow SDK', 'Prisma 7']
   color: var(--vp-c-text-2);
 }
 .hfx__stat--link:hover .hfx__stat-value { color: var(--vp-c-brand-1); }
+
+.hfx__footer-resizes {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+  font-family: var(--vp-font-family-mono);
+  margin: 8px 0 0;
+}
 </style>

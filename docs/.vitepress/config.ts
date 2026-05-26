@@ -14,6 +14,100 @@ function vitepressBase(): string {
 
 const siteBase = vitepressBase()
 
+const enNav = [
+  { text: 'Guide', link: '/guide/getting-started' },
+  { text: 'Features', link: '/features/rag-pipeline' },
+  { text: 'API', link: '/api/reference' },
+  { text: 'Architecture', link: '/architecture' },
+  { text: 'Roadmap', link: '/roadmap' },
+  { text: 'Chat app', link: demoAppUrl, target: '_blank', rel: 'noopener noreferrer' },
+  { text: 'GitHub', link: 'https://github.com/albegosu/hypar', target: '_blank' },
+]
+
+const esNav = [
+  { text: 'Guía', link: '/guide/getting-started' },
+  { text: 'Features', link: '/features/rag-pipeline' },
+  { text: 'API', link: '/api/reference' },
+  { text: 'Arquitectura', link: '/architecture' },
+  { text: 'Roadmap', link: '/roadmap' },
+  { text: 'Chat app', link: demoAppUrl, target: '_blank', rel: 'noopener noreferrer' },
+  { text: 'GitHub', link: 'https://github.com/albegosu/hypar', target: '_blank' },
+]
+
+const enSidebar = [
+  {
+    text: 'Guide',
+    items: [
+      { text: 'Getting Started', link: '/guide/getting-started' },
+      { text: 'Docker (development)', link: '/guide/docker' },
+      { text: 'Production Deployment', link: '/guide/production' },
+      { text: 'Environment Variables', link: '/guide/env' },
+    ],
+  },
+  {
+    text: 'Features',
+    items: [
+      { text: 'RAG Pipeline', link: '/features/rag-pipeline' },
+      { text: 'Hybrid Search & HyDE', link: '/features/search' },
+      { text: 'Memory & Commands', link: '/features/memory' },
+      { text: 'Learning Quest (legacy)', link: '/features/learning-quest' },
+    ],
+  },
+  {
+    text: 'Reference',
+    items: [
+      { text: 'API Reference', link: '/api/reference' },
+      { text: 'Architecture', link: '/architecture' },
+      { text: 'Roadmap', link: '/roadmap' },
+      { text: 'Contributing', link: '/contributing' },
+    ],
+  },
+  {
+    text: 'Design notes',
+    items: [
+      { text: 'ADR: Monorepo unification', link: '/decisions/monorepo-unification' },
+      { text: 'RFC: Auth phases (2026)', link: '/rfcs/2026-auth-phases' },
+    ],
+  },
+]
+
+const esSidebar = [
+  {
+    text: 'Guía',
+    items: [
+      { text: 'Primeros pasos', link: '/guide/getting-started' },
+      { text: 'Docker (desarrollo)', link: '/guide/docker' },
+      { text: 'Despliegue en producción', link: '/guide/production' },
+      { text: 'Variables de entorno', link: '/guide/env' },
+    ],
+  },
+  {
+    text: 'Features',
+    items: [
+      { text: 'Pipeline RAG', link: '/features/rag-pipeline' },
+      { text: 'Búsqueda híbrida y HyDE', link: '/features/search' },
+      { text: 'Memoria y comandos', link: '/features/memory' },
+      { text: 'Learning Quest (legacy)', link: '/features/learning-quest' },
+    ],
+  },
+  {
+    text: 'Referencia',
+    items: [
+      { text: 'Referencia API', link: '/api/reference' },
+      { text: 'Arquitectura', link: '/architecture' },
+      { text: 'Roadmap', link: '/roadmap' },
+      { text: 'Contribuir', link: '/contributing' },
+    ],
+  },
+  {
+    text: 'Notas de diseño',
+    items: [
+      { text: 'ADR: Unificación de monorepo', link: '/decisions/monorepo-unification' },
+      { text: 'RFC: Fases de auth (2026)', link: '/rfcs/2026-auth-phases' },
+    ],
+  },
+]
+
 export default defineConfig({
   title: 'hypar',
   description: 'Production-ready Retrieval-Augmented Generation app built with Nuxt 3, pgvector and the Vercel AI SDK.',
@@ -51,63 +145,27 @@ export default defineConfig({
     ],
   ],
 
+  locales: {
+    root: {
+      label: 'English',
+      lang: 'en-US',
+      themeConfig: {
+        nav: enNav,
+        sidebar: enSidebar,
+      },
+    },
+    es: {
+      label: 'Español',
+      lang: 'es',
+      link: '/es/',
+      themeConfig: {
+        nav: esNav,
+        sidebar: esSidebar,
+      },
+    },
+  },
+
   themeConfig: {
-    nav: [
-      { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'Features', link: '/features/rag-pipeline' },
-      { text: 'API', link: '/api/reference' },
-      { text: 'Architecture', link: '/architecture' },
-      { text: 'Roadmap', link: '/roadmap' },
-      {
-        text: 'Chat app',
-        link: demoAppUrl,
-        target: '_blank',
-        rel: 'noopener noreferrer',
-      },
-      {
-        text: 'GitHub',
-        link: 'https://github.com/albegosu/hypar',
-        target: '_blank',
-      },
-    ],
-
-    sidebar: [
-      {
-        text: 'Guide',
-        items: [
-          { text: 'Getting Started', link: '/guide/getting-started' },
-          { text: 'Docker (development)', link: '/guide/docker' },
-          { text: 'Production Deployment', link: '/guide/production' },
-          { text: 'Environment Variables', link: '/guide/env' },
-        ],
-      },
-      {
-        text: 'Features',
-        items: [
-          { text: 'RAG Pipeline', link: '/features/rag-pipeline' },
-          { text: 'Hybrid Search & HyDE', link: '/features/search' },
-          { text: 'Memory & Commands', link: '/features/memory' },
-          { text: 'Learning Quest (legacy)', link: '/features/learning-quest' },
-        ],
-      },
-      {
-        text: 'Reference',
-        items: [
-          { text: 'API Reference', link: '/api/reference' },
-          { text: 'Architecture', link: '/architecture' },
-          { text: 'Roadmap', link: '/roadmap' },
-          { text: 'Contributing', link: '/contributing' },
-        ],
-      },
-      {
-        text: 'Design notes',
-        items: [
-          { text: 'ADR: Monorepo unification', link: '/decisions/monorepo-unification' },
-          { text: 'RFC: Auth phases (2026)', link: '/rfcs/2026-auth-phases' },
-        ],
-      },
-    ],
-
     socialLinks: [
       {
         icon: {
@@ -124,7 +182,7 @@ export default defineConfig({
 
     footer: {
       message: 'MIT License.',
-      copyright: 'Powered by Resizes to learn.',
+      copyright: 'A Resizes lab_project.',
     },
 
     editLink: {

@@ -72,6 +72,7 @@ summary:focus-visible {
   max-width: 1280px !important;
   width: 100%;
   margin-inline: auto;
+  margin-top: 50px;
   padding-inline: 24px !important;
 }
 
