@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Try demo
-      link: https://from-zero-rag-production.up.railway.app/
+      link: https://hypar.up.railway.app/
     - theme: alt
       text: Read tutorial
       link: /guide/getting-started
