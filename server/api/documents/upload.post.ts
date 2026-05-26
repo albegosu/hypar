@@ -1,21 +1,35 @@
 import { ingestFromFile } from '../../utils/documents.service'
-import { getSetting, getNumericSetting } from '../../utils/settings.service'
+import {
+  DEFAULT_ALLOWED_FORMATS,
+  parseAllowedFormatsOrDefault,
+} from '../../utils/allowed-formats'
+import {
+  getEffectiveSettingForUpload,
+  getNumericSetting,
+  getRuntimeConfigFallback,
+} from '../../utils/settings.service'
+import { requireSessionUserId } from '../../utils/session'
 
-async function getUploadConfig() {
+async function getUploadConfig(workspaceId: string, userId: string) {
   const config = useRuntimeConfig()
+  const fallback =
+    getRuntimeConfigFallback('ALLOWED_FORMATS') ||
+    String(config.allowedFormats ?? DEFAULT_ALLOWED_FORMATS)
+
   const [maxMbStr, formatsStr] = await Promise.all([
-    getSetting('MAX_DOC_SIZE_MB', String(config.maxDocSizeMb ?? 10)),
-    getSetting('ALLOWED_FORMATS', String(config.allowedFormats ?? 'pdf,md,txt')),
+    getEffectiveSettingForUpload('MAX_DOC_SIZE_MB', { workspaceId, userId }, String(config.maxDocSizeMb ?? 10)),
+    getEffectiveSettingForUpload('ALLOWED_FORMATS', { workspaceId, userId }, fallback),
   ])
   const maxMb = Math.max(1, getNumericSetting(maxMbStr, 10))
-  const formats = formatsStr
-    .split(',')
-    .map((f) => f.trim().toLowerCase().replace(/^\./, ''))
-    .filter(Boolean)
+  const formats = parseAllowedFormatsOrDefault(formatsStr)
   return { maxBytes: maxMb * 1024 * 1024, formats }
 }
 
 export default defineEventHandler(async (event) => {
+  const userId = requireSessionUserId(event)
+  const workspaceId = event.context.workspaceId
+  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
+
   const parts = await readMultipartFormData(event)
   if (!parts?.length) throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })
 
@@ -24,7 +38,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'No file part named "file"' })
   }
 
-  const { maxBytes, formats } = await getUploadConfig()
+  const { maxBytes, formats } = await getUploadConfig(workspaceId, userId)
 
   if (filePart.data.length > maxBytes) {
     const mb = Math.round(maxBytes / 1024 / 1024)
@@ -40,10 +54,6 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  requireSessionUserId(event)
-  const workspaceId = event.context.workspaceId
-  if (!workspaceId) throw createError({ statusCode: 400, statusMessage: 'No active workspace' })
-
   return ingestFromFile(
     {
       buffer: filePart.data,
@@ -51,6 +61,6 @@ export default defineEventHandler(async (event) => {
       mimetype: filePart.type ?? 'application/octet-stream',
       size: filePart.data.length,
     },
-    { workspaceId },
+    { workspaceId, allowedFormats: formats },
   )
 })

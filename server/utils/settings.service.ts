@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto'
+import { DEFAULT_ALLOWED_FORMATS } from '../../utils/allowed-formats'
 import { prisma } from './prisma.ts'
 
 const CACHE_TTL_MS = 60_000
@@ -86,8 +87,16 @@ function toCache(key: string, value: string): void {
 }
 
 export function invalidateCache(key?: string): void {
-  if (key) cache.delete(key)
-  else cache.clear()
+  if (key) {
+    cache.delete(key)
+    for (const k of cache.keys()) {
+      if (k.startsWith(`ws:`) && k.endsWith(`:${key}`)) cache.delete(k)
+    }
+  } else cache.clear()
+}
+
+function workspaceCacheKey(workspaceId: string, key: string): string {
+  return `ws:${workspaceId}:${key}`
 }
 
 export async function getSetting(key: string, fallback: string): Promise<string> {
@@ -153,6 +162,12 @@ export function stringifyWizardDefault(def: unknown): string {
  * Same fallback chain the app uses at runtime (nuxt runtimeConfig defaults),
  * for admin settings display via getSetting().
  */
+/** Resolves the global effective value (DB → env → runtimeConfig → wizard default). */
+export async function resolveSystemSetting(envKey: string, wizardDefault: unknown): Promise<string> {
+  const fallback = getRuntimeConfigFallback(envKey) || stringifyWizardDefault(wizardDefault)
+  return getSetting(envKey, fallback)
+}
+
 export function getRuntimeConfigFallback(envKey: string): string {
   const config = useRuntimeConfig()
   const map: Record<string, () => string> = {
@@ -175,7 +190,7 @@ export function getRuntimeConfigFallback(envKey: string): string {
     CHUNK_OVERLAP: () => String(config.chunkOverlap ?? 60),
     CHUNK_STRATEGY: () => String(config.chunkStrategy ?? 'sentence-aware'),
     MAX_DOC_SIZE_MB: () => String(config.maxDocSizeMb ?? 10),
-    ALLOWED_FORMATS: () => String(config.allowedFormats ?? 'pdf,md,txt'),
+    ALLOWED_FORMATS: () => String(config.allowedFormats ?? DEFAULT_ALLOWED_FORMATS),
     SEARCH_TOP_K: () => String(config.searchTopK ?? 5),
     SEARCH_THRESHOLD: () => String(config.searchThreshold ?? 0.2),
     SEARCH_HYBRID: () => String(config.searchHybrid ?? false),
@@ -206,6 +221,84 @@ export async function getEffectiveSetting(key: string, userId: string, fallback 
   } catch {
     // fall through to global
   }
+  return getSetting(key, fallback)
+}
+
+export async function getWorkspaceSettingValue(
+  workspaceId: string,
+  key: string,
+): Promise<string | null> {
+  const cacheKey = workspaceCacheKey(workspaceId, key)
+  const cached = fromCache(cacheKey)
+  if (cached !== undefined) return cached || null
+
+  try {
+    const row = await prisma.workspaceSetting.findUnique({
+      where: { workspaceId_key: { workspaceId, key } },
+    })
+    const value = row?.value?.trim() ? row.value : ''
+    toCache(cacheKey, value)
+    return value || null
+  } catch {
+    return null
+  }
+}
+
+export async function getWorkspaceSettings(
+  workspaceId: string,
+  category: string,
+): Promise<Record<string, string>> {
+  const rows = await prisma.workspaceSetting.findMany({ where: { workspaceId, category } })
+  const result: Record<string, string> = {}
+  for (const row of rows) {
+    result[row.key] = row.value
+    toCache(workspaceCacheKey(workspaceId, row.key), row.value)
+  }
+  return result
+}
+
+export async function upsertWorkspaceSetting(
+  workspaceId: string,
+  key: string,
+  value: string,
+  category: string,
+): Promise<void> {
+  await prisma.workspaceSetting.upsert({
+    where: { workspaceId_key: { workspaceId, key } },
+    update: { value, category },
+    create: { workspaceId, key, value, category },
+  })
+  toCache(workspaceCacheKey(workspaceId, key), value)
+}
+
+export async function deleteWorkspaceSetting(workspaceId: string, key: string): Promise<void> {
+  await prisma.workspaceSetting.deleteMany({ where: { workspaceId, key } })
+  invalidateCache(key)
+  cache.delete(workspaceCacheKey(workspaceId, key))
+}
+
+/**
+ * Upload-related settings: WorkspaceSetting → UserSetting → global Setting → env → fallback.
+ */
+export async function getEffectiveSettingForUpload(
+  key: string,
+  ctx: { workspaceId: string; userId: string },
+  fallback = '',
+): Promise<string> {
+  const wsValue = await getWorkspaceSettingValue(ctx.workspaceId, key)
+  if (wsValue) return wsValue
+
+  try {
+    const userRow = await prisma.userSetting.findUnique({
+      where: { userId_key: { userId: ctx.userId, key } },
+    })
+    if (userRow?.value?.trim()) {
+      return userRow.encrypted ? decryptSecret(userRow.value) : userRow.value
+    }
+  } catch {
+    // fall through
+  }
+
   return getSetting(key, fallback)
 }
 

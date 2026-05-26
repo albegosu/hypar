@@ -24,7 +24,8 @@ const PLACEHOLDER_TITLES = new Set(
 function deriveTitle(text: string): string {
   const trimmed = stripNul(text).trim().replace(/\s+/g, ' ')
   if (!trimmed) return 'New conversation'
-  return truncate(trimmed, TITLE_MAX)
+  const words = trimmed.split(/\s+/).slice(0, 6).join(' ')
+  return truncate(words, TITLE_MAX)
 }
 
 function isPlaceholderTitle(title: string | null | undefined): boolean {

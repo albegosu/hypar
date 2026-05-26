@@ -16,6 +16,8 @@
             :field="field"
             :value="modelValue[field.id]"
             :error="errors[field.id]"
+            :system-hint="systemHints?.[field.id]"
+            :use-system-hint="useSystemHints"
             @update="onUpdate"
           />
         </template>
@@ -43,6 +45,8 @@
               :field="field"
               :value="modelValue[field.id]"
               :error="errors[field.id]"
+              :system-hint="systemHints?.[field.id]"
+              :use-system-hint="useSystemHints"
               @update="onUpdate"
             />
           </template>
@@ -64,8 +68,11 @@ const props = withDefaults(
     modelValue: Record<string, any>;
     /** When false, required/validation messages are hidden until the parent turns this on (e.g. after Next). */
     showFieldErrors?: boolean;
+    /** Per-field system values shown when the user has no override */
+    systemHints?: Record<string, unknown>;
+    useSystemHints?: boolean;
   }>(),
-  { showFieldErrors: true },
+  { showFieldErrors: true, useSystemHints: false },
 );
 
 const emit = defineEmits<{
@@ -79,13 +86,38 @@ const advancedOpen = ref(false);
 const basicFields = computed(() => props.fields.filter((f) => !f.advanced));
 const advancedFields = computed(() => props.fields.filter((f) => f.advanced));
 
+function effectiveFieldValue(fieldId: string): unknown {
+  const v = props.modelValue[fieldId];
+  const isEmpty =
+    v === undefined ||
+    v === null ||
+    v === '' ||
+    (Array.isArray(v) && v.length === 0);
+  if (props.useSystemHints && isEmpty && props.systemHints && fieldId in props.systemHints) {
+    return props.systemHints[fieldId];
+  }
+  if (isEmpty) {
+    const field = props.fields.find((f) => f.id === fieldId);
+    if (field && field.defaultValue !== undefined) return field.defaultValue;
+  }
+  return v;
+}
+
 function isVisible(field: ConfigField): boolean {
   if (!field.dependsOn) return true;
-  return props.modelValue[field.dependsOn.field] === field.dependsOn.equals;
+  return effectiveFieldValue(field.dependsOn.field) === field.dependsOn.equals;
 }
 
 const visibleBasic = computed(() => basicFields.value.filter(isVisible));
 const visibleAdvanced = computed(() => advancedFields.value.filter(isVisible));
+
+watch(
+  () => [visibleBasic.value.length, visibleAdvanced.value.length] as const,
+  ([basicCount, advancedCount]) => {
+    if (basicCount === 0 && advancedCount > 0) advancedOpen.value = true;
+  },
+  { immediate: true },
+);
 
 const rawErrors = computed<Record<string, string | null>>(() => {
   const out: Record<string, string | null> = {};

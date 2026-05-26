@@ -1,5 +1,16 @@
+import {
+  DEFAULT_ALLOWED_FORMATS,
+  parseAllowedFormatsOrDefault,
+} from '../../utils/allowed-formats'
 import { requireSessionUserId } from '../../utils/session'
-import { getUserSettings, SECRET_SETTING_KEYS } from '../../utils/settings.service'
+import {
+  getEffectiveSettingForUpload,
+  getRuntimeConfigFallback,
+  getUserSettings,
+  getWorkspaceSettingValue,
+  resolveSystemSetting,
+  SECRET_SETTING_KEYS,
+} from '../../utils/settings.service'
 import { step1, step2, step3, step4, step5, step6 } from '~/utils/setup/wizard-steps'
 import type { WizardStep } from '~/utils/setup/wizard-types'
 
@@ -14,6 +25,19 @@ const STEPS: Record<string, WizardStep> = {
   rag: step6,
 }
 
+export type UserSettingScalarField = {
+  override: string
+  system: string
+  hasOverride: boolean
+}
+
+export type UserSettingSecretField = {
+  configured: boolean
+  systemConfigured: boolean
+}
+
+export type UserSettingFieldValue = UserSettingScalarField | UserSettingSecretField
+
 export default defineEventHandler(async (event) => {
   const userId = requireSessionUserId(event)
 
@@ -27,25 +51,62 @@ export default defineEventHandler(async (event) => {
   const userValues = await getUserSettings(userId, category)
   const step = STEPS[category]
 
-  // Return user's own values; secret fields are masked in response (never send decrypted)
-  const result: Record<string, string | { configured: boolean }> = {}
+  const result: Record<string, UserSettingFieldValue | string> = {}
 
   if (step) {
     for (const field of step.configFields ?? []) {
       if (!field.envKey) continue
-      const val = userValues[field.envKey]
+
+      const userVal = userValues[field.envKey]
+      const system = await resolveSystemSetting(field.envKey, field.defaultValue)
+
       if (field.secret) {
-        result[field.envKey] = { configured: Boolean(val) }
+        result[field.envKey] = {
+          configured: Boolean(userVal),
+          systemConfigured: Boolean(system),
+        }
       } else {
-        result[field.envKey] = val ?? ''
+        const hasOverride = userVal !== undefined && userVal !== ''
+        result[field.envKey] = {
+          override: userVal ?? '',
+          system,
+          hasOverride,
+        }
       }
     }
   }
 
-  // Include any extra user keys not covered by wizard fields
+  // Legacy extra user keys not covered by wizard fields
   for (const [k, v] of Object.entries(userValues)) {
-    if (!(k in result)) {
-      result[k] = SECRET_SETTING_KEYS.has(k) ? { configured: Boolean(v) } : v
+    if (k in result) continue
+    if (SECRET_SETTING_KEYS.has(k)) {
+      const system = await resolveSystemSetting(k, '')
+      result[k] = { configured: Boolean(v), systemConfigured: Boolean(system) }
+    } else {
+      const system = await resolveSystemSetting(k, '')
+      result[k] = { override: v, system, hasOverride: v !== '' }
+    }
+  }
+
+  if (category === 'chunking') {
+    const workspaceId = event.context.workspaceId
+    if (workspaceId) {
+      try {
+        const config = useRuntimeConfig()
+        const fallback =
+          getRuntimeConfigFallback('ALLOWED_FORMATS') ||
+          String(config.allowedFormats ?? DEFAULT_ALLOWED_FORMATS)
+        const effective = await getEffectiveSettingForUpload(
+          'ALLOWED_FORMATS',
+          { workspaceId, userId },
+          fallback,
+        )
+        result.effective_ALLOWED_FORMATS = parseAllowedFormatsOrDefault(effective).join(',')
+        const wsOverride = await getWorkspaceSettingValue(workspaceId, 'ALLOWED_FORMATS')
+        result.workspaceOverride_ALLOWED_FORMATS = wsOverride ? 'true' : 'false'
+      } catch {
+        // WorkspaceSetting table missing or DB unavailable — chunking fields still load
+      }
     }
   }
 

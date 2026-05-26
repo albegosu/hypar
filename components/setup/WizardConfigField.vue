@@ -14,7 +14,7 @@
           :id="fieldId"
           class="wz-input flex-1"
           :type="inputType"
-          :placeholder="translateOptional(field.placeholder)"
+          :placeholder="textPlaceholder"
           :value="value ?? ''"
           @input="emitValue(($event.target as HTMLInputElement).value)"
         />
@@ -48,7 +48,7 @@
           :min="field.min"
           :max="field.max"
           :step="field.step"
-          :value="value ?? field.defaultValue ?? ''"
+          :value="displayScalar"
           @input="emitValue(parseNumber(($event.target as HTMLInputElement).value))"
         />
         <span v-if="field.unit || field.min !== undefined" class="wz-faint text-xs">
@@ -70,11 +70,11 @@
           :min="field.min ?? 0"
           :max="field.max ?? 100"
           :step="field.step ?? 1"
-          :value="value ?? field.defaultValue ?? 0"
+          :value="displayScalar"
           @input="emitValue(parseNumber(($event.target as HTMLInputElement).value))"
         />
         <span class="w-24 text-right text-xs wz-strong">
-          {{ value ?? field.defaultValue ?? 0 }}<span v-if="field.unit"> {{ field.unit }}</span>
+          {{ displayScalar }}<span v-if="field.unit"> {{ field.unit }}</span>
         </span>
       </div>
     </template>
@@ -84,9 +84,16 @@
       <select
         :id="fieldId"
         class="wz-select"
-        :value="value ?? field.defaultValue ?? ''"
+        :value="displayScalar"
         @change="emitValue(($event.target as HTMLSelectElement).value)"
       >
+        <option
+          v-if="useSystemHint && systemHintText && isEmptyValue"
+          value=""
+          disabled
+        >
+          {{ systemHintText }}
+        </option>
         <option v-for="opt in field.options" :key="opt.value" :value="opt.value">
           {{ opt.label }}
         </option>
@@ -103,7 +110,12 @@
           @change="emitValue(($event.target as HTMLInputElement).checked)"
         />
         <span class="wz-muted text-xs">
-          {{ field.helpText ? translateOptional(field.helpText) : (value ? t('wizard.chrome.enabled') : t('wizard.chrome.disabled')) }}
+          <template v-if="useSystemHint && systemHintText && isEmptyValue">
+            {{ systemHintText }}
+          </template>
+          <template v-else>
+            {{ field.helpText ? translateOptional(field.helpText) : (value ? t('wizard.chrome.enabled') : t('wizard.chrome.disabled')) }}
+          </template>
         </span>
       </label>
     </template>
@@ -114,7 +126,7 @@
         :id="fieldId"
         class="wz-input w-full"
         :rows="field.rows ?? 4"
-        :placeholder="translateOptional(field.placeholder)"
+        :placeholder="textPlaceholder"
         :value="value ?? ''"
         @input="emitValue(($event.target as HTMLTextAreaElement).value)"
       ></textarea>
@@ -140,6 +152,12 @@
     </template>
 
     <p v-if="error" class="mt-1 text-xs" style="color: var(--term-danger)">{{ error }}</p>
+    <p
+      v-else-if="useSystemHint && systemHintText && isEmptyValue && field.type !== 'checkbox'"
+      class="mt-1 wz-faint text-[11px]"
+    >
+      {{ systemHintText }}
+    </p>
     <p v-else-if="field.helpText && field.type !== 'checkbox'" class="mt-1 wz-faint text-[11px]">
       {{ translateOptional(field.helpText) }}
     </p>
@@ -154,6 +172,9 @@ const props = defineProps<{
   field: ConfigField;
   value: any;
   error: string | null;
+  /** When set, empty fields show this system value as hint instead of wizard defaults */
+  systemHint?: unknown;
+  useSystemHint?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -164,6 +185,60 @@ const { t, te } = useI18n();
 const reveal = ref(false);
 
 const fieldId = computed(() => `wz-field-${props.field.id}`);
+
+const isEmptyValue = computed(() => {
+  const v = props.value
+  if (v === undefined || v === null || v === '') return true
+  if (Array.isArray(v) && v.length === 0) return true
+  return false
+})
+
+const displayScalar = computed(() => {
+  if (props.useSystemHint) {
+    const empty =
+      props.value === undefined ||
+      props.value === null ||
+      props.value === '' ||
+      (Array.isArray(props.value) && props.value.length === 0)
+    if (empty && props.systemHint !== undefined && props.systemHint !== null && props.systemHint !== '') {
+      if (props.field.type === 'slider' || props.field.type === 'number') {
+        const n = Number(props.systemHint)
+        return Number.isFinite(n) ? n : props.systemHint
+      }
+      return props.systemHint
+    }
+    if (props.field.type === 'slider' || props.field.type === 'number') {
+      return props.value ?? ''
+    }
+    return props.value ?? ''
+  }
+  if (props.field.type === 'slider' || props.field.type === 'number') {
+    return props.value ?? props.field.defaultValue ?? ''
+  }
+  return props.value ?? props.field.defaultValue ?? ''
+})
+
+const systemHintText = computed(() => {
+  if (!props.useSystemHint || props.systemHint === undefined || props.systemHint === null) return ''
+  if (props.field.type === 'checkbox') {
+    const on = props.systemHint === true || props.systemHint === 'true'
+    return t('settings.systemHint', {
+      value: on ? t('wizard.chrome.enabled') : t('wizard.chrome.disabled'),
+    })
+  }
+  if (Array.isArray(props.systemHint)) {
+    return t('settings.systemHint', { value: (props.systemHint as string[]).join(', ') })
+  }
+  return t('settings.systemHint', { value: String(props.systemHint) })
+})
+
+const textPlaceholder = computed(() => {
+  if (props.useSystemHint && systemHintText.value && isEmptyValue.value) {
+    return systemHintText.value
+  }
+  return translateOptional(props.field.placeholder)
+})
+
 const inputType = computed(() => {
   if (props.field.type === 'password') return reveal.value ? 'text' : 'password';
   return 'text';

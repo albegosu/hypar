@@ -130,12 +130,12 @@
             <UIcon name="i-heroicons-cloud-arrow-up" class="w-6 h-6 wz-accent" />
           </div>
           <p class="wz-strong font-medium mb-1">{{ t('upload.dropZone') }}</p>
-          <p class="text-sm wz-muted">{{ t('upload.supports') }}</p>
+          <p class="text-sm wz-muted">{{ supportsLine }}</p>
 
           <input
             ref="fileInput"
             type="file"
-            accept=".txt,.md,.pdf,.xls,.xlsx"
+            :accept="uploadAccept"
             class="hidden"
             @change="handleFileChange"
           >
@@ -185,6 +185,28 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const store = useDocumentsStore()
+
+interface UploadConfig {
+  allowedFormats: string[]
+  accept: string
+  supportsLabel: string
+  maxDocSizeMb: number
+}
+
+const uploadConfig = ref<UploadConfig | null>(null)
+const uploadAccept = computed(() => uploadConfig.value?.accept ?? '.txt,.md,.pdf,.xls,.xlsx')
+const supportsLine = computed(() => {
+  const label = uploadConfig.value?.supportsLabel ?? '.txt, .md, .pdf, .xls, .xlsx'
+  return `${t('upload.supportsPrefix')} ${label}`
+})
+
+onMounted(async () => {
+  try {
+    uploadConfig.value = await $fetch<UploadConfig>('/api/config/upload')
+  } catch {
+    uploadConfig.value = null
+  }
+})
 
 const activeTab = ref(0)
 const uploading = ref(false)

@@ -21,6 +21,43 @@
         </button>
       </div>
 
+      <!-- allowed formats -->
+      <div class="mt-3 space-y-2">
+        <p v-if="ws.effectiveFormats" class="wz-faint text-[10px]">
+          {{ t('workspaces.allowedFormatsEffective', { formats: ws.effectiveFormats }) }}
+        </p>
+        <template v-if="ws.role === 'owner' || ws.role === 'editor'">
+          <label class="wz-label text-[10px] block">{{ t('workspaces.allowedFormatsLabel') }}</label>
+          <input
+            v-model="formatsInput[ws.id]"
+            class="wz-input w-full text-[10px] h-7"
+            placeholder="pdf,md,txt,xls,xlsx"
+          />
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="wz-btn-ghost text-[10px]"
+              :disabled="savingFormats === ws.id"
+              @click="saveFormats(ws.id)"
+            >
+              {{ savingFormats === ws.id ? '…' : t('workspaces.allowedFormatsSave') }}
+            </button>
+            <button
+              type="button"
+              class="wz-btn-ghost text-[10px]"
+              :disabled="savingFormats === ws.id"
+              @click="clearFormats(ws.id)"
+            >
+              {{ t('workspaces.allowedFormatsClear') }}
+            </button>
+          </div>
+        </template>
+        <p v-else-if="ws.effectiveFormats" class="wz-faint text-[10px]">
+          {{ t('workspaces.allowedFormatsViewer', { formats: ws.effectiveFormats }) }}
+        </p>
+        <p v-if="formatsError[ws.id]" class="text-red-500 text-[10px]">{{ formatsError[ws.id] }}</p>
+      </div>
+
       <!-- invite (owners only) -->
       <div v-if="ws.role === 'owner'" class="mt-3 flex gap-2">
         <input
@@ -56,25 +93,101 @@
 </template>
 
 <script setup lang="ts">
-interface Workspace { id: string; name: string; role: string; active: boolean }
+import { useI18n } from 'vue-i18n'
+import { formatsToDisplay } from '~/utils/allowed-formats'
+
+const { t } = useI18n()
+
+interface Workspace {
+  id: string
+  name: string
+  role: string
+  active: boolean
+  effectiveFormats?: string
+}
 
 const workspaces = ref<Workspace[]>([])
 const activating = ref<string | null>(null)
 const inviting = ref<string | null>(null)
 const inviteEmail = ref<Record<string, string>>({})
 const inviteError = ref<Record<string, string>>({})
+const formatsInput = ref<Record<string, string>>({})
+const formatsError = ref<Record<string, string>>({})
+const savingFormats = ref<string | null>(null)
 const newName = ref('')
 const creating = ref(false)
 const createError = ref('')
 
+async function loadWorkspaceFormats(ws: Workspace) {
+  try {
+    const data = await $fetch<Record<string, string>>(`/api/workspaces/${ws.id}/settings?category=chunking`)
+    const effective = data.effective_ALLOWED_FORMATS ?? ''
+    ws.effectiveFormats = effective
+      ? formatsToDisplay(effective.split(',').map((f) => f.trim()).filter(Boolean))
+      : undefined
+    formatsInput.value[ws.id] = data.ALLOWED_FORMATS ?? ''
+  } catch {
+    formatsError.value[ws.id] = 'Could not load formats'
+  }
+}
+
 async function load() {
-  workspaces.value = await $fetch<Workspace[]>('/api/workspaces')
+  const list = await $fetch<Workspace[]>('/api/workspaces')
+  workspaces.value = list
+  await Promise.all(list.map((ws) => loadWorkspaceFormats(ws)))
 }
 
 async function activate(id: string) {
   activating.value = id
   await $fetch(`/api/workspaces/${id}/activate`, { method: 'POST' })
   window.location.reload()
+}
+
+async function saveFormats(wsId: string) {
+  formatsError.value[wsId] = ''
+  savingFormats.value = wsId
+  try {
+    await $fetch(`/api/workspaces/${wsId}/settings`, {
+      method: 'POST',
+      body: {
+        key: 'ALLOWED_FORMATS',
+        value: formatsInput.value[wsId] ?? '',
+        category: 'chunking',
+      },
+    })
+    const ws = workspaces.value.find((w) => w.id === wsId)
+    if (ws) await loadWorkspaceFormats(ws)
+  } catch (e: unknown) {
+    const msg =
+      (e as { data?: { statusMessage?: string; message?: string } })?.data?.statusMessage
+      ?? (e as { data?: { message?: string } })?.data?.message
+      ?? 'Error saving formats'
+    formatsError.value[wsId] = msg
+  } finally {
+    savingFormats.value = null
+  }
+}
+
+async function clearFormats(wsId: string) {
+  formatsError.value[wsId] = ''
+  savingFormats.value = wsId
+  try {
+    await $fetch(`/api/workspaces/${wsId}/settings`, {
+      method: 'POST',
+      body: { key: 'ALLOWED_FORMATS', value: '', category: 'chunking' },
+    })
+    formatsInput.value[wsId] = ''
+    const ws = workspaces.value.find((w) => w.id === wsId)
+    if (ws) await loadWorkspaceFormats(ws)
+  } catch (e: unknown) {
+    const msg =
+      (e as { data?: { statusMessage?: string; message?: string } })?.data?.statusMessage
+      ?? (e as { data?: { message?: string } })?.data?.message
+      ?? 'Error clearing formats'
+    formatsError.value[wsId] = msg
+  } finally {
+    savingFormats.value = null
+  }
 }
 
 async function invite(wsId: string) {

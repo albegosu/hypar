@@ -132,7 +132,7 @@ const DEFAULT_MIN_SCORE = Number(process.env.SEARCH_THRESHOLD) || 0.2
 | `CHUNK_SIZE` | Replace `DEFAULT_CHUNK_TOKENS` |
 | `CHUNK_OVERLAP` | Replace `DEFAULT_OVERLAP_TOKENS` |
 | `MAX_DOC_SIZE_MB` | Replace `TEN_MB` cap in upload handler |
-| `ALLOWED_FORMATS` | Replace hardcoded MIME allowlist |
+| `ALLOWED_FORMATS` | Wired: workspace → user → global DB → env; MIME gate uses effective list |
 | `CHUNK_STRATEGY` | Add `fixed` / `with-overlap` branches alongside the existing sentence-aware logic |
 
 ### Step 3 — higher effort

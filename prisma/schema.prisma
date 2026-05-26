@@ -93,6 +93,7 @@ model Workspace {
   members       WorkspaceMember[]
   documents     Document[]
   conversations Conversation[]
+  settings      WorkspaceSetting[]
 
   @@index([ownerId])
 }
@@ -121,6 +122,20 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@index([category])
+}
+
+// Per-workspace settings overrides (e.g. ALLOWED_FORMATS). Workspace wins over user/global for uploads.
+model WorkspaceSetting {
+  workspaceId String
+  key         String
+  value       String
+  category    String   @default("general")
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, key])
+  @@index([workspaceId, category])
 }
 
 // Per-user settings overrides. Resolution order: UserSetting → Setting → env.
