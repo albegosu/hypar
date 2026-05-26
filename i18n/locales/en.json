@@ -83,7 +83,12 @@
     "notSearched": "no search",
     "notSearchedHint": "the agent answered without searching",
     "cited": "cited",
-    "citedHint": "the answer references retrieved passages with [n]"
+    "citedHint": "the answer references retrieved passages with [n]",
+    "userMetricsMode": "mode/{mode}",
+    "userMetricsDocs": "{count} docs",
+    "userMetricsChars": "{count} chars",
+    "userMetricsTokensIn": "~{count}t in",
+    "userMetricsTokensOut": "~{count}t out"
   },
   "documents": {
     "title": "documents",
@@ -122,7 +127,7 @@
     "fieldType": "type",
     "save": "save document",
     "dropZone": "drag and drop files here, or click to browse",
-    "supports": "supports: .txt, .md, .pdf, .xls, .xlsx",
+    "supportsPrefix": "supports:",
     "selectFile": "select file",
     "uploadFile": "upload file",
     "saving": "Saving…",
@@ -169,6 +174,13 @@
     "providerQuotaBannerHint": "Your API key is active, but the provider (e.g. Gemini free tier) limits requests per minute. Wait and retry, enable billing at Google AI, or switch to another model or provider below.",
     "ownKey": "your key ✓",
     "systemDefault": "system default",
+    "allowedFormatsUserHint": "Your allowed formats apply when the active workspace has no override. Configure per workspace on the workspaces page.",
+    "allowedFormatsEffective": "Uploads in the active workspace use: {formats}",
+    "allowedFormatsWorkspaceOverride": "The active workspace overrides your setting. Uploads use: {formats}",
+    "loadErrorTitle": "could not load settings",
+    "loadErrorHint": "Showing wizard defaults. Check that you are signed in and the API is running.",
+    "noFields": "No configuration fields for this section.",
+    "systemHint": "system: {value}",
     "privacyTitle": "privacy note",
     "privacyBody": "Your keys are encrypted with AES-256-GCM before storage. The server decrypts them only when making requests on your behalf. Admins cannot view your key values."
   },
@@ -337,5 +349,12 @@
         "helpText": "Use 'Direct' for migrations and low-concurrency. Use 'Transaction pooler' for serverless / high-concurrency."
       }
     }
+  },
+  "workspaces": {
+    "allowedFormatsLabel": "allowed file formats (comma-separated extensions)",
+    "allowedFormatsEffective": "uploads use: {formats}",
+    "allowedFormatsSave": "[ save formats ]",
+    "allowedFormatsClear": "[ use defaults ]",
+    "allowedFormatsViewer": "formats: {formats}"
   }
 }

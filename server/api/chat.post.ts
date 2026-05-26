@@ -243,5 +243,17 @@ export default defineEventHandler(async (event) => {
 
   return result.toUIMessageStreamResponse({
     headers: { 'x-conversation-id': conversationId },
+    messageMetadata: ({ part }) => {
+      if (part.type === 'finish') {
+        const u = part.totalUsage
+        return {
+          usage: {
+            inputTokens: u.inputTokens,
+            outputTokens: u.outputTokens,
+          },
+        }
+      }
+      return undefined
+    },
   })
 })

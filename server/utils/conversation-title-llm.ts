@@ -6,7 +6,7 @@ import { getSetting, getBoolSetting } from './settings.service.ts'
 import { isProviderQuotaError } from './llm-errors'
 import { markProviderQuotaHit, shouldSuppressOptionalLlmCalls } from './llm-quota-guard'
 
-const TITLE_MAX = 80
+const TITLE_MAX = 40
 const TRANSCRIPT_MSG_CAP = 16
 const SNIPPET_MAX = 400
 
@@ -60,9 +60,9 @@ async function refineConversationTitleFromTranscript(conversationId: string): Pr
     const { text } = await generateText({
       model: await getLlmModel(),
       system:
-        'You name chat threads for a RAG assistant. Reply with exactly one line: a short descriptive title (maximum 10 words), in the SAME language as the transcript. No quotation marks, no markdown, no emojis, no trailing period.',
+        'You name chat threads for a RAG assistant. Reply with exactly one line: a short descriptive title (maximum 5 words), in the SAME language as the transcript. No quotation marks, no markdown, no emojis, no trailing period.',
       prompt: `Transcript:\n---\n${transcript}\n---\nTitle:`,
-      maxOutputTokens: 48,
+      maxOutputTokens: 24,
       temperature: 0.2,
       maxRetries: 0,
     })

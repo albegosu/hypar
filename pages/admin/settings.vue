@@ -9,11 +9,12 @@
       <!-- Tab nav -->
       <div class="flex gap-1 text-xs flex-wrap">
         <button
-          v-for="tab in tabs"
+          v-for="tab in SETTINGS_TABS"
           :key="tab.id"
           class="px-3 py-1.5 rounded transition-colors duration-150"
           :class="activeTab === tab.id ? 'wz-btn-outline font-semibold' : 'wz-btn-ghost'"
-          @click="switchTab(tab.id)"
+          :disabled="loadingTab"
+          @click="onSwitchTab(tab.id)"
         >
           {{ t(`settings.tabs.${tab.id}`) }}
         </button>
@@ -37,8 +38,10 @@
         </p>
       </div>
 
+      <div v-if="loadingTab" class="text-xs wz-faint py-4 text-center">{{ t('common.loading') }}</div>
+
       <!-- Config form for active tab -->
-      <div v-if="currentStep" class="space-y-4">
+      <div v-else-if="currentStep" class="space-y-4">
         <SetupWizardConfigForm
           :step-id="currentStep.id"
           :fields="currentFields"
@@ -54,87 +57,55 @@
           </button>
         </div>
       </div>
-
-      <div v-else class="text-xs wz-faint py-4 text-center">{{ t('common.loading') }}</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { step1, step2, step3, step4, step5, step6 } from '~/utils/setup/wizard-steps'
-import type { ConfigField, WizardStep } from '~/utils/setup/wizard-types'
-
+import {
+  SETTINGS_TABS,
+  buildWizardDefaults,
+  getStepFields,
+  parseFieldValue,
+  useSettingsTabs,
+  type SettingsTabId,
+} from '~/composables/useSettingsTabs'
 definePageMeta({ middleware: ['admin'] })
 
 const { t } = useI18n()
 
-const activeTab = ref('apis')
 const saving = ref(false)
 const saveStatus = ref<{ ok: boolean; message: string } | null>(null)
-const formValues = ref<Record<string, unknown>>({})
-const loadedValues = ref<Record<string, Record<string, unknown>>>({})
 
-const tabs = [
-  { id: 'apis', step: step1 },
-  { id: 'vectorDb', step: step2 },
-  { id: 'embeddings', step: step3 },
-  { id: 'chunking', step: step4 },
-  { id: 'search', step: step5 },
-  { id: 'rag', step: step6 },
-]
-
-const currentStep = computed(() => tabs.find((t) => t.id === activeTab.value)?.step ?? null)
-const currentFields = computed(() => getStepFields(currentStep.value))
-
-function getStepFields(step: WizardStep | null | undefined): ConfigField[] {
-  return step?.configFields ?? []
-}
-
-onMounted(() => loadTab(activeTab.value))
-
-async function switchTab(id: string) {
-  activeTab.value = id
-  saveStatus.value = null
-  if (!loadedValues.value[id]) {
-    await loadTab(id)
-  } else {
-    formValues.value = { ...loadedValues.value[id] }
-  }
-}
-
-async function loadTab(tabId: string) {
-  const step = tabs.find((t) => t.id === tabId)?.step
-  if (!step) return
-
-  try {
-    const data = await $fetch<Record<string, string>>(`/api/admin/settings?category=${tabId}`)
-    const defaults: Record<string, unknown> = {}
+const {
+  activeTab,
+  loadingTab,
+  formValues,
+  loadedValues,
+  currentStep,
+  currentFields,
+  switchTab,
+  invalidateAndReload,
+} = useSettingsTabs({
+  fetchUrl: (tabId) => `/api/admin/settings?category=${tabId}`,
+  parseResponse(data, step) {
+    const apiData = data as Record<string, string>
+    const defaults = buildWizardDefaults(step)
     const overlay: Record<string, unknown> = {}
     for (const field of getStepFields(step)) {
-      defaults[field.id] = field.defaultValue
-      const raw = field.envKey ? data[field.envKey] : undefined
-      // Empty string means "unset" — keep wizard default; do not parse as 0/false.
+      const raw = field.envKey ? apiData[field.envKey] : undefined
       if (raw !== undefined && raw !== '') {
         overlay[field.id] = parseFieldValue(raw, field.type)
       }
     }
-    const merged = { ...defaults, ...overlay }
-    loadedValues.value[tabId] = merged
-    formValues.value = { ...merged }
-  } catch {
-    const defaults: Record<string, unknown> = {}
-    for (const field of getStepFields(step)) defaults[field.id] = field.defaultValue
-    loadedValues.value[tabId] = defaults
-    formValues.value = { ...defaults }
-  }
-}
+    return { formValues: { ...defaults, ...overlay } }
+  },
+})
 
-function parseFieldValue(raw: string, type: string): unknown {
-  if (type === 'checkbox') return raw === 'true'
-  if (type === 'number' || type === 'slider') return Number(raw)
-  if (type === 'tags') return raw.split(',').map((s) => s.trim()).filter(Boolean)
-  return raw
+function onSwitchTab(id: SettingsTabId) {
+  saveStatus.value = null
+  switchTab(id)
 }
 
 async function saveTab() {
@@ -187,8 +158,7 @@ async function resetTab() {
           }),
         ),
     )
-    delete loadedValues.value[activeTab.value]
-    await loadTab(activeTab.value)
+    await invalidateAndReload()
     saveStatus.value = { ok: true, message: t('settings.resetOk') }
   } catch {
     saveStatus.value = { ok: false, message: t('settings.resetFail') }

@@ -6,6 +6,7 @@ import { prisma } from './prisma'
 import { ingestDocument } from '../workflows/ingest-document'
 import { createError } from 'h3'
 import { notFound, badRequest } from './errors'
+import { isAllowedFile } from './allowed-formats'
 import { stripNul, sanitizeJsonMetadata, safeFilename } from './text'
 
 export interface UploadedFile {
@@ -23,16 +24,6 @@ export interface CreateDocumentInput {
   metadata?: Record<string, unknown>
 }
 
-const ALLOWED_MIME = new Set([
-  'application/pdf',
-  'text/plain',
-  'text/markdown',
-  'text/x-markdown',
-  'application/octet-stream', // browsers sometimes send this for .md/.txt
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-])
-
 function isSpreadsheet(mime: string, filename: string): boolean {
   const m = mime.toLowerCase()
   const f = filename.toLowerCase()
@@ -41,18 +32,6 @@ function isSpreadsheet(mime: string, filename: string): boolean {
     m === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
     f.endsWith('.xls') ||
     f.endsWith('.xlsx')
-  )
-}
-
-export function isAllowedMime(mime: string, filename: string): boolean {
-  if (ALLOWED_MIME.has(mime.toLowerCase())) return true
-  const lower = filename.toLowerCase()
-  return (
-    lower.endsWith('.pdf') ||
-    lower.endsWith('.txt') ||
-    lower.endsWith('.md') ||
-    lower.endsWith('.xls') ||
-    lower.endsWith('.xlsx')
   )
 }
 
@@ -153,10 +132,10 @@ export async function ingestFromText(input: CreateDocumentInput): Promise<{
  */
 export async function ingestFromFile(
   file: UploadedFile,
-  opts: { workspaceId: string },
+  opts: { workspaceId: string; allowedFormats: string[] },
 ): Promise<{ documentId: string; title: string; runId: string; status: 'processing' }> {
   if (!file?.buffer?.length) throw badRequest('No file uploaded')
-  if (!isAllowedMime(file.mimetype, file.originalname)) {
+  if (!isAllowedFile(file.mimetype, file.originalname, opts.allowedFormats)) {
     throw badRequest(`Unsupported file type: ${file.mimetype || 'unknown'}`)
   }
 

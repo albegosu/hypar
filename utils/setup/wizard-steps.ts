@@ -328,7 +328,7 @@ export const step4: WizardStep = {
       type: 'tags',
       envKey: 'ALLOWED_FORMATS',
       advanced: true,
-      defaultValue: ['pdf', 'md', 'txt'],
+      defaultValue: ['pdf', 'md', 'txt', 'xls', 'xlsx'],
     },
   ],
 
@@ -337,7 +337,7 @@ CHUNK_STRATEGY=${get(cfg, 'chunking', 'chunkStrategy', 'sentence-aware')}
 CHUNK_SIZE=${get(cfg, 'chunking', 'chunkSize', 512)}
 CHUNK_OVERLAP=${get(cfg, 'chunking', 'overlap', 50)}
 MAX_DOC_SIZE_MB=${get(cfg, 'chunking', 'maxDocSizeMb', 25)}
-ALLOWED_FORMATS=${(get(cfg, 'chunking', 'allowedFormats', ['pdf', 'md', 'txt']) as string[]).join(',')}`,
+ALLOWED_FORMATS=${(get(cfg, 'chunking', 'allowedFormats', ['pdf', 'md', 'txt', 'xls', 'xlsx']) as string[]).join(',')}`,
 
   hasCodePreview: true,
   codeSnippet: {

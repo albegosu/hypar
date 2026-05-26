@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { validateAllowedFormatsValue } from '../../utils/allowed-formats'
 import { requireSessionUserId } from '../../utils/session'
 import { upsertUserSetting, deleteUserSetting } from '../../utils/settings.service'
 import { invalidateRateLimitCache } from '../../utils/rate-limit'
@@ -26,7 +27,19 @@ export default defineEventHandler(async (event) => {
     return { ok: true, key, deleted: true }
   }
 
-  await upsertUserSetting(userId, key, value, category)
+  let storedValue = value
+  if (key === 'ALLOWED_FORMATS') {
+    try {
+      storedValue = validateAllowedFormatsValue(value)
+    } catch (err) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: err instanceof Error ? err.message : 'Invalid ALLOWED_FORMATS',
+      })
+    }
+  }
+
+  await upsertUserSetting(userId, key, storedValue, category)
   invalidateRateLimitCache(userId)
   return { ok: true, key, category }
 })

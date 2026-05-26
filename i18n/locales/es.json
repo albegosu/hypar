@@ -83,7 +83,12 @@
     "notSearched": "sin búsqueda",
     "notSearchedHint": "el agente respondió sin buscar",
     "cited": "con citas",
-    "citedHint": "la respuesta cita pasajes recuperados con [n]"
+    "citedHint": "la respuesta cita pasajes recuperados con [n]",
+    "userMetricsMode": "modo/{mode}",
+    "userMetricsDocs": "{count} docs",
+    "userMetricsChars": "{count} chars",
+    "userMetricsTokensIn": "~{count}t entrada",
+    "userMetricsTokensOut": "~{count}t salida"
   },
   "documents": {
     "title": "documentos",
@@ -122,7 +127,7 @@
     "fieldType": "tipo",
     "save": "guardar documento",
     "dropZone": "arrastra archivos aquí, o haz clic para buscar",
-    "supports": "soporta: .txt, .md, .pdf, .xls, .xlsx",
+    "supportsPrefix": "soporta:",
     "selectFile": "seleccionar archivo",
     "uploadFile": "subir archivo",
     "saving": "Guardando…",
@@ -169,6 +174,13 @@
     "providerQuotaBannerHint": "Tu API key está activa, pero el proveedor (p. ej. Gemini gratis) limita peticiones por minuto. Espera y reintenta, activa facturación en Google AI o cambia de modelo o proveedor abajo.",
     "ownKey": "tu clave ✓",
     "systemDefault": "valor del sistema",
+    "allowedFormatsUserHint": "Tus formatos permitidos aplican cuando el workspace activo no tiene override. Configúralos por workspace en la página de workspaces.",
+    "allowedFormatsEffective": "Las subidas en el workspace activo usan: {formats}",
+    "allowedFormatsWorkspaceOverride": "El workspace activo anula tu ajuste. Las subidas usan: {formats}",
+    "loadErrorTitle": "no se pudieron cargar los ajustes",
+    "loadErrorHint": "Mostrando valores por defecto del wizard. Comprueba que has iniciado sesión y que la API está en marcha.",
+    "noFields": "No hay campos de configuración en esta sección.",
+    "systemHint": "sistema: {value}",
     "privacyTitle": "nota de privacidad",
     "privacyBody": "Tus claves se cifran con AES-256-GCM antes de guardarse. El servidor las descifra solo al hacer peticiones en tu nombre. Los administradores no pueden ver los valores de tus claves."
   },
@@ -337,5 +349,12 @@
         "helpText": "Usa 'Direct' para migraciones o baja concurrencia. Usa 'Transaction pooler' para serverless / alta concurrencia."
       }
     }
+  },
+  "workspaces": {
+    "allowedFormatsLabel": "formatos de archivo permitidos (extensiones separadas por comas)",
+    "allowedFormatsEffective": "subidas usan: {formats}",
+    "allowedFormatsSave": "[ guardar formatos ]",
+    "allowedFormatsClear": "[ usar valores por defecto ]",
+    "allowedFormatsViewer": "formatos: {formats}"
   }
 }

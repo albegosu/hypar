@@ -23,7 +23,7 @@
         <!-- Messages -->
         <div
           ref="scrollRef"
-          class="flex-1 min-h-0 overflow-y-auto overscroll-contain space-y-3 pb-6 scroll-pb-4"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain space-y-3 pb-6 scroll-pb-4"
         >
           <div v-if="!displayMessages.length" class="wz-panel p-6 text-center text-sm">
             <div class="text-2xl mb-2">▌</div>
@@ -33,18 +33,35 @@
           <div
             v-for="(msg, idx) in displayMessages"
             :key="msg.id"
-            class="flex"
+            class="flex min-w-0"
             :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
           >
             <div
-              class="max-w-[90%] rounded-md px-3 py-2 text-sm whitespace-pre-wrap leading-relaxed"
+              class="max-w-[90%] min-w-0 rounded-md px-3 py-2 text-sm whitespace-pre-wrap break-words leading-relaxed"
               :class="msg.role === 'user' ? 'bubble-user' : 'bubble-assistant'"
             >
               <div
                 v-if="msg.role === 'user'"
-                class="wz-faint text-[10px] mb-1 font-mono"
+                class="wz-faint text-[10px] mb-1 font-mono space-y-0.5"
               >
-                &gt; user
+                <div>&gt; user</div>
+                <div v-if="msg.userMetrics" class="flex flex-wrap gap-x-2 gap-y-0.5">
+                  <span>{{ t('chat.userMetricsMode', { mode: msg.userMetrics.searchMode }) }}</span>
+                  <span>{{ t('chat.userMetricsDocs', { count: msg.userMetrics.docsCount }) }}</span>
+                  <span>{{ t('chat.userMetricsChars', { count: msg.userMetrics.charCount }) }}</span>
+                </div>
+                <div
+                  v-if="msg.userMetrics?.inputTokens != null || msg.userMetrics?.outputTokens != null"
+                  class="wz-faint"
+                >
+                  <span v-if="msg.userMetrics.inputTokens != null">
+                    {{ t('chat.userMetricsTokensIn', { count: msg.userMetrics.inputTokens }) }}
+                  </span>
+                  <span v-if="msg.userMetrics.outputTokens != null">
+                    <template v-if="msg.userMetrics.inputTokens != null"> · </template>
+                    {{ t('chat.userMetricsTokensOut', { count: msg.userMetrics.outputTokens }) }}
+                  </span>
+                </div>
               </div>
               <div
                 v-if="msg.role === 'assistant'"
@@ -436,7 +453,19 @@ interface KbToolOutput {
 /** Persisted on reload so citations render without synthetic tool parts in the API payload. */
 interface ChatMessageMetadata {
   sources?: ConverseSource[]
+  usage?: {
+    inputTokens?: number
+    outputTokens?: number
+  }
 }
+
+interface UserMsgMeta {
+  searchMode: string
+  docsCount: number
+  charCount: number
+}
+
+const userMsgMeta = reactive(new Map<string, UserMsgMeta>())
 
 const { t } = useI18n()
 const store = useDocumentsStore()
@@ -579,6 +608,7 @@ async function newConversation() {
   if (typeof window !== 'undefined') window.sessionStorage.removeItem(CONV_ID_KEY)
   chat.messages = []
   expandedSet.clear()
+  userMsgMeta.clear()
 }
 
 async function deleteConversation(id: string) {
@@ -648,6 +678,14 @@ const chatErrorMessage = computed(() => {
   }
 })
 
+interface UserMessageMetrics {
+  searchMode: string
+  docsCount: number
+  charCount: number
+  inputTokens?: number
+  outputTokens?: number
+}
+
 interface DisplayMessage {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -660,6 +698,7 @@ interface DisplayMessage {
   /** True only if the assistant text references retrieved sources. */
   cited: boolean
   latencyMs?: number
+  userMetrics?: UserMessageMetrics
 }
 
 function renderMarkdown(text: string): string {
@@ -683,8 +722,21 @@ function normalizeToolSources(sources: ConverseSource[] | undefined): ConverseSo
   })
 }
 
+function usageFromAssistantMeta(meta: ChatMessageMetadata | undefined): {
+  inputTokens?: number
+  outputTokens?: number
+} {
+  const u = meta?.usage
+  if (!u) return {}
+  return {
+    inputTokens: u.inputTokens,
+    outputTokens: u.outputTokens,
+  }
+}
+
 const displayMessages = computed<DisplayMessage[]>(() => {
-  return chat.messages.map((m) => {
+  const raw = chat.messages
+  return raw.map((m, i) => {
     let text = ''
     let toolOutput: KbToolOutput | null = null
     let toolCalled = false
@@ -714,6 +766,25 @@ const displayMessages = computed<DisplayMessage[]>(() => {
     const cited = m.role === 'assistant'
       && !!sources?.length
       && /\[\d+\]/.test(text)
+
+    let userMetrics: UserMessageMetrics | undefined
+    if (m.role === 'user') {
+      const stored = userMsgMeta.get(m.id)
+      const next = raw[i + 1]
+      const tokenUsage =
+        next?.role === 'assistant'
+          ? usageFromAssistantMeta(next.metadata as ChatMessageMetadata | undefined)
+          : {}
+      if (stored || tokenUsage.inputTokens != null || tokenUsage.outputTokens != null) {
+        userMetrics = {
+          searchMode: stored?.searchMode ?? selectedSearchMode.value,
+          docsCount: stored?.docsCount ?? store.documents.length,
+          charCount: stored?.charCount ?? text.length,
+          ...tokenUsage,
+        }
+      }
+    }
+
     return {
       id: m.id,
       role: m.role,
@@ -724,6 +795,7 @@ const displayMessages = computed<DisplayMessage[]>(() => {
       searched: m.role === 'assistant' ? (hadKbSearch ? true : (text ? false : null)) : null,
       cited,
       latencyMs: toolOutput?.latencyMs,
+      userMetrics,
     }
   })
 })
@@ -903,8 +975,15 @@ async function send() {
   }
   lastSentInput.value = text
   input.value = ''
+  const pendingMeta: UserMsgMeta = {
+    searchMode: selectedSearchMode.value,
+    docsCount: store.documents.length,
+    charCount: text.length,
+  }
   await ensureConversationId()
   await chat.sendMessage({ text })
+  const lastUser = [...chat.messages].reverse().find((m) => m.role === 'user')
+  if (lastUser) userMsgMeta.set(lastUser.id, pendingMeta)
   // Refresh sidebar so the new conversation/title appears.
   fetchConversations()
   focusChatInput()
@@ -952,4 +1031,8 @@ function getIconForType(type: string) {
   margin: 0.25rem 0 0.5rem 1.25rem;
 }
 .markdown-body a { text-decoration: underline; }
+.markdown-body {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 </style>
