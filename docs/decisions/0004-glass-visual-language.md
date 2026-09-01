@@ -14,14 +14,15 @@ Hypar’s UI spoke in a terminal/CLI voice (mono-first chrome, `$ command` panel
 
 ## Decision
 
-Adopt a **glass + rounded** visual language for the Nuxt app shell and surfaces:
+Adopt a **"herbario nocturno"** visual language (refinement of the initial glass + rounded pass) for the Nuxt app shell and surfaces:
 
-- Translucent panels, soft `rgba` borders / highlight edges, large corner radii, soft elevation
-- Light mode: warm/neutral ambient wash behind frosted cards
-- Dark mode: atmospheric gradient wash behind dark glass; white primary CTAs; soft glow for live states (e.g. growing)
-- Sans labels by default; monospace only for seed/code-like bits
-- Keep the existing theme toggle (`useTerminalPrefs` / `AppHeader`) — both modes are glass, not terminal-green
-- Keep the CSS variable layer (`--term-*` under `.terminal-theme`) for low churn; values change, names can migrate later
+- **Light = pliego de herbario**: warm paper canvas, ink text, opaque cards with hairline borders and minimal shadow — no blur, no pastel washes
+- **Dark = invernadero de noche**: deep moss-charcoal atmosphere, dark hairline glass panels, white primary CTAs; discreet live-state glow (e.g. growing)
+- **Inverted agent voice**: the agent challenge hero renders in the *opposite* theme (ink-on-paper block in light, paper-on-night block in dark) so the agent reads as another voice, not another card
+- Micro-metadata (panel headers, state badges, lifecycle steps) in mono 10px uppercase with tracking; content in sans
+- Subtle film-grain overlay on the canvas; radii 12/18px (no bubbly 24px); rounded-rect buttons, pills reserved for badges/chips
+- Keep the existing theme toggle (`useTerminalPrefs` / `AppHeader`) — both modes share the same structure
+- Keep the CSS variable layer (`--term-*` under `.terminal-theme`) for low churn; values change, names can migrate later (new: `--term-voice-*` for the inverted agent surface)
 
 Docs/marketing VitePress can retain a distinct aesthetic; this ADR binds the **app** surfaces.
 
