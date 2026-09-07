@@ -50,10 +50,11 @@ Hypar attacks all three by giving ideas a **lifecycle with pressure** — a syst
 
 The unit of thought. Not a note, not a task, not a ticket. A living entity with a lifecycle.
 
-- **Seed**: One sentence capturing one atomic concept. Immutable after creation. The constraint is intentional — if you can't say it in one sentence, it's not one idea. **The system enforces atomicity**: if the agent detects multiple concepts in a seed ("a card that on hover shows a preview with position-aware transition"), it splits them before planting and the user confirms the split. A seed can originate from text, a URL, or an image.
+- **Seed**: One sentence capturing one atomic concept. Immutable after creation. The constraint is intentional — if you can't say it in one sentence, it's not one idea. **The system enforces atomicity**: if the agent detects multiple concepts in a seed ("a card that on hover shows a preview with position-aware transition"), it splits them before planting and the user confirms the split. A seed can originate from text, a URL, or an image — when the input is non-text, the agent analyzes it and proposes a one-sentence seed that the user confirms or rewrites before planting. The original URL/image is stored as an attachment alongside the seed.
+- **Tensions**: Open questions within an embryo that demand resolution. Raised by the agent ("Does this work on touch devices?") or by the user. A tension is not a comment — it stays visible and unresolved until someone answers it. Tensions are the pressure mechanism that prevents ideas from resting comfortably.
 - **Lifecycle**: `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`. The state shapes the agent's behavior (what kind of challenge it poses, what methodology stance it applies) but does not gate the user's actions. All actions are available in all states — the lifecycle is soft guidance, not a permissions system.
 - **Maturity**: An embryo becomes MATURE when the agent proposes it and the user confirms. The user can also declare maturity directly. There is no automatic promotion.
-- **No delete**: Dead ideas are fossilized with a reason, never erased. The graveyard teaches — the agent proactively surfaces relevant fossils when you work on a new embryo ("You explored something similar 3 months ago and fossilized it because X"), and the strata view is always browsable. RESURRECTS connections are the formal mechanism for reviving a fossilized line of thought.
+- **Fossilization**: Same pattern as maturity — the agent proposes fossilization (including from time decay pressure), the user confirms. The user can also fossilize directly. A fossil requires a reason (why this idea died) and the reason is permanent and visible. The graveyard teaches — the agent proactively surfaces relevant fossils when you work on a new embryo ("You explored something similar 3 months ago and fossilized it because X"), and the strata view is always browsable. RESURRECTS connections are the formal mechanism for reviving a fossilized line of thought.
 
 ### The Garden
 
@@ -72,6 +73,14 @@ Every idea and action in the garden has clear authorship:
 This distinction is permanent and visible. The model can originate ideas (not just respond to yours), but the user always sees what came from where. Model-originated embryos live in a **separate proposal inbox** — they do not count against the garden's volume cap and do not appear on the living surface until the user explicitly adopts them. Adopted proposals become regular embryos (marked as model-originated) and count toward the cap.
 
 **Origination chaining**: an adopted model proposal can trigger one more round of agent origination, but chains never go deeper than two levels. This allows emergent discovery without runaway loops.
+
+### The Embryo detail view
+
+When you open an embryo, the view is structured in three zones:
+
+1. **Seed** (top) — The immutable one-sentence idea, its state badge, its origin (user/model), and any attachments (URL, image).
+2. **Agent thread** (middle) — The structured interaction: challenge cards, tension cards, connection proposals, enrichment notes, and the user's free-text replies. This is the conversation about the idea, not a chat.
+3. **Prototype preview** (bottom/side) — When materializing, the live HTML preview renders here. During iteration, it updates as the conversation evolves.
 
 ### The Agent role
 
@@ -189,6 +198,12 @@ This implies the system prompt, the agent's context window, and potentially a cu
 | D23 | Fossils are proactively surfaced | The agent connects new work to relevant fossils ("You tried this before and fossilized it because X"). Plus manual strata browsing. RESURRECTS is the formal mechanism. |
 | D24 | Materialization is iterative with live preview | The user and agent refine the prototype conversationally. The prototype renders live in Hypar during iteration, not after each round-trip. |
 | D25 | Architecture supports future integrations | No integrations in MVP, but the architecture (API, webhooks) is designed so Figma, GitHub, and other tool connections are addable without rearchitecture. |
+| D26 | Non-text seeds: agent extracts, user confirms | URLs and images are analyzed by the agent, which proposes a one-sentence seed. The user confirms or rewrites. The original input stays as an attachment. The seed is always text. |
+| D27 | Embryo detail: seed + thread + prototype | Three-zone layout. Top: immutable seed. Middle: structured agent thread. Bottom/side: live prototype preview during materialization. |
+| D28 | Tensions are a first-class concept | Open questions within an embryo that demand resolution. The pressure mechanism. Not comments — they stay visible until resolved. |
+| D29 | Paths are dropped — use connected embryos instead | Alternative directions are better expressed as separate embryos linked by CONTRADICTS or EXTENDS. Each path gets its own lifecycle and can independently mature or die. |
+| D30 | Mobile-first | Designed for phone. Desktop is a larger canvas for the same experience. Capture on the go is the core use case — the street idea must reach the garden instantly. |
+| D31 | Fossilization: agent proposes, user confirms | Same HITL pattern as maturity (D17). Time decay triggers proposal, not auto-fossilization. The user always decides what dies. |
 
 ## Open questions
 
