@@ -14,5 +14,22 @@
   "common": {
     "loading": "loading…",
     "cancel": "cancel"
+  },
+  "garden": {
+    "underTension": "under tension",
+    "quiet": "quiet",
+    "surface": "surface",
+    "strata": "strata",
+    "all": "all",
+    "pendingChallenges": "Pending challenges",
+    "unanswered": "{n} unanswered"
+  },
+  "challenge": {
+    "current": "Current challenge",
+    "move": "move",
+    "germinateEyebrow": "First confrontation",
+    "germinateLine": "latent → germinating",
+    "germinateHint": "The seed has met its first challenge",
+    "germinateContinue": "Continue"
   }
 }

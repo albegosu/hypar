@@ -222,8 +222,8 @@
   border: 1px solid var(--term-accent-line);
   border-radius: var(--term-radius-lg);
   background: var(--term-bg-elevated);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   box-shadow: var(--term-shadow);
   overflow: hidden;
 }
@@ -395,8 +395,8 @@
   color: var(--term-text);
   font-family: var(--term-font-sans);
   box-sizing: border-box;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--term-shadow);
 }
 
@@ -453,8 +453,8 @@
   border-radius: var(--term-radius-pill);
   font-family: var(--term-font-sans);
   font-size: 0.625rem;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   box-shadow: var(--term-shadow);
 }
 

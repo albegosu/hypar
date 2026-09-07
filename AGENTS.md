@@ -25,7 +25,7 @@ Archived RAG lives on branch [`archive/rag-v1`](https://github.com/albegosu/hypa
 | [docs/direction.md](docs/direction.md) | Lab / product north star |
 | [docs/decisions/](docs/decisions/) | ADRs (settled choices) |
 | [docs/experiments/](docs/experiments/) | Research write-ups |
-| [docs/open-questions.md](docs/open-questions.md) | Active design tensions |
+| [docs/open-questions.md](docs/open-questions.md) | Active design tensions + near-term UI/product follow-ups |
 | [agents-plans/](agents-plans/) | **Scratch only — not source of truth** |
 
 Prefer reading docs and code over inventing behaviour. When docs and code disagree, fix the drift; do not paper over it in plans.
@@ -56,3 +56,4 @@ pnpm docs:build        # if you change docs/**
 - Decisions: [docs/decisions/](docs/decisions/)
 - Concepts: embryo, lifecycle, agent, fossils under `docs/concepts/`
 - Architecture: [docs/architecture/](docs/architecture/)
+- When asked what to work on next: start from [docs/open-questions.md](docs/open-questions.md) → **Near-term UI / product follow-ups (2026-09-02)** (annotation, not a full roadmap).

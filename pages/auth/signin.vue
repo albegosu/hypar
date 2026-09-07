@@ -1,18 +1,18 @@
 <template>
   <div class="terminal-theme min-h-screen" :class="{ 'theme-light': theme === 'light' }">
-    <div class="wz-scanline app-backdrop min-h-screen flex flex-col">
+    <div class="app-backdrop min-h-screen flex flex-col">
 
       <header class="glass hairline-b px-4 h-12 flex items-center justify-between text-xs shrink-0">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <BrandHyparMark />
-          <span class="wz-strong font-semibold">hypar</span>
+          <span class="text-sm font-medium wz-strong tracking-tight">hypar</span>
         </div>
         <button type="button" class="wz-btn-ghost wz-theme-toggle" @click="toggleTheme">
-          {{ theme === 'light' ? 'Light' : 'Dark' }}
+          {{ theme === 'light' ? '☀' : '☾' }}
         </button>
       </header>
 
-      <div class="flex-1 flex items-center justify-center px-4 py-12">
+      <div class="relative z-10 flex-1 flex items-center justify-center px-3 sm:px-4 py-12">
         <div class="w-full max-w-sm">
           <div class="wz-panel">
 
@@ -97,7 +97,7 @@
                   role="alert"
                   aria-live="assertive"
                   class="text-xs px-3 py-2 rounded font-mono"
-                  style="color: var(--term-danger); background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25)"
+                  style="color: var(--term-danger); background: color-mix(in srgb, var(--term-danger) 8%, transparent); border: 1px solid color-mix(in srgb, var(--term-danger) 28%, transparent)"
                 >
                   ⚠ {{ error }}
                 </div>

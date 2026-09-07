@@ -101,7 +101,7 @@
                   role="alert"
                   aria-live="assertive"
                   class="text-xs px-3 py-2 rounded font-mono"
-                  style="color: var(--term-danger); background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25)"
+                  style="color: var(--term-danger); background: color-mix(in srgb, var(--term-danger) 8%, transparent); border: 1px solid color-mix(in srgb, var(--term-danger) 28%, transparent)"
                 >
                   ⚠ {{ error }}
                 </div>

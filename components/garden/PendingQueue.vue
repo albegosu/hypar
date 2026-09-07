@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { AiQueueItem } from 'ai-elements-nuxt/types'
+import { useI18n } from 'vue-i18n'
 import { useEmbryoStore } from '~/stores/embryos'
 import { truncateSeed } from '~/utils/embryo-display'
 
 const store = useEmbryoStore()
+const { t } = useI18n({ useScope: 'global' })
 
 interface PendingItem extends AiQueueItem {
   embryoId: string
@@ -40,8 +42,8 @@ function openItem(item: AiQueueItem) {
 <template>
   <div v-if="items.length" class="wz-panel">
     <div class="wz-panel-header flex items-center justify-between">
-      <span class="wz-label">Pending challenges</span>
-      <span class="wz-faint text-[10px]">{{ items.length }} unanswered</span>
+      <span class="wz-label">{{ t('garden.pendingChallenges') }}</span>
+      <span class="wz-faint text-[10px]">{{ t('garden.unanswered', { n: items.length }) }}</span>
     </div>
     <div class="p-3">
       <AiQueue :items="items" @retry="openItem">
