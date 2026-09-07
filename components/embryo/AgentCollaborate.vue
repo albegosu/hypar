@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import type { AiConfirmationData, AiContextItem, AiSuggestion } from 'ai-elements-nuxt/types'
+import { useI18n } from 'vue-i18n'
 import { extractPartialQuestion } from '~/utils/embryo-stream'
-import { FOSSIL_KIND_COPY, parseFossilNote } from '~/utils/embryo-method'
+import {
+  FOSSIL_KIND_COPY,
+  MOVE_COPY,
+  isAgentMove,
+  parseFossilNote,
+  type AgentMove,
+} from '~/utils/embryo-method'
 import { appendTranscript, parseConnectionNote } from '~/utils/embryo-display'
 
 const props = defineProps<{
@@ -11,11 +18,13 @@ const props = defineProps<{
 const store = useEmbryoStore()
 const { selectedModel } = useLlmModel()
 const { locale } = useTerminalPrefs()
+const { t } = useI18n({ useScope: 'global' })
 
 const askingAgent = ref(false)
 const agentError = ref<string | null>(null)
 const agentThinking = ref(false)
 const streamPreview = ref('')
+const streamedMove = ref<AgentMove | null>(null)
 const replyInput = ref('')
 const replying = ref(false)
 const autoEngagedFor = ref<string | null>(null)
@@ -78,6 +87,27 @@ const canAsk = computed(() =>
 /** Current unanswered question as the hero (streaming uses streamPreview in template). */
 const focalChallenge = computed(() => unansweredQuestion.value?.content ?? null)
 
+/** Move from the logged AGENT_QUESTION (or just-streamed done payload). */
+const currentMove = computed<AgentMove | null>(() => {
+  if (streamedMove.value) return streamedMove.value
+  const e = embryo.value
+  if (!e) return null
+  const pending = unansweredQuestion.value?.content
+  for (let i = e.events.length - 1; i >= 0; i--) {
+    const ev = e.events[i]!
+    if (ev.type !== 'AGENT_QUESTION') continue
+    if (pending && String(ev.payload?.question ?? '') !== pending) continue
+    const move = ev.payload?.move
+    if (isAgentMove(move)) return move
+    if (pending) return null
+  }
+  return null
+})
+
+const moveHint = computed(() =>
+  currentMove.value ? MOVE_COPY[currentMove.value] : null,
+)
+
 /** Prior completed turns — compact log, excluding the live unanswered question. */
 const priorTurns = computed(() => {
   const pending = unansweredQuestion.value?.content
@@ -128,11 +158,16 @@ const emptyHint = computed(() => {
   return ''
 })
 
+function dismissGerminate() {
+  germinatedNotice.value = false
+}
+
 async function askAgent() {
   askingAgent.value = true
   agentError.value = null
   agentThinking.value = true
   streamPreview.value = ''
+  streamedMove.value = null
 
   try {
     const response = await fetch(`/api/embryos/${props.embryoId}/agent`, {
@@ -175,6 +210,7 @@ async function askAgent() {
           }
           else if (data.type === 'done') {
             streamPreview.value = ''
+            if (isAgentMove(data.move)) streamedMove.value = data.move
             germinatedNotice.value = Boolean(data.germinated)
             await store.fetchOne(props.embryoId, { silent: true })
           }
@@ -208,12 +244,14 @@ async function submitReply() {
   const text = replyInput.value.trim()
   const note = unansweredQuestion.value
   if (!text || !note) return
+  dismissGerminate()
   replying.value = true
   agentError.value = null
   const ok = await store.reply(props.embryoId, note.id, text)
   replying.value = false
   if (!ok) return
   replyInput.value = ''
+  streamedMove.value = null
   await askAgent()
 }
 
@@ -224,6 +262,7 @@ function onReplySpeech(transcript: string, isFinal: boolean) {
 
 function onSuggestion(suggestion: AiSuggestion) {
   if (suggestion.value === 'skip' && unansweredQuestion.value) {
+    dismissGerminate()
     store.dismissNote(props.embryoId, unansweredQuestion.value.id)
   }
 }
@@ -276,6 +315,7 @@ watch(() => props.embryoId, () => {
   replyInput.value = ''
   agentError.value = null
   streamPreview.value = ''
+  streamedMove.value = null
 })
 
 watch(
@@ -303,11 +343,25 @@ watch(
       <span v-else-if="askingAgent" class="text-[11px] wz-accent">Thinking…</span>
     </div>
 
+    <!-- Explicit germination moment (LATENT → GERMINATING) -->
     <div
       v-if="germinatedNotice && !isFossil"
-      class="px-4 py-2 text-[11px] wz-accent border-b border-[var(--term-accent-faint)]"
+      class="hypar-germinate-moment"
+      role="status"
+      aria-live="polite"
     >
-      Advanced to germinating — first engage
+      <div class="hypar-germinate-moment__body">
+        <p class="hypar-germinate-moment__eyebrow">{{ t('challenge.germinateEyebrow') }}</p>
+        <p class="hypar-germinate-moment__line">{{ t('challenge.germinateLine') }}</p>
+        <p class="hypar-germinate-moment__hint">{{ t('challenge.germinateHint') }}</p>
+      </div>
+      <button
+        type="button"
+        class="hypar-germinate-moment__dismiss"
+        @click="dismissGerminate"
+      >
+        {{ t('challenge.germinateContinue') }}
+      </button>
     </div>
 
     <AiErrorBoundary
@@ -354,7 +408,17 @@ watch(
       v-if="focalChallenge || askingAgent"
       class="hypar-challenge-hero"
     >
-      <p class="hypar-challenge-hero__label">Current challenge</p>
+      <div class="hypar-challenge-hero__meta">
+        <p class="hypar-challenge-hero__label">{{ t('challenge.current') }}</p>
+        <p
+          v-if="currentMove"
+          class="hypar-challenge-hero__move"
+          :title="moveHint ?? undefined"
+        >
+          <span class="hypar-challenge-hero__move-name">{{ currentMove }}</span>
+          <span v-if="moveHint" class="hypar-challenge-hero__move-hint">{{ moveHint }}</span>
+        </p>
+      </div>
       <AiShimmer v-if="askingAgent && !streamPreview && !focalChallenge" :active="true" :lines="2" />
       <p v-else class="hypar-challenge-hero__q">
         {{ streamPreview || focalChallenge }}
@@ -424,4 +488,3 @@ watch(
     </div>
   </div>
 </template>
-

@@ -75,3 +75,35 @@ export const EMBRYO_LIST_INCLUDE = {
   agentNotes: { where: { dismissed: false } },
   _count: { select: { events: true, connections: true, connectedTo: true } },
 } as const
+
+/** Living embryo with unanswered challenge or open tension — garden primary signal. */
+export function hasOpenTension(e: {
+  tensions: Array<{ resolved: boolean }>
+  agentNotes: Array<{ type: string; dismissed?: boolean }>
+}): boolean {
+  if (e.tensions.some(t => !t.resolved)) return true
+  return e.agentNotes.some(n =>
+    !n.dismissed
+    && (n.type === 'PENDING_QUESTION'
+      || n.type === 'PENDING_CONNECTION'
+      || n.type === 'PENDING_PATH'
+      || n.type === 'PENDING_FOSSIL'),
+  )
+}
+
+/** Higher score = more urgent tension for garden ordering. */
+export function tensionPriority(e: {
+  tensions: Array<{ resolved: boolean }>
+  agentNotes: Array<{ type: string; dismissed?: boolean }>
+}): number {
+  let score = 0
+  if (e.agentNotes.some(n => !n.dismissed && n.type === 'PENDING_QUESTION')) score += 1000
+  score += e.tensions.filter(t => !t.resolved).length * 10
+  score += e.agentNotes.filter(n =>
+    !n.dismissed
+    && (n.type === 'PENDING_CONNECTION'
+      || n.type === 'PENDING_PATH'
+      || n.type === 'PENDING_FOSSIL'),
+  ).length * 5
+  return score
+}

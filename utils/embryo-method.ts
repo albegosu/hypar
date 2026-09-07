@@ -12,6 +12,15 @@ export const METHOD_COPY: Record<string, string> = {
   FOSSIL: 'path closed, reason kept',
 }
 
+/** Short move labels for the challenge hero — legible, not a method tutorial. */
+export const MOVE_COPY: Record<AgentMove, string> = {
+  DEFINE: 'name the real problem',
+  PROBE: 'test the assumptions',
+  INVERT: 'what would make this wrong?',
+  VARIETY: 'open alternative paths',
+  SIMPLEST: 'close or reopen',
+}
+
 export const FOSSIL_KIND_COPY: Record<FossilKind, { label: string; starter: string }> = {
   ILL_DEFINED: {
     label: 'ill-defined problem',

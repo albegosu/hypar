@@ -25,7 +25,7 @@ Headless AI UI can serve a *collaborator* (one question, HITL links, typed graph
 
 ## What we did not mount
 
-`useAiChat` / `createChatHandler`, `AiSources`, `AiPlan` / `AiTask`, visible `AiReasoning` / `AiChainOfThought`, `AiConversation` as the garden, coding-agent surfaces (`Sandbox`, `Commit`, …). Those either contradict [The Agent](/concepts/agent) or belong to later experiments (method-as-process Phase 2 still logs *moves* without UI).
+`useAiChat` / `createChatHandler`, `AiSources`, `AiPlan` / `AiTask`, visible `AiReasoning` / `AiChainOfThought`, `AiConversation` as the garden, coding-agent surfaces (`Sandbox`, `Commit`, …). Those either contradict [The Agent](/concepts/agent) or belong to later experiments. Method moves are now lightly visible on the challenge hero (from `payload.move`), without a Munari stepper.
 
 ## Observations to collect
 

@@ -49,7 +49,7 @@ See [Fossils & Memory](/concepts/fossils) for the full picture.
 
 ### Who advances an embryo?
 
-- **First agent engage** on a `LATENT` embryo sets `GERMINATING` (logged as `STATE_CHANGED` initiated by `AGENT`). The collaborator panel shows **state → germinating · first engage**. That is the germination trigger in the current lab.
+- **First agent engage** on a `LATENT` embryo sets `GERMINATING` (logged as `STATE_CHANGED` initiated by `AGENT`). The collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — not a silent auto-advance. That is the germination trigger in the current lab.
 - **You** can jump to any other living state from the detail page at any time (including backward). There is no adjacency graph.
 - The agent does **not** suggest other lifecycle transitions. Path and fossil proposals are separate HITL notes.
 

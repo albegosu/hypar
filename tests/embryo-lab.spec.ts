@@ -2,9 +2,11 @@ import { describe, it, expect } from 'vitest'
 import {
   connectionsToPersist,
   fossilStratum,
+  hasOpenTension,
   parseEmbryoStateParam,
   selectAgentPeers,
   shouldAutoGerminate,
+  tensionPriority,
 } from '../utils/embryo-lab'
 
 describe('parseEmbryoStateParam', () => {
@@ -82,5 +84,35 @@ describe('fossilStratum', () => {
     expect(fossilStratum('2026-08-01T00:00:00Z', now)).toBe('mid')
     expect(fossilStratum('2026-01-01T00:00:00Z', now)).toBe('deep')
     expect(fossilStratum(null, now)).toBe('deep')
+  })
+})
+
+describe('hasOpenTension / tensionPriority', () => {
+  it('detects pending challenge and open tensions', () => {
+    expect(hasOpenTension({ tensions: [], agentNotes: [] })).toBe(false)
+    expect(hasOpenTension({
+      tensions: [{ resolved: true }],
+      agentNotes: [{ type: 'OBSERVATION' }],
+    })).toBe(false)
+    expect(hasOpenTension({
+      tensions: [{ resolved: false }],
+      agentNotes: [],
+    })).toBe(true)
+    expect(hasOpenTension({
+      tensions: [],
+      agentNotes: [{ type: 'PENDING_QUESTION' }],
+    })).toBe(true)
+  })
+
+  it('ranks pending questions above plain tensions', () => {
+    const pendingQ = {
+      tensions: [],
+      agentNotes: [{ type: 'PENDING_QUESTION' as const }],
+    }
+    const openT = {
+      tensions: [{ resolved: false }, { resolved: false }],
+      agentNotes: [],
+    }
+    expect(tensionPriority(pendingQ)).toBeGreaterThan(tensionPriority(openT))
   })
 })

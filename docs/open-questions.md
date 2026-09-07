@@ -27,11 +27,11 @@ The [ai-elements surfaces](/experiments/ai-elements-surfaces) experiment draws t
 
 An embryo starts as latent. What moves it to germinating?
 
-**Current runtime (option mixed):** opening a `LATENT` embryo auto-engages the agent. The first successful agent turn sets `GERMINATING` and the collaborator shows **state → germinating · first engage**. You can also jump state by hand.
+**Current runtime (option mixed):** opening a `LATENT` embryo auto-engages the agent. The first successful agent turn sets `GERMINATING` and the collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — dismissible, not silent. You can also jump state by hand.
 
-Still open: should that auto-advance be visible? Should the agent wait to be invited? Should forgotten latent embryos germinate without a visit?
+Still open: should the agent wait to be invited? Should forgotten latent embryos germinate without a visit?
 
-*Status: partially answered — first engage is the trigger; UX of the silent advance is still an observation.*
+*Status: partially answered — first engage is the trigger; the advance is now an explicit UX moment (observation continues on invite-vs-auto).*
 
 ---
 
@@ -63,19 +63,21 @@ Fossils exist in strata. The navigation metaphor is excavation, not browsing. Bu
 
 Scroll depth? A separate view? A toggle between "surface" and "strata"? A search that surfaces fossils alongside living embryos when relevant?
 
-Today fossils are grouped in the garden **strata** view by age (week / month / older). Whether that is enough excavation is still an observation.
+**Current runtime:** the garden defaults to **surface** — living embryos sectioned by open tension / pending challenge first, then quiet. Fossils live under the **strata** filter, grouped by age (week / month / older).
 
-*Status: in experiment — strata filter shipped; metaphor still under review.*
+Whether strata excavation is enough (and whether quiet living should stay on the surface) is still an observation.
+
+*Status: in experiment — tension-first surface + strata filter shipped; metaphor still under review.*
 
 ---
 
 ## Does the agent’s question depend on lifecycle state?
 
-The [method-as-process experiment](/experiments/method-as-process) shipped stance per state: define → probe → generate paths → select the simplest. `LATENT` is included in the prompt. The move is logged on the event, not shown in the UI.
+The [method-as-process experiment](/experiments/method-as-process) shipped stance per state: define → probe → generate paths → select the simplest. `LATENT` is included in the prompt. The move is logged on the event and shown lightly on the challenge hero (`DEFINE` / `PROBE` / … plus a short hint) — not as a Munari stepper.
 
 The remaining risk is theatre: we added stance text and the questions do not change. Count `payload.move` on `AGENT_QUESTION` events against embryo state. If `GROWING` is still 90% `PROBE`, the prompt failed.
 
-*Status: implemented, awaiting observation.*
+*Status: implemented (move legible in UI), awaiting observation of question quality × state.*
 
 ---
 
@@ -88,5 +90,16 @@ Phase 3 shipped option A: pending paths the user accepts as tensions. Whether th
 *Status: implemented (option A), awaiting observation — [method as process](/experiments/method-as-process).*
 
 ---
+
+## Near-term UI / product follow-ups (2026-09-02)
+
+Annotation — not a roadmap. Shell and glass work after [ADR 0004](/decisions/0004-glass-visual-language); polish and method depth still open:
+
+- **Writing hero placement** — evaluate a notepad-like writing surface placed at a random position within max height/width (not a fixed dock)
+- **Floating menu** — shrink the Garden/Settings float pill; tighten aesthetics to match the glass chrome
+- **Background** — fix the ambient field (dithered `+` / fluid overlay) so it reads as atmosphere, not noise or unfinished canvas
+- **Textures** — enrich glass and field textures without reverting to glyph/CRT clutter
+- **Settings** — expand/complete beyond the current model selector (`pages/settings.vue`); more lab controls as they earn a surface
+- **Enrich the process** — deepen embryo method in product (stance × state, paths, HITL) so the lab process is denser than chrome — see [method as process](/experiments/method-as-process) and the stance questions above
 
 *This page is a living document. Questions are added as they emerge and marked resolved when experiments answer them.*
