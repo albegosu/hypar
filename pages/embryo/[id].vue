@@ -153,7 +153,7 @@ function stepClass(state: EmbryoState) {
 
 <template>
   <div
-    class="max-w-3xl mx-auto px-4 pt-6 pb-24 flex flex-col gap-5"
+    class="max-w-3xl mx-auto px-3 sm:px-5 pt-12 sm:pt-14 pb-8 flex flex-col gap-4 sm:gap-5"
     :class="{ 'fossil-view': isFossil }"
   >
 
@@ -272,7 +272,7 @@ function stepClass(state: EmbryoState) {
             v-model="fossilReason"
             rows="2"
             placeholder="Why is this closing? (required)"
-            class="bg-transparent resize-none text-sm wz-strong placeholder:wz-faint focus:outline-none w-full"
+            class="wz-field-bare"
           />
           <div class="flex gap-2 justify-end">
             <button class="wz-btn-ghost text-xs" @click="showFossilDialog = false; fossilKind = null">Cancel</button>
@@ -506,7 +506,7 @@ function stepClass(state: EmbryoState) {
 }
 .fossil-view::before {
   content: '';
-  position: fixed;
+  position: absolute;
   inset: 0;
   pointer-events: none;
   background: repeating-linear-gradient(
