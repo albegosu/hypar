@@ -10,7 +10,7 @@
 
 Hypar is an **intelligent idea laboratory for digital product people** — designers, developers, and product thinkers who work on UI/UX and digital experiences.
 
-It is a place where you plant raw ideas (a hover interaction, a navigation pattern, a micro-animation concept), and the system helps you **define, challenge, connect, validate, and materialize** them — from a one-sentence seed to something you can show: a description or a working HTML prototype.
+It is a place where you plant raw ideas (a hover interaction, a navigation pattern, a micro-animation concept), and the system helps you **define, challenge, connect, and materialize** them — from a one-sentence seed to something you can show: a refined description or a working HTML prototype. Validation is not a separate step — it is the outcome of surviving challenges, resolving tensions, and optionally materializing into a prototype that proves the concept works.
 
 The lab is personal but shareable. You own your garden; you can open it to others.
 
@@ -51,10 +51,10 @@ Hypar attacks all three by giving ideas a **lifecycle with pressure** — a syst
 The unit of thought. Not a note, not a task, not a ticket. A living entity with a lifecycle.
 
 - **Seed**: One sentence capturing one atomic concept. Immutable after creation. The constraint is intentional — if you can't say it in one sentence, it's not one idea. **The system enforces atomicity**: if the agent detects multiple concepts in a seed ("a card that on hover shows a preview with position-aware transition"), it splits them before planting and the user confirms the split. A seed can originate from text, a URL, or an image — when the input is non-text, the agent analyzes it and proposes a one-sentence seed that the user confirms or rewrites before planting. The original URL/image is stored as an attachment alongside the seed.
-- **Tensions**: Open questions within an embryo that demand resolution. Raised by the agent ("Does this work on touch devices?") or by the user. A tension is not a comment — it stays visible and unresolved until someone answers it. Tensions are the pressure mechanism that prevents ideas from resting comfortably.
+- **Tensions**: Open questions within an embryo that demand resolution. Raised by the agent ("Does this work on touch devices?") or by the user. A tension is not a comment — it stays visible and unresolved until someone answers it with a resolution. Tensions are the pressure mechanism that prevents ideas from resting comfortably. Agent challenges create tensions directly — the challenge IS a tension, not a separate concept.
 - **Lifecycle**: `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`. The state shapes the agent's behavior (what kind of challenge it poses, what methodology stance it applies) but does not gate the user's actions. All actions are available in all states — the lifecycle is soft guidance, not a permissions system.
 - **Maturity**: An embryo becomes MATURE when the agent proposes it and the user confirms. The user can also declare maturity directly. There is no automatic promotion.
-- **Fossilization**: Same pattern as maturity — the agent proposes fossilization (including from time decay pressure), the user confirms. The user can also fossilize directly. A fossil requires a reason (why this idea died) and the reason is permanent and visible. The graveyard teaches — the agent proactively surfaces relevant fossils when you work on a new embryo ("You explored something similar 3 months ago and fossilized it because X"), and the strata view is always browsable. RESURRECTS connections are the formal mechanism for reviving a fossilized line of thought.
+- **Fossilization**: Same pattern as maturity — the agent proposes fossilization (including from time decay pressure), the user confirms. The user can also fossilize directly. A fossil requires a reason and a kind. **Fossil kinds include negative outcomes (ill-defined, wrong path, superseded) and positive ones (completed, shipped).** A mature embryo that has produced its prototype and resolved its tensions can be fossilized as COMPLETED — graduation, not death. This frees volume cap space and moves the idea to the strata as a trophy, not a tombstone. The graveyard teaches — the agent proactively surfaces relevant fossils when you work on a new embryo ("You explored something similar 3 months ago and fossilized it because X"), and the strata view is always browsable. RESURRECTS connections are the formal mechanism for reviving a fossilized line of thought.
 
 ### The Garden
 
@@ -106,7 +106,7 @@ The agent does NOT: validate without questioning, summarize without adding, or c
 
 The path from idea to artifact. This is what separates Hypar from a thinking tool and makes it a lab:
 
-1. **Text** — A refined description of the idea: what it does, why it matters, where it applies.
+1. **Text** — A refined description synthesized from the seed and agent thread: what the idea does, why it matters, where it applies, what tensions it resolved. Generated by the agent on demand from the accumulated conversation, not manually written.
 2. **Prototype** — A working HTML/CSS/JS artifact that demonstrates the interaction or pattern. The browser is the canvas: looping CSS animations, interactive hover states, transition sequences, layout experiments — all achievable without image generation.
 
 **Process**: Materialization is iterative with live preview. The user and agent go back and forth — "slower transition", "darker background", "try it with a spring easing" — and the prototype renders live in Hypar as the conversation evolves. The user sees changes in real time, not after each round-trip.
@@ -200,10 +200,13 @@ This implies the system prompt, the agent's context window, and potentially a cu
 | D25 | Architecture supports future integrations | No integrations in MVP, but the architecture (API, webhooks) is designed so Figma, GitHub, and other tool connections are addable without rearchitecture. |
 | D26 | Non-text seeds: agent extracts, user confirms | URLs and images are analyzed by the agent, which proposes a one-sentence seed. The user confirms or rewrites. The original input stays as an attachment. The seed is always text. |
 | D27 | Embryo detail: seed + thread + prototype | Three-zone layout. Top: immutable seed. Middle: structured agent thread. Bottom/side: live prototype preview during materialization. |
-| D28 | Tensions are a first-class concept | Open questions within an embryo that demand resolution. The pressure mechanism. Not comments — they stay visible until resolved. |
+| D28 | Tensions are a first-class concept; agent challenges ARE tensions | Open questions within an embryo that demand resolution. Agent challenges create tensions directly — no separate "pending question" concept. Tensions carry a resolution when answered. |
 | D29 | Paths are dropped — use connected embryos instead | Alternative directions are better expressed as separate embryos linked by CONTRADICTS or EXTENDS. Each path gets its own lifecycle and can independently mature or die. |
 | D30 | Mobile-first | Designed for phone. Desktop is a larger canvas for the same experience. Capture on the go is the core use case — the street idea must reach the garden instantly. |
 | D31 | Fossilization: agent proposes, user confirms | Same HITL pattern as maturity (D17). Time decay triggers proposal, not auto-fossilization. The user always decides what dies. |
+| D32 | Fossil kinds include positive outcomes | COMPLETED and SHIPPED are valid fossil kinds alongside ill-defined, wrong-path, superseded. Fossilization is not only death — it is also graduation. This solves the MATURE cap-blocking problem: successful ideas fossilize as trophies, freeing volume. |
+| D33 | Validation is implicit, not a discrete step | Validation = surviving challenges + resolving tensions + optionally materializing. No separate "validate" action. The process IS the validation. |
+| D34 | Agent challenges create tensions, not notes | No separate "pending question" concept. When the agent challenges, it creates a Tension (raisedBy: AGENT). The user resolves it with a text answer. Simplifies the model and makes every challenge a pressure point. |
 
 ## Open questions
 
