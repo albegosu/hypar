@@ -161,15 +161,15 @@ This implies the system prompt, the agent's context window, and potentially a cu
 | D8 | Materialization MVP is text + HTML/CSS/JS | HTML can produce looping animations, interactive demos, and visual proofs of concept. No image generation needed — the browser is the canvas. Keeps the pipeline simple and the output runnable. |
 | D9 | Model origination is event-driven | The agent proposes new ideas when the user plants a seed or when an embryo changes state — not on a schedule, not on demand. This keeps origination contextual and non-intrusive: the model reacts to momentum, not to silence. |
 | D10 | Carrying capacity: time decay + volume cap | Two pressures prevent garden bloat. **Time decay**: embryos that stay LATENT beyond a threshold trigger agent-proposed fossilization. **Volume cap**: a maximum number of living embryos forces the user to decide — grow or fossilize — before planting more. The exact thresholds are tuning parameters, not product decisions. |
+| D11 | Agent knowledge: training first, curated DB later | Start with the LLM's built-in UI/UX knowledge. If answers prove too generic or outdated, add a searchable pattern database as a second phase. Avoids premature infrastructure. |
+| D12 | Prototypes are viewable in Hypar and exportable | The prototype lives inside the lab (embedded preview) but the user can download it as a standalone HTML file to share, present, or embed elsewhere. The lab is not a walled garden for its own output. |
+| D13 | Curated provider list | Hypar supports 2–3 proven LLM providers that meet the quality floor for design reasoning, code generation, and critical challenge. Not any model — the agent's quality is the product, and weak models undermine it. |
 
 ## Open questions
 
 | # | Question | Stakes |
 |---|---|---|
-| O3 | How much domain knowledge does the agent carry vs. retrieve? | Affects architecture: system prompt tuning vs. RAG over a UI pattern corpus vs. tool use. |
-| O4 | What does "shared garden" mean in practice? Read-only showcase? Forkable? Collaborative? | Determines auth, permissions, and data model changes. |
-| O5 | Is there a "harvest" concept — a mature embryo that graduated from the lab into a real project? | Closes the loop between ideation and execution. Might be out of scope. |
-| O6 | Provider flexibility — should the lab work with any LLM, or is the agent quality tightly coupled to a specific model? | Ollama is current; quality for origination and materialization may demand stronger models. |
+| O4 | What does "shared garden" mean in practice? Read-only showcase? Forkable? Collaborative? | Determines auth, permissions, and data model changes. Deferred to post-MVP. |
 
 ---
 
