@@ -77,7 +77,7 @@ The agent is a **collaborator with a critical stance**, not an assistant. Its be
 | **Challenge** | Questions your idea's assumptions, feasibility, originality | Model track |
 | **Connect** | Detects relationships between embryos (reinforces, contradicts, extends) | Model track (unconfirmed until user accepts) |
 | **Enrich** | Adds context, references, technical considerations | Model track |
-| **Originate** | Proposes new embryos derived from existing ones or from gaps it identifies | Model track (proposed, requires user adoption) |
+| **Originate** | Proposes new embryos when triggered by a new seed or a state change — contextual, not scheduled | Model track (proposed, requires user adoption) |
 | **Materialize** | Helps push an idea toward a tangible artifact (description, visual, prototype) | Collaborative |
 
 The agent does NOT: validate without questioning, summarize without adding, or comfort. Tension is the product.
@@ -87,8 +87,7 @@ The agent does NOT: validate without questioning, summarize without adding, or c
 The path from idea to artifact. This is what separates Hypar from a thinking tool and makes it a lab:
 
 1. **Text** — A refined description of the idea: what it does, why it matters, where it applies.
-2. **Visual reference** — An image, sketch, or mood reference that anchors the concept visually.
-3. **Prototype** — A working HTML/CSS/JS artifact that demonstrates the interaction or pattern.
+2. **Prototype** — A working HTML/CSS/JS artifact that demonstrates the interaction or pattern. The browser is the canvas: looping CSS animations, interactive hover states, transition sequences, layout experiments — all achievable without image generation.
 
 Not every embryo reaches materialization. Many should die as fossils. But the path must exist and be smooth for the ideas that earn it.
 
@@ -159,18 +158,18 @@ This implies the system prompt, the agent's context window, and potentially a cu
 | D5 | Materialization is a first-class path | A lab that only produces text is a notebook. The lab must produce testable artifacts. |
 | D6 | Scope boundary: if it can't be UI/interaction/digital experience, it's out | Prevents the garden from becoming a second brain for everything. |
 | D7 | Documentation in English | Broader reach, technical standard. |
+| D8 | Materialization MVP is text + HTML/CSS/JS | HTML can produce looping animations, interactive demos, and visual proofs of concept. No image generation needed — the browser is the canvas. Keeps the pipeline simple and the output runnable. |
+| D9 | Model origination is event-driven | The agent proposes new ideas when the user plants a seed or when an embryo changes state — not on a schedule, not on demand. This keeps origination contextual and non-intrusive: the model reacts to momentum, not to silence. |
+| D10 | Carrying capacity: time decay + volume cap | Two pressures prevent garden bloat. **Time decay**: embryos that stay LATENT beyond a threshold trigger agent-proposed fossilization. **Volume cap**: a maximum number of living embryos forces the user to decide — grow or fossilize — before planting more. The exact thresholds are tuning parameters, not product decisions. |
 
 ## Open questions
 
 | # | Question | Stakes |
 |---|---|---|
-| O1 | What is the minimum viable materialization? Just HTML, or also images/sketches? | Determines the first artifact pipeline to build. |
-| O2 | How does the model originate ideas? Scheduled sweeps, event-driven, or on explicit "surprise me"? | Defines the agent's autonomy model and the UX for model-track proposals. |
 | O3 | How much domain knowledge does the agent carry vs. retrieve? | Affects architecture: system prompt tuning vs. RAG over a UI pattern corpus vs. tool use. |
 | O4 | What does "shared garden" mean in practice? Read-only showcase? Forkable? Collaborative? | Determines auth, permissions, and data model changes. |
 | O5 | Is there a "harvest" concept — a mature embryo that graduated from the lab into a real project? | Closes the loop between ideation and execution. Might be out of scope. |
 | O6 | Provider flexibility — should the lab work with any LLM, or is the agent quality tightly coupled to a specific model? | Ollama is current; quality for origination and materialization may demand stronger models. |
-| O7 | What prevents the garden from growing endlessly without pressure? Is there a carrying capacity? | Without constraint, the garden becomes a graveyard of latent seeds nobody revisits. |
 
 ---
 
