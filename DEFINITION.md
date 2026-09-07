@@ -10,9 +10,11 @@
 
 Hypar is an **intelligent idea laboratory for digital product people** — designers, developers, and product thinkers who work on UI/UX and digital experiences.
 
-It is a place where you plant raw ideas (a hover interaction, a navigation pattern, a micro-animation concept), and the system helps you **define, challenge, connect, validate, and materialize** them — from a one-sentence seed to something you can show: a description, a visual reference, or a working HTML prototype.
+It is a place where you plant raw ideas (a hover interaction, a navigation pattern, a micro-animation concept), and the system helps you **define, challenge, connect, validate, and materialize** them — from a one-sentence seed to something you can show: a description or a working HTML prototype.
 
 The lab is personal but shareable. You own your garden; you can open it to others.
+
+**Capture is instant.** An idea can be born from text, an external link, or a screenshot/image. Inside the app, the garden opens with a text field front and center — one tap, type, enter. Outside the app, a quick-capture shortcut (keyboard shortcut, mobile widget, share intent) lets you plant a seed without navigating to the garden first.
 
 ## What Hypar is not
 
@@ -48,9 +50,10 @@ Hypar attacks all three by giving ideas a **lifecycle with pressure** — a syst
 
 The unit of thought. Not a note, not a task, not a ticket. A living entity with a lifecycle.
 
-- **Seed**: One sentence capturing the raw idea. Immutable after creation. The constraint is intentional — if you can't say it in one sentence, it's not one idea.
-- **Lifecycle**: `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`
-- **No delete**: Dead ideas are fossilized with a reason, never erased. The graveyard teaches.
+- **Seed**: One sentence capturing one atomic concept. Immutable after creation. The constraint is intentional — if you can't say it in one sentence, it's not one idea. **The system enforces atomicity**: if the agent detects multiple concepts in a seed ("a card that on hover shows a preview with position-aware transition"), it splits them before planting and the user confirms the split. A seed can originate from text, a URL, or an image.
+- **Lifecycle**: `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`. The state shapes the agent's behavior (what kind of challenge it poses, what methodology stance it applies) but does not gate the user's actions. All actions are available in all states — the lifecycle is soft guidance, not a permissions system.
+- **Maturity**: An embryo becomes MATURE when the agent proposes it and the user confirms. The user can also declare maturity directly. There is no automatic promotion.
+- **No delete**: Dead ideas are fossilized with a reason, never erased. The graveyard teaches — the agent proactively surfaces relevant fossils when you work on a new embryo ("You explored something similar 3 months ago and fossilized it because X"), and the strata view is always browsable. RESURRECTS connections are the formal mechanism for reviving a fossilized line of thought.
 
 ### The Garden
 
@@ -66,7 +69,9 @@ Every idea and action in the garden has clear authorship:
 - **Your track**: Ideas you planted, connections you drew, decisions you made.
 - **Model track**: Ideas the model originated, connections it inferred, challenges it posed.
 
-This distinction is permanent and visible. The model can originate ideas (not just respond to yours), but the user always sees what came from where. Model-originated embryos require explicit user acknowledgment before they become part of the garden's living surface — they arrive as proposals, not facts.
+This distinction is permanent and visible. The model can originate ideas (not just respond to yours), but the user always sees what came from where. Model-originated embryos live in a **separate proposal inbox** — they do not count against the garden's volume cap and do not appear on the living surface until the user explicitly adopts them. Adopted proposals become regular embryos (marked as model-originated) and count toward the cap.
+
+**Origination chaining**: an adopted model proposal can trigger one more round of agent origination, but chains never go deeper than two levels. This allows emergent discovery without runaway loops.
 
 ### The Agent role
 
@@ -82,12 +87,20 @@ The agent is a **collaborator with a critical stance**, not an assistant. Its be
 
 The agent does NOT: validate without questioning, summarize without adding, or comfort. Tension is the product.
 
+**Interaction model**: Hybrid. The agent's primary output is structured — challenge cards, connection proposals, prototype iterations. But the user can reply in free text to push back, redirect, or ask for more. This is not a chat: the structure keeps the conversation productive, and free text keeps it human.
+
+**Agent persona**: The user picks a discipline profile during onboarding (designer, developer, product thinker). The agent adapts its challenge vocabulary, technical depth, and materialization style to the profile. A developer gets "this needs requestAnimationFrame, not CSS transitions, because..." A designer gets "the visual weight shifts the hierarchy away from the primary action."
+
+**Scope enforcement**: The agent does not reject out-of-scope ideas. It redirects them toward their UI/UX surface. "API rate limiting strategy" becomes "How does rate limiting surface to the user? What does the error state look like?" Every idea has a user-facing angle; the agent finds it.
+
 ### Materialization
 
 The path from idea to artifact. This is what separates Hypar from a thinking tool and makes it a lab:
 
 1. **Text** — A refined description of the idea: what it does, why it matters, where it applies.
 2. **Prototype** — A working HTML/CSS/JS artifact that demonstrates the interaction or pattern. The browser is the canvas: looping CSS animations, interactive hover states, transition sequences, layout experiments — all achievable without image generation.
+
+**Process**: Materialization is iterative with live preview. The user and agent go back and forth — "slower transition", "darker background", "try it with a spring easing" — and the prototype renders live in Hypar as the conversation evolves. The user sees changes in real time, not after each round-trip.
 
 Not every embryo reaches materialization. Many should die as fossils. But the path must exist and be smooth for the ideas that earn it.
 
@@ -164,6 +177,18 @@ This implies the system prompt, the agent's context window, and potentially a cu
 | D11 | Agent knowledge: training first, curated DB later | Start with the LLM's built-in UI/UX knowledge. If answers prove too generic or outdated, add a searchable pattern database as a second phase. Avoids premature infrastructure. |
 | D12 | Prototypes are viewable in Hypar and exportable | The prototype lives inside the lab (embedded preview) but the user can download it as a standalone HTML file to share, present, or embed elsewhere. The lab is not a walled garden for its own output. |
 | D13 | Curated provider list | Hypar supports 2–3 proven LLM providers that meet the quality floor for design reasoning, code generation, and critical challenge. Not any model — the agent's quality is the product, and weak models undermine it. |
+| D14 | Capture is multi-format and instant | Seeds can originate from text, URLs, or images. The garden has an always-visible field; outside the app, quick-capture (shortcut, widget, share intent) skips navigation. Solving evaporation requires zero-friction entry. |
+| D15 | Seeds are atomic — system enforces | If the agent detects multiple concepts in a seed, it proposes a split before planting. The user confirms the split. Compound ideas become connected embryos, not one overloaded seed. |
+| D16 | Lifecycle is soft guidance, not permissions | The state shapes the agent's behavior (challenge style, methodology stance) but never gates user actions. No "you can't materialize until MATURE." |
+| D17 | Maturity is agent-proposed, user-confirmed | The agent suggests when an embryo looks mature. The user can also declare it directly. No automatic promotion — maturity is a human decision. |
+| D18 | Origination chains max depth 2 | An adopted model proposal can trigger one more origination round, but never deeper. Balances emergent discovery against runaway feedback loops. |
+| D19 | Model proposals live in a separate inbox | Proposals don't count against the volume cap and don't appear on the garden surface until adopted. The model can't flood your garden or block your own planting. |
+| D20 | Interaction is hybrid: structured + free text | The agent outputs structured cards (challenges, proposals, prototypes). The user can reply in free text. Not a chat, not a form — structured enough to be productive, open enough to be human. |
+| D21 | User picks a discipline profile | Onboarding asks: designer, developer, or product thinker. The agent adapts challenges, vocabulary, and materialization style accordingly. |
+| D22 | Scope enforcement is redirection, not rejection | Out-of-scope ideas are steered toward their UI/UX surface, not refused. Every idea has a user-facing angle. |
+| D23 | Fossils are proactively surfaced | The agent connects new work to relevant fossils ("You tried this before and fossilized it because X"). Plus manual strata browsing. RESURRECTS is the formal mechanism. |
+| D24 | Materialization is iterative with live preview | The user and agent refine the prototype conversationally. The prototype renders live in Hypar during iteration, not after each round-trip. |
+| D25 | Architecture supports future integrations | No integrations in MVP, but the architecture (API, webhooks) is designed so Figma, GitHub, and other tool connections are addable without rearchitecture. |
 
 ## Open questions
 
