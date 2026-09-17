@@ -64,6 +64,15 @@ describe('rate-limit middleware', () => {
     expect(() => handler(makeEvent('/api/integrations/tokens', 'POST', ip))).not.toThrow()
   })
 
+  it('applies the integration rule to reference index pushes', () => {
+    const ip = '10.0.0.91'
+    for (let i = 0; i < 30; i++) {
+      handler(makeEvent('/api/integrations/references', 'PUT', ip))
+    }
+    expect(() => handler(makeEvent('/api/integrations/references', 'PUT', ip))).toThrow('Rate limit exceeded')
+    expect(() => handler(makeEvent('/api/integrations/references', 'DELETE', ip))).not.toThrow()
+  })
+
   it('does not rate-limit removed RAG paths', () => {
     expect(() => handler(makeEvent('/api/chat', 'POST', '10.0.0.1', 'user-1'))).not.toThrow()
     expect(() => handler(makeEvent('/api/documents/upload', 'POST', '10.0.0.1', 'user-1'))).not.toThrow()

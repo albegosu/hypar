@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildAgentSystemPrompt,
+  hasSourceContext,
   buildAgentUserMessage,
   dialogueFromEvents,
   extractPartialQuestion,
@@ -142,6 +143,39 @@ describe('buildAgentUserMessage', () => {
     expect(message).toContain('Embryo: A lone seed.')
     expect(message).toContain('Current state: LATENT')
     expect(message).not.toContain('Prior exchange')
+  })
+})
+
+describe('what sparked the seed', () => {
+  const base = { seed: 'I think this would be great for hypar', state: 'LATENT', openTensions: [], dialogue: [], otherEmbryos: [] }
+
+  it('shows the capture as context, apart from the seed', () => {
+    const message = buildAgentUserMessage({
+      ...base,
+      source: { title: 'Interactive Component Preview Hover', context: 'Hovering a card plays its animation.' },
+    })
+    expect(message).toContain('Embryo: I think this would be great for hypar')
+    expect(message).toContain('What sparked this seed (something the user saved; context, not the idea):')
+    expect(message).toContain('Interactive Component Preview Hover\n\nHovering a card plays its animation.')
+  })
+
+  it('clips a long essence', () => {
+    const message = buildAgentUserMessage({ ...base, source: { context: `${'line of detail\n'.repeat(1000)}` } })
+    expect(message.length).toBeLessThan(5000)
+    expect(message).toContain('…')
+  })
+
+  it('leaves the message and the system prompt unchanged without a source', () => {
+    expect(buildAgentUserMessage({ ...base, source: { title: ' ', context: null } })).toBe(buildAgentUserMessage(base))
+    expect(hasSourceContext({ title: null, context: '' })).toBe(false)
+    expect(buildAgentSystemPrompt('LATENT', { sparked: false })).toBe(buildAgentSystemPrompt('LATENT'))
+    expect(buildAgentSystemPrompt('LATENT')).not.toContain('What sparked this seed')
+  })
+
+  it('tells the agent not to recommend the saved thing when sparked', () => {
+    const prompt = buildAgentSystemPrompt('LATENT', { sparked: true })
+    expect(prompt).toContain('never suggest adopting, copying or building it')
+    expect(prompt).toContain('Preferred move: DEFINE')
   })
 })
 

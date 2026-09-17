@@ -67,6 +67,8 @@ model Embryo {
   fossilBy     FossilTrigger?
   sourceUrl    String?     // Original link when the seed arrived from an integration (e.g. second-brain)
   sourceRef    String?     // Where the integration keeps its own copy (e.g. the wiki source note)
+  sourceTitle  String?     // Title of what sparked the seed (e.g. the capture's title)
+  sourceContext String?    // What sparked the seed, as Markdown: the capture's essence, never the seed itself
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   events       EmbryoEvent[]
@@ -156,6 +158,19 @@ model IntegrationToken {
   @@index([userId])
 }
 
+// Latest index of the user's second-brain wiki (topic and item names, summaries),
+// pushed by the wiki repository. One row per user, replaced on every push.
+model ReferenceIndex {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  markdown  String
+  commit    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 // ── better-auth tables ────────────────────────────────────────
 
 model User {
@@ -175,6 +190,7 @@ model User {
   accounts  Account[]
   embryos   Embryo[]
   integrationTokens IntegrationToken[]
+  referenceIndex    ReferenceIndex?
 }
 
 model Session {

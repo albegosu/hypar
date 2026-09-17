@@ -8,6 +8,7 @@ import {
   buildAgentSystemPrompt,
   buildAgentUserMessage,
   dialogueFromEvents,
+  hasSourceContext,
   parseAgentResponse,
 } from '~/server/utils/embryo-agent'
 import { formatFossilNote } from '~/utils/embryo-method'
@@ -67,7 +68,9 @@ export default defineEventHandler(async (event) => {
     openTensions: embryo.tensions.map(t => t.question),
     otherEmbryos: candidates,
     dialogue,
+    source: { title: embryo.sourceTitle, context: embryo.sourceContext },
   })
+  const sparked = hasSourceContext({ title: embryo.sourceTitle, context: embryo.sourceContext })
 
   const { model, timeoutMs } = createOllamaChatModel(requestedModel)
 
@@ -80,7 +83,7 @@ export default defineEventHandler(async (event) => {
   try {
     const result = streamText({
       model,
-      system: buildAgentSystemPrompt(embryo.state),
+      system: buildAgentSystemPrompt(embryo.state, { sparked }),
       prompt: userMessage,
       abortSignal: AbortSignal.timeout(timeoutMs),
     })
