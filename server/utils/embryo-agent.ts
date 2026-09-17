@@ -6,6 +6,7 @@ import {
   type FossilKind,
 } from '../../utils/embryo-method'
 import { AGENT_CONNECTION_TYPES } from '../../utils/embryo-lab'
+import { clipSourceContext } from '../../utils/source-context'
 
 export { extractPartialQuestion } from '../../utils/embryo-stream'
 export type { AgentMove, FossilKind }
@@ -35,10 +36,14 @@ Rules:
 - Paths are directions that lead to options, not the option itself.
 - Never name Munari, Design Thinking, or a method in the question. The method is how you think, not what you say.`
 
-export function buildAgentSystemPrompt(state: string): string {
+const SPARKED_RULE = `This seed was sparked by something the user saved (shown as "What sparked this seed"). The seed is the user's reaction to it, and the embryo is the user's idea, not the saved thing.
+- Use it to understand what "this" refers to and to make the question concrete.
+- Challenge what the user wants from it or why it matters for them. Never describe it back, and never suggest adopting, copying or building it.`
+
+export function buildAgentSystemPrompt(state: string, opts: { sparked?: boolean } = {}): string {
   const stance = stanceFor(state)
   return `${BASE_PROMPT}
-
+${opts.sparked ? `\n${SPARKED_RULE}\n` : ''}
 Current embryo state: ${state}
 Preferred move: ${stance.move}
 Stance: ${stance.instruction}`
@@ -77,6 +82,13 @@ export interface AgentPromptInput {
   openTensions: string[]
   otherEmbryos: Array<{ id: string; seed: string; state: string }>
   dialogue: AgentDialogueTurn[]
+  /** What sparked the seed (e.g. a second-brain capture): context for the agent, never the idea. */
+  source?: { title?: string | null; context?: string | null }
+}
+
+/** Whether the embryo carries anything the agent should read as its origin. */
+export function hasSourceContext(source: AgentPromptInput['source']): boolean {
+  return !!(source?.title?.trim() || source?.context?.trim())
 }
 
 const CONNECTION_TYPES = new Set<string>(AGENT_CONNECTION_TYPES)
@@ -149,6 +161,12 @@ export function buildAgentUserMessage(input: AgentPromptInput): string {
 
   if (input.state) {
     parts.push(`Current state: ${input.state}`)
+  }
+
+  if (hasSourceContext(input.source)) {
+    const lines = [input.source?.title?.trim(), input.source?.context?.trim() ? clipSourceContext(input.source.context) : '']
+      .filter(Boolean)
+    parts.push(`What sparked this seed (something the user saved; context, not the idea):\n${lines.join('\n\n')}`)
   }
 
   if (input.openTensions.length > 0) {

@@ -42,6 +42,7 @@ const models = computed<AiModelOption[]>(() => data.value?.models ?? [{
           />
         </div>
         <SettingsIntegrationTokens />
+        <SettingsReferenceIndex />
       </div>
     </div>
   </div>

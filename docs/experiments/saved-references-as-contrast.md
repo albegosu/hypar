@@ -1,6 +1,6 @@
 # Experiment: saved references as contrast
 
-> **Status:** proposed (2026-09). Nothing here is implemented. It extends the [second-brain integration](/guide/second-brain), which today only plants seeds, and answers part of the open question [What does the agent know?](/open-questions#what-does-the-agent-know).
+> **Status:** Phase 1 implemented (2026-09): the index reaches hypar; the agent doesn't use it yet. It extends the [second-brain integration](/guide/second-brain), which today only plants seeds, and answers part of the open question [What does the agent know?](/open-questions#what-does-the-agent-know).
 
 The agent challenges an embryo using only the garden: the seed, its tensions, the dialogue and a few peers. The user also keeps a [second-brain](https://github.com/albegosu/second-brain) wiki of interface patterns, features, tools and practices they saved from what they read. This experiment asks whether the agent can use that wiki to **press on** a growing idea, without becoming the retriever Hypar stopped being.
 
@@ -22,6 +22,10 @@ The experiment succeeds only if (1) improves and (2) doesn't happen.
 The agent may name a saved reference only to sharpen the tension: to ask how the idea differs from it, what it rejects in it, or which of two saved directions it is closer to. It never proposes adopting it.
 
 ---
+
+## Not the same as what sparked a seed
+
+An embryo planted from a capture already carries that capture's essence, and the agent reads it in every state. That is the embryo's own origin, needed to know what "this" in the seed refers to. This experiment is about the rest of the wiki: references the embryo didn't come from.
 
 ## Where it fits in the lifecycle
 

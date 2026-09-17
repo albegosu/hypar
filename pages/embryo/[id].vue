@@ -204,11 +204,19 @@ function stepClass(state: EmbryoState) {
           <p class="text-base leading-relaxed" :class="isFossil ? 'text-[var(--term-text-dim)]' : 'wz-strong'">
             {{ embryo.seed }}
           </p>
-          <p v-if="sourceUrl || sourceRef" class="text-[10px] wz-faint -mt-2 flex flex-wrap gap-x-3">
-            <span>planted from a capture</span>
-            <a v-if="sourceUrl" :href="sourceUrl" target="_blank" rel="noopener noreferrer" class="underline">original</a>
-            <a v-if="sourceRef" :href="sourceRef" target="_blank" rel="noopener noreferrer" class="underline">source note</a>
-          </p>
+          <details v-if="sourceUrl || sourceRef || embryo.sourceTitle" class="-mt-2 group">
+            <summary class="text-[10px] wz-faint flex flex-wrap items-center gap-x-3 cursor-pointer list-none">
+              <span>sparked by <span class="wz-muted">{{ embryo.sourceTitle || 'a capture' }}</span></span>
+              <a v-if="sourceUrl" :href="sourceUrl" target="_blank" rel="noopener noreferrer" class="underline" @click.stop>original</a>
+              <a v-if="sourceRef" :href="sourceRef" target="_blank" rel="noopener noreferrer" class="underline" @click.stop>source note</a>
+              <span v-if="embryo.sourceContext" class="wz-faint group-open:hidden">show what it shows ↓</span>
+            </summary>
+            <AiMarkdown
+              v-if="embryo.sourceContext"
+              :content="embryo.sourceContext"
+              class="mt-3 text-xs wz-muted leading-relaxed border-l border-[var(--term-accent-faint)] pl-3"
+            />
+          </details>
           <div v-if="isFossil && embryo.fossilReason" class="pt-3 border-t border-[var(--term-text-dim)] fossil-reason">
             <p class="text-[10px] text-[var(--term-text-dim)] uppercase tracking-wider mb-1">Cause of fossilization</p>
             <p class="text-xs text-[var(--term-text-dim)]">{{ embryo.fossilReason }}</p>

@@ -34,6 +34,8 @@ export interface EmbryoSummary {
   fossilReason: string | null
   sourceUrl?: string | null
   sourceRef?: string | null
+  sourceTitle?: string | null
+  sourceContext?: string | null
   tensions: Tension[]
   agentNotes: AgentNote[]
   _count: { events: number; connections: number; connectedTo: number }

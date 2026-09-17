@@ -33,7 +33,7 @@ const RULES: Rule[] = [
   },
   {
     label: 'integration',
-    test: (p, m) => m === 'POST' && p.startsWith('/api/integrations/') && !p.startsWith('/api/integrations/tokens'),
+    test: (p, m) => (m === 'POST' || m === 'PUT') && p.startsWith('/api/integrations/') && !p.startsWith('/api/integrations/tokens'),
     capacity: 30,
     refillPerSec: 30 / 60,
   },
