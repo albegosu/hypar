@@ -41,6 +41,7 @@ const models = computed<AiModelOption[]>(() => data.value?.models ?? [{
             :group-by-provider="true"
           />
         </div>
+        <SettingsIntegrationTokens />
       </div>
     </div>
   </div>

@@ -49,6 +49,7 @@ export default defineConfig({
           { text: 'Environment', link: '/guide/env' },
           { text: 'Docker', link: '/guide/docker' },
           { text: 'Production', link: '/guide/production' },
+          { text: 'second-brain', link: '/guide/second-brain' },
         ],
       },
       {

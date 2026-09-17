@@ -13,6 +13,7 @@ import {
   nextLifecycleState,
   stateColor,
 } from '~/utils/embryo-display'
+import { safeHttpUrl } from '~/utils/safe-url'
 
 const route = useRoute()
 const store = useEmbryoStore()
@@ -61,6 +62,8 @@ async function openConnectDialog() {
 
 const embryo = computed(() => store.current)
 const isFossil = computed(() => embryo.value?.state === 'FOSSIL')
+const sourceUrl = computed(() => safeHttpUrl(embryo.value?.sourceUrl))
+const sourceRef = computed(() => safeHttpUrl(embryo.value?.sourceRef))
 const hasLinks = computed(() =>
   !!embryo.value && (embryo.value.connections.length > 0 || embryo.value.connectedTo.length > 0),
 )
@@ -200,6 +203,11 @@ function stepClass(state: EmbryoState) {
         <div class="p-4 flex flex-col gap-4">
           <p class="text-base leading-relaxed" :class="isFossil ? 'text-[var(--term-text-dim)]' : 'wz-strong'">
             {{ embryo.seed }}
+          </p>
+          <p v-if="sourceUrl || sourceRef" class="text-[10px] wz-faint -mt-2 flex flex-wrap gap-x-3">
+            <span>planted from a capture</span>
+            <a v-if="sourceUrl" :href="sourceUrl" target="_blank" rel="noopener noreferrer" class="underline">original</a>
+            <a v-if="sourceRef" :href="sourceRef" target="_blank" rel="noopener noreferrer" class="underline">source note</a>
           </p>
           <div v-if="isFossil && embryo.fossilReason" class="pt-3 border-t border-[var(--term-text-dim)] fossil-reason">
             <p class="text-[10px] text-[var(--term-text-dim)] uppercase tracking-wider mb-1">Cause of fossilization</p>

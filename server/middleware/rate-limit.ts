@@ -31,6 +31,12 @@ const RULES: Rule[] = [
     capacity: 60,
     refillPerSec: 60 / 60,
   },
+  {
+    label: 'integration',
+    test: (p, m) => m === 'POST' && p.startsWith('/api/integrations/') && !p.startsWith('/api/integrations/tokens'),
+    capacity: 30,
+    refillPerSec: 30 / 60,
+  },
 ]
 
 const buckets = new Map<string, Bucket>()

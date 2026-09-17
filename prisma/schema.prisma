@@ -65,6 +65,8 @@ model Embryo {
   fossilizedAt DateTime?
   fossilReason String?     // Required when fossilizing
   fossilBy     FossilTrigger?
+  sourceUrl    String?     // Original link when the seed arrived from an integration (e.g. second-brain)
+  sourceRef    String?     // Where the integration keeps its own copy (e.g. the wiki source note)
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   events       EmbryoEvent[]
@@ -75,6 +77,7 @@ model Embryo {
 
   @@index([userId, state])
   @@index([userId, createdAt])
+  @@index([userId, sourceUrl])
 }
 
 model EmbryoEvent {
@@ -135,6 +138,24 @@ model AgentNote {
   @@index([embryoId, type])
 }
 
+// ── Integrations ──────────────────────────────────────────────
+
+// Personal token an external tool (e.g. second-brain) uses to write into one
+// user's garden. Only the SHA-256 hash is stored; the token is shown once.
+model IntegrationToken {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  hash       String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 // ── better-auth tables ────────────────────────────────────────
 
 model User {
@@ -153,6 +174,7 @@ model User {
   sessions  Session[]
   accounts  Account[]
   embryos   Embryo[]
+  integrationTokens IntegrationToken[]
 }
 
 model Session {

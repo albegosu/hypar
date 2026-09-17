@@ -55,6 +55,15 @@ describe('rate-limit middleware', () => {
     expect(() => handler(makeEvent('/api/embryos/x/resurrect', 'POST', ip, 'write-user'))).toThrow('Rate limit exceeded')
   })
 
+  it('applies the integration rule to plants but not to token management', () => {
+    const ip = '10.0.0.90'
+    for (let i = 0; i < 30; i++) {
+      handler(makeEvent('/api/integrations/embryos', 'POST', ip))
+    }
+    expect(() => handler(makeEvent('/api/integrations/embryos', 'POST', ip))).toThrow('Rate limit exceeded')
+    expect(() => handler(makeEvent('/api/integrations/tokens', 'POST', ip))).not.toThrow()
+  })
+
   it('does not rate-limit removed RAG paths', () => {
     expect(() => handler(makeEvent('/api/chat', 'POST', '10.0.0.1', 'user-1'))).not.toThrow()
     expect(() => handler(makeEvent('/api/documents/upload', 'POST', '10.0.0.1', 'user-1'))).not.toThrow()
