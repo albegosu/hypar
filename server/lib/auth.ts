@@ -17,6 +17,10 @@ if (!process.env.BETTER_AUTH_SECRET) {
   process.env.BETTER_AUTH_SECRET = authSecret
 }
 
+// DISABLE_SIGNUP=true closes account creation (email and OAuth) on a public
+// deployment once your own account exists. Sign-in keeps working.
+const signUpDisabled = process.env.DISABLE_SIGNUP === 'true'
+
 /**
  * better-auth instance.
  *
@@ -40,6 +44,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    disableSignUp: signUpDisabled,
   },
 
   socialProviders: {
@@ -48,6 +53,7 @@ export const auth = betterAuth({
           google: {
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            disableSignUp: signUpDisabled,
           },
         }
       : {}),
@@ -57,6 +63,7 @@ export const auth = betterAuth({
           github: {
             clientId: process.env.GITHUB_CLIENT_ID,
             clientSecret: process.env.GITHUB_CLIENT_SECRET,
+            disableSignUp: signUpDisabled,
           },
         }
       : {}),

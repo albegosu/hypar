@@ -2,6 +2,8 @@
 
 # Production Deployment
 
+For a free deployment that needs no server of your own, see [Vercel + Supabase](./vercel-supabase). This page covers a self-hosted server.
+
 For production use `docker-compose.prod.yml`. It adds:
 
 - **Caddy** as a reverse proxy with automatic TLS via Let's Encrypt

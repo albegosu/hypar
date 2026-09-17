@@ -1,0 +1,54 @@
+# Applies Prisma migrations to the production database when they reach main.
+#
+# Needs the DATABASE_MIGRATION_URL secret: a session-mode connection (Supabase:
+# the shared pooler on port 5432, IPv4, with ?sslmode=require). Without it the
+# job is skipped, so forks and the test database in CI are unaffected.
+name: Migrate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'prisma/migrations/**'
+      - 'prisma/schema.prisma'
+  workflow_dispatch:
+
+concurrency:
+  group: migrate
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_MIGRATION_URL }}
+    steps:
+      - name: Check the migration secret
+        id: secret
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::notice::DATABASE_MIGRATION_URL is not set; skipping migrations"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secret.outputs.present == 'true'
+
+      - uses: pnpm/action-setup@v4
+        if: steps.secret.outputs.present == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.secret.outputs.present == 'true'
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.secret.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Apply migrations
+        if: steps.secret.outputs.present == 'true'
+        run: pnpm exec prisma migrate deploy
