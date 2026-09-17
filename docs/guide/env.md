@@ -30,6 +30,14 @@ Startup fails if any of these are missing (`server/utils/env-validation.ts`).
 
 ---
 
+## Auth
+
+| Variable | Description |
+|---|---|
+| `DISABLE_SIGNUP` | `true` closes account creation (email and OAuth). Set it on a public deployment once your account exists. |
+
+---
+
 ## Ollama (agent collaborator)
 
 The embryo agent talks to Ollama over the OpenAI-compatible `/v1/chat/completions` API. There is no embedding pipeline.
@@ -51,6 +59,7 @@ Settings can override the model for the next agent turn (cookie `hypar-llm-model
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | Full Postgres connection string. Required. |
+| `DATABASE_CA_CERT` | Optional PEM (e.g. the Supabase CA). The app then encrypts the connection and verifies the server certificate. Don't put `sslmode` in `DATABASE_URL` alongside it. |
 
 **Local example** (matches `.env.example`):
 
