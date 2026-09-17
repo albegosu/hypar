@@ -7,6 +7,9 @@ share a post ──► second-brain worker (GitHub Actions) ──► POST /api/
                      files the capture in the wiki             Bearer hyp_…
 ```
 
+The two projects move on their own; what the bridge needs is tracked in the
+[Lab roadmap](https://github.com/users/albegosu/projects/5) under the `Loop — …` cards.
+
 ## What arrives
 
 - **The seed is your note**, the text you typed when sharing — never the model's summary of the post. A capture shared without a note plants nothing.
