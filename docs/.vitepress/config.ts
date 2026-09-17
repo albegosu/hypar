@@ -74,6 +74,7 @@ export default defineConfig({
           { text: 'Experiments', link: '/experiments/' },
           { text: 'Method as process', link: '/experiments/method-as-process' },
           { text: 'ai-elements surfaces', link: '/experiments/ai-elements-surfaces' },
+          { text: 'Saved references as contrast', link: '/experiments/saved-references-as-contrast' },
         ],
       },
       {

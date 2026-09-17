@@ -43,6 +43,8 @@ Does the agent have access to all embryos in all states simultaneously, or does 
 
 Full access would let the agent surface resurrection and old contradictions — and may overwhelm. Local context is better for questions and worse for memory.
 
+The [saved references as contrast](/experiments/saved-references-as-contrast) experiment proposes one bounded answer: the index of the user's second-brain wiki, only while probing and generating paths, and only as contrast.
+
 *Status: implemented as local living context — whether that is the right bound is still open.*
 
 ---
