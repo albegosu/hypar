@@ -43,6 +43,14 @@ Nuxt 3 · Nuxt UI v3 · Tailwind v4 · Pinia · Prisma 7 · Postgres 16 · Ollam
 | `components/embryo/`, `components/garden/` | Collaborator, graph, pending queue |
 | `stores/embryos.ts` | Pinia embryo store |
 
+## References before UI work
+
+Before designing or changing UI, motion or visual language (glass, textures, the ambient field, the connection graph), check the `second-brain` skill for saved references when it is available. It is the maintainer's reference wiki; adapt what it holds to hypar's tokens and ADRs rather than copying it.
+
+## Integrations
+
+second-brain can plant seeds through `POST /api/integrations/embryos` with a per-user token (`IntegrationToken`, hash only). The seed is always the user's own note; the source is stored beside it (`sourceUrl`, `sourceRef`). See [docs/guide/second-brain.md](docs/guide/second-brain.md).
+
 ## How to verify
 
 ```bash
