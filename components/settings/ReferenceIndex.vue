@@ -32,7 +32,8 @@ async function clear() {
     <p class="text-[10px] wz-faint uppercase tracking-wider mb-2">saved references</p>
     <p class="text-xs wz-muted mb-3">
       second-brain sends the index of your wiki after each capture: topic and pattern names with their summaries, never
-      the saved posts. The agent doesn't use it yet.
+      the saved posts. The agent reads it only while probing an idea or opening paths, as contrast — never as a
+      recommendation.
     </p>
     <div v-if="snapshot" class="flex items-center gap-2 text-xs">
       <span class="wz-strong flex-1">

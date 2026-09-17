@@ -1,6 +1,6 @@
 # Experiment: saved references as contrast
 
-> **Status:** Phase 1 implemented (2026-09): the index reaches hypar; the agent doesn't use it yet. It extends the [second-brain integration](/guide/second-brain), which today only plants seeds, and answers part of the open question [What does the agent know?](/open-questions#what-does-the-agent-know).
+> **Status:** Phases 1–2 implemented (2026-09): the index reaches hypar and the agent reads it while probing and opening paths. Whether the questions get better — and whether recommendations leak — is the observation now open. Phases 3–4 are not built. It extends the [second-brain integration](/guide/second-brain), which today only plants seeds, and answers part of the open question [What does the agent know?](/open-questions#what-does-the-agent-know).
 
 The agent challenges an embryo using only the garden: the seed, its tensions, the dialogue and a few peers. The user also keeps a [second-brain](https://github.com/albegosu/second-brain) wiki of interface patterns, features, tools and practices they saved from what they read. This experiment asks whether the agent can use that wiki to **press on** a growing idea, without becoming the retriever Hypar stopped being.
 
@@ -71,13 +71,16 @@ Smallest slice first. Stop after Phase 2 if the questions don't get better.
 
 **Acceptance:** a capture updates the snapshot; a token from another user can't overwrite it; clearing removes it; the agent prompt is unchanged.
 
-### Phase 2 — Prompt only, `GERMINATING` and `GROWING`
+### Phase 2 — Prompt only, `GERMINATING` and `GROWING` ✅
 
-- When a snapshot exists and the state is `GERMINATING` or `GROWING`, append a **Saved references** block to the user message and a rule to the system prompt: *a reference may be named only to contrast with the idea; never suggest adopting, using or trying it*.
+- When a snapshot exists and the state is `GERMINATING` or `GROWING`, a **Saved references** block is appended to the user message and a rule to the system prompt: a reference is a contrast, never a recommendation, and a turn that finds nothing useful ignores the list.
+- The block is the index's category sections only: the generated preamble, empty categories and the "Recent captures" list are dropped, and the rest is clipped to 12,000 characters.
 - The spoken turn is still exactly one question ([ADR 0002](/decisions/0002-agent-one-question)).
-- Log `payload.references: true` on the `AGENT_QUESTION` event, so turns with and without references can be compared.
+- `payload.references` on the `AGENT_QUESTION` event records which turns had them.
 
-**Acceptance:** `LATENT` and `MATURE` prompts contain no references; unit tests cover the block and the rule; a turn without a snapshot is byte-for-byte the current prompt.
+**Acceptance:** met — `LATENT` and `MATURE` prompts are byte-for-byte the previous ones, as is any turn without a snapshot; unit tests cover the gate, the block and the rule.
+
+With the current index (36 topics), a turn grows from ~650 to ~3,500 tokens in the two states that use it.
 
 ### Phase 3 — Named reference as a HITL note (only if Phase 2 holds)
 

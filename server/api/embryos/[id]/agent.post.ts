@@ -13,6 +13,7 @@ import {
 } from '~/server/utils/embryo-agent'
 import { formatFossilNote } from '~/utils/embryo-method'
 import { connectionsToPersist, selectAgentPeers, shouldAutoGerminate } from '~/utils/embryo-lab'
+import { shouldUseReferences } from '~/utils/reference-index'
 
 export default defineEventHandler(async (event) => {
   const userId = requireSessionUserId(event)
@@ -58,6 +59,10 @@ export default defineEventHandler(async (event) => {
     }),
   ])
 
+  const referenceIndex = shouldUseReferences(embryo.state)
+    ? await prisma.referenceIndex.findUnique({ where: { userId }, select: { markdown: true } })
+    : null
+
   const alreadyConnected = embryo.connections.map(c => c.targetId)
   const candidates = selectAgentPeers({ living, fossils, alreadyConnected })
   const dialogue = dialogueFromEvents(embryo.events).slice(-12)
@@ -69,8 +74,10 @@ export default defineEventHandler(async (event) => {
     otherEmbryos: candidates,
     dialogue,
     source: { title: embryo.sourceTitle, context: embryo.sourceContext },
+    references: referenceIndex?.markdown,
   })
   const sparked = hasSourceContext({ title: embryo.sourceTitle, context: embryo.sourceContext })
+  const withReferences = !!referenceIndex?.markdown?.trim()
 
   const { model, timeoutMs } = createOllamaChatModel(requestedModel)
 
@@ -83,7 +90,7 @@ export default defineEventHandler(async (event) => {
   try {
     const result = streamText({
       model,
-      system: buildAgentSystemPrompt(embryo.state, { sparked }),
+      system: buildAgentSystemPrompt(embryo.state, { sparked, references: withReferences }),
       prompt: userMessage,
       abortSignal: AbortSignal.timeout(timeoutMs),
     })
@@ -118,7 +125,7 @@ export default defineEventHandler(async (event) => {
                 embryoId: id,
                 type: 'AGENT_QUESTION',
                 initiatedBy: 'AGENT',
-                payload: { question: parsed.question, move: parsed.move },
+                payload: { question: parsed.question, move: parsed.move, references: withReferences },
               },
             }),
           ]
