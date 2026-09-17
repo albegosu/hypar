@@ -64,4 +64,4 @@ pnpm docs:build        # if you change docs/**
 - Decisions: [docs/decisions/](docs/decisions/)
 - Concepts: embryo, lifecycle, agent, fossils under `docs/concepts/`
 - Architecture: [docs/architecture/](docs/architecture/)
-- When asked what to work on next: start from [docs/open-questions.md](docs/open-questions.md) → **Near-term UI / product follow-ups (2026-09-02)** (annotation, not a full roadmap).
+- When asked what to work on next: the actionable list is the [Lab roadmap](https://github.com/users/albegosu/projects/5) project; [docs/open-questions.md](docs/open-questions.md) holds the unresolved design tensions behind it.

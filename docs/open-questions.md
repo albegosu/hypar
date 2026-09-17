@@ -93,15 +93,10 @@ Phase 3 shipped option A: pending paths the user accepts as tensions. Whether th
 
 ---
 
-## Near-term UI / product follow-ups (2026-09-02)
+## Where the near-term work lives
 
-Annotation — not a roadmap. Shell and glass work after [ADR 0004](/decisions/0004-glass-visual-language); polish and method depth still open:
+Actionable follow-ups (shell and glass polish, settings, method depth) are tracked in the [Lab roadmap](https://github.com/users/albegosu/projects/5), not here. This page keeps the tensions that have no answer yet.
 
-- **Writing hero placement** — evaluate a notepad-like writing surface placed at a random position within max height/width (not a fixed dock)
-- **Floating menu** — shrink the Garden/Settings float pill; tighten aesthetics to match the glass chrome
-- **Background** — fix the ambient field (dithered `+` / fluid overlay) so it reads as atmosphere, not noise or unfinished canvas
-- **Textures** — enrich glass and field textures without reverting to glyph/CRT clutter
-- **Settings** — expand/complete beyond the current model selector (`pages/settings.vue`); more lab controls as they earn a surface
-- **Enrich the process** — deepen embryo method in product (stance × state, paths, HITL) so the lab process is denser than chrome — see [method as process](/experiments/method-as-process) and the stance questions above
+---
 
 *This page is a living document. Questions are added as they emerge and marked resolved when experiments answer them.*
