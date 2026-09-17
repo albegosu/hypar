@@ -22,7 +22,7 @@ Why these limits work:
 ## 1. Supabase
 
 1. Create a **new project** just for hypar (a free organization allows two). Save the database password.
-2. **Turn off the Data API** (*Project Settings → Data API*). hypar connects to Postgres directly and never uses it; left on, the tables in `public` are reachable over REST with the project's publishable key.
+2. **Turn off the Data API** (*Project Settings → Data API*) and check that it stays off. hypar connects to Postgres directly and never uses it. As a second line of defense, the `lock_down_data_api` migration enables row level security on every table and revokes the `anon` and `authenticated` roles, including on tables created later, so users and sessions can't be read over REST with the project's publishable key even if the Data API is on. The app connects as the table owner, which RLS doesn't restrict.
 3. *Database → Settings → SSL Configuration*: turn on **Enforce SSL** and **download the certificate**.
 4. From **Connect**, copy two connection strings:
    - **Transaction pooler** (port `6543`) → the app's `DATABASE_URL`.
