@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { countReferenceTopics } from '../utils/reference-index'
+import { countReferenceTopics, referencesForPrompt, shouldUseReferences } from '../utils/reference-index'
 
 const index = `# Second brain
 
@@ -27,5 +27,39 @@ describe('countReferenceTopics', () => {
 
   it('is zero for an empty wiki', () => {
     expect(countReferenceTopics('# Second brain\n\n_Nothing yet._\n')).toBe(0)
+  })
+})
+
+describe('shouldUseReferences', () => {
+  it('allows references only while probing and opening paths', () => {
+    expect(shouldUseReferences('GERMINATING')).toBe(true)
+    expect(shouldUseReferences('GROWING')).toBe(true)
+    expect(shouldUseReferences('LATENT')).toBe(false)
+    expect(shouldUseReferences('MATURE')).toBe(false)
+    expect(shouldUseReferences('FOSSIL')).toBe(false)
+  })
+})
+
+describe('referencesForPrompt', () => {
+  const forPrompt = referencesForPrompt(index)
+
+  it('keeps the category sections with their topics', () => {
+    expect(forPrompt).toContain('## Design')
+    expect(forPrompt).toContain('- [AI Chat Interfaces]')
+    expect(forPrompt).toContain('Patterns: AI Chat Interface')
+  })
+
+  it('drops the generated preamble, empty categories and recent captures', () => {
+    expect(forPrompt).not.toContain('# Second brain')
+    expect(forPrompt).not.toContain('Recent captures')
+    expect(forPrompt).not.toContain('Voice Input Glow Effect')
+    expect(forPrompt).not.toContain('## Tools')
+  })
+
+  it('clips a long index', () => {
+    const long = `## Design\n\n${'- [Topic](design/t.md) — summary\n'.repeat(2000)}`
+    const clipped = referencesForPrompt(long, 2000)
+    expect(clipped.length).toBeLessThanOrEqual(2001)
+    expect(clipped.endsWith('…')).toBe(true)
   })
 })

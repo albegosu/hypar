@@ -7,6 +7,7 @@ import {
 } from '../../utils/embryo-method'
 import { AGENT_CONNECTION_TYPES } from '../../utils/embryo-lab'
 import { clipSourceContext } from '../../utils/source-context'
+import { referencesForPrompt, shouldUseReferences } from '../../utils/reference-index'
 
 export { extractPartialQuestion } from '../../utils/embryo-stream'
 export type { AgentMove, FossilKind }
@@ -40,10 +41,15 @@ const SPARKED_RULE = `This seed was sparked by something the user saved (shown a
 - Use it to understand what "this" refers to and to make the question concrete.
 - Challenge what the user wants from it or why it matters for them. Never describe it back, and never suggest adopting, copying or building it.`
 
-export function buildAgentSystemPrompt(state: string, opts: { sparked?: boolean } = {}): string {
+const REFERENCES_RULE = `You are also shown "Saved references": an index of things the user saved elsewhere (interface patterns, features, tools, ways of working). It is context about the user, not material to recommend.
+- A reference is a contrast, not a recommendation. You may name one only to sharpen the tension: how the idea differs from it, what it rejects in it, or which of two saved directions it is closer to.
+- Never suggest adopting, using, trying, copying or reading a reference, and never answer the embryo with one.
+- If nothing there sharpens the tension, ignore the list entirely. Most turns should not mention it.`
+
+export function buildAgentSystemPrompt(state: string, opts: { sparked?: boolean; references?: boolean } = {}): string {
   const stance = stanceFor(state)
   return `${BASE_PROMPT}
-${opts.sparked ? `\n${SPARKED_RULE}\n` : ''}
+${opts.sparked ? `\n${SPARKED_RULE}\n` : ''}${opts.references && shouldUseReferences(state) ? `\n${REFERENCES_RULE}\n` : ''}
 Current embryo state: ${state}
 Preferred move: ${stance.move}
 Stance: ${stance.instruction}`
@@ -84,6 +90,8 @@ export interface AgentPromptInput {
   dialogue: AgentDialogueTurn[]
   /** What sparked the seed (e.g. a second-brain capture): context for the agent, never the idea. */
   source?: { title?: string | null; context?: string | null }
+  /** The user's second-brain index. Used only while probing and opening paths. */
+  references?: string | null
 }
 
 /** Whether the embryo carries anything the agent should read as its origin. */
@@ -179,6 +187,13 @@ export function buildAgentUserMessage(input: AgentPromptInput): string {
       return `${who}: ${turn.text}`
     })
     parts.push(`Prior exchange:\n${lines.join('\n')}`)
+  }
+
+  const references = shouldUseReferences(input.state) && input.references?.trim()
+    ? referencesForPrompt(input.references)
+    : ''
+  if (references) {
+    parts.push(`Saved references (an index of what the user saved elsewhere; contrast only, never a recommendation):\n${references}`)
   }
 
   if (input.otherEmbryos.length > 0) {
