@@ -73,6 +73,19 @@ describe('rate-limit middleware', () => {
     expect(() => handler(makeEvent('/api/integrations/references', 'DELETE', ip))).not.toThrow()
   })
 
+  it('applies the telemetry rule to public beacons (60 req)', () => {
+    const ip = '10.0.0.95'
+    for (let i = 0; i < 60; i++) {
+      handler(makeEvent('/api/vitals', 'POST', ip))
+    }
+    expect(() => handler(makeEvent('/api/vitals', 'POST', ip))).toThrow('Rate limit exceeded')
+    // client-errors shares the telemetry rule but a different bucket label key path
+    for (let i = 0; i < 60; i++) {
+      handler(makeEvent('/api/client-errors', 'POST', '10.0.0.96'))
+    }
+    expect(() => handler(makeEvent('/api/client-errors', 'POST', '10.0.0.96'))).toThrow('Rate limit exceeded')
+  })
+
   it('does not rate-limit removed RAG paths', () => {
     expect(() => handler(makeEvent('/api/chat', 'POST', '10.0.0.1', 'user-1'))).not.toThrow()
     expect(() => handler(makeEvent('/api/documents/upload', 'POST', '10.0.0.1', 'user-1'))).not.toThrow()
