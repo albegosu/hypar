@@ -6,7 +6,7 @@ vi.stubGlobal('createError', (opts: { statusCode: number; statusMessage: string 
   return e
 })
 
-import { requireSessionUserId } from '../server/utils/session'
+import { requireAdminUserId, requireSessionUserId } from '../server/utils/session'
 import type { H3Event } from 'h3'
 
 describe('requireSessionUserId', () => {
@@ -27,5 +27,26 @@ describe('requireSessionUserId', () => {
       context: { auth: { user: { id: undefined } } },
     } as unknown as H3Event
     expect(() => requireSessionUserId(event)).toThrow('Unauthorized')
+  })
+})
+
+describe('requireAdminUserId', () => {
+  it('returns user ID for an admin', () => {
+    const event = {
+      context: { auth: { user: { id: 'usr_admin', role: 'admin' } } },
+    } as unknown as H3Event
+    expect(requireAdminUserId(event)).toBe('usr_admin')
+  })
+
+  it('throws 403 for a non-admin user', () => {
+    const event = {
+      context: { auth: { user: { id: 'usr_123', role: 'user' } } },
+    } as unknown as H3Event
+    expect(() => requireAdminUserId(event)).toThrow('Forbidden')
+  })
+
+  it('throws 401 when unauthenticated', () => {
+    const event = { context: {} } as unknown as H3Event
+    expect(() => requireAdminUserId(event)).toThrow('Unauthorized')
   })
 })
