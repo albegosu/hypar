@@ -26,7 +26,7 @@ const layoutKey = computed(() => {
   return `${e.id}:${ids}`
 })
 
-function neighborEntries() {
+const neighborEntries = computed(() => {
   const seen = new Set<string>()
   const list: Array<{
     id: string
@@ -65,10 +65,10 @@ function neighborEntries() {
     })
   }
   return list
-}
+})
 
 function layout() {
-  const neighbors = neighborEntries()
+  const neighbors = neighborEntries.value
   const nextNodes: AiWorkflowNode[] = [
     {
       id: props.embryo.id,
@@ -216,7 +216,7 @@ function glyphFor(state: unknown) {
       @fit-view="fit"
     />
     <p class="px-3 py-2 text-[10px] wz-faint">
-      {{ neighborEntries().length
+      {{ neighborEntries.length
         ? 'Dashed = inferred (unconfirmed) · solid = explicit · double-click a node to open'
         : 'Empty graph shell — connect another embryo to grow the map' }}
     </p>
