@@ -1,4 +1,5 @@
 import { streamText } from 'ai'
+import type { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import { requireSessionUserId } from '~/server/utils/session'
 import { logger } from '~/server/utils/logger'
@@ -112,7 +113,7 @@ export default defineEventHandler(async (event) => {
             return
           }
 
-          const dbOps: any[] = [
+          const dbOps: Prisma.PrismaPromise<unknown>[] = [
             prisma.agentNote.create({
               data: {
                 embryoId: id,
