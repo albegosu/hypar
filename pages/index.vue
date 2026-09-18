@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useEmbryoStore, type EmbryoState, type EmbryoSummary } from '~/stores/embryos'
-import { LIFECYCLE, appendTranscript, stateColor } from '~/utils/embryo-display'
+import { LIFECYCLE, appendTranscript } from '~/utils/embryo-display'
 import {
   FOSSIL_STRATUM_COPY,
   fossilStratum,
@@ -121,8 +121,10 @@ onMounted(() => store.fetchAll())
           v-model="seedInput"
           rows="2"
           placeholder="Drop the seed..."
+          aria-label="New seed"
           class="wz-field-bare flex-1"
           @keydown.meta.enter="submitSeed"
+          @keydown.ctrl.enter="submitSeed"
         />
         <div class="flex flex-col gap-2 self-end">
           <AiSpeechInput
@@ -182,27 +184,12 @@ onMounted(() => store.fetchAll())
           <p class="text-[11px] wz-accent uppercase tracking-wider">{{ group.label }}</p>
           <p class="text-[10px] wz-faint">{{ group.depth }} · {{ group.items.length }}</p>
         </div>
-        <NuxtLink
+        <GardenEmbryoCard
           v-for="e in group.items"
           :key="e.id"
-          :to="`/embryo/${e.id}`"
-          class="wz-panel group block transition-colors fossil-card"
-          :class="`stratum-${group.stratum}`"
-        >
-          <div class="wz-panel-header flex items-center justify-between">
-            <span :class="['text-xs', stateColor(e.state)]">
-              {{ LIFECYCLE.find(l => l.state === e.state)!.glyph }}
-              {{ e.state.toLowerCase() }}
-            </span>
-            <span class="wz-faint text-[10px]">{{ e.fossilizedAt ? new Date(e.fossilizedAt).toLocaleDateString() : '' }}</span>
-          </div>
-          <div class="p-4">
-            <p class="text-sm leading-relaxed line-clamp-3 text-[var(--term-text-dim)]">{{ e.seed }}</p>
-            <p v-if="e.fossilReason" class="text-[11px] text-[var(--term-text-dim)] mt-2 opacity-60 line-clamp-1">
-              ◈ {{ e.fossilReason }}
-            </p>
-          </div>
-        </NuxtLink>
+          :embryo="e"
+          :stratum="group.stratum"
+        />
       </section>
     </div>
 
@@ -213,35 +200,7 @@ onMounted(() => store.fetchAll())
           <p class="text-[11px] wz-accent uppercase tracking-wider">{{ t('garden.underTension') }}</p>
           <p class="text-[10px] wz-faint">{{ surfaceSections.under.length }}</p>
         </div>
-        <NuxtLink
-          v-for="e in surfaceSections.under"
-          :key="e.id"
-          :to="`/embryo/${e.id}`"
-          class="wz-panel group block transition-colors hover:border-[var(--term-accent-line)]"
-          :class="e.state === 'GROWING' ? 'wz-live-glow' : ''"
-        >
-          <div class="wz-panel-header flex items-center justify-between">
-            <span :class="['text-xs', stateColor(e.state)]">
-              {{ LIFECYCLE.find(l => l.state === e.state)!.glyph }}
-              {{ e.state.toLowerCase() }}
-            </span>
-            <div class="flex items-center gap-2 sm:gap-3 wz-faint text-[10px]">
-              <span v-if="e._count.connections + e._count.connectedTo > 0" class="opacity-70 hidden sm:inline">
-                ⟶ {{ e._count.connections + e._count.connectedTo }}
-              </span>
-              <span v-if="e.tensions.filter(t => !t.resolved).length" class="text-[var(--term-warn)]">
-                ⚡ {{ e.tensions.filter(t => !t.resolved).length }}
-              </span>
-              <span v-if="e.agentNotes.length" class="wz-accent opacity-70">
-                ↯ {{ e.agentNotes.length }}
-              </span>
-              <span>{{ new Date(e.createdAt).toLocaleDateString() }}</span>
-            </div>
-          </div>
-          <div class="p-3 sm:p-4">
-            <p class="text-sm leading-relaxed line-clamp-3 wz-strong">{{ e.seed }}</p>
-          </div>
-        </NuxtLink>
+        <GardenEmbryoCard v-for="e in surfaceSections.under" :key="e.id" :embryo="e" />
       </section>
 
       <section v-if="surfaceSections.quiet.length" class="flex flex-col gap-2.5 sm:gap-3">
@@ -249,89 +208,14 @@ onMounted(() => store.fetchAll())
           <p class="text-[11px] wz-faint uppercase tracking-wider">{{ t('garden.quiet') }}</p>
           <p class="text-[10px] wz-faint">{{ surfaceSections.quiet.length }}</p>
         </div>
-        <NuxtLink
-          v-for="e in surfaceSections.quiet"
-          :key="e.id"
-          :to="`/embryo/${e.id}`"
-          class="wz-panel group block transition-colors hover:border-[var(--term-accent-line)] opacity-80"
-          :class="e.state === 'GROWING' ? 'wz-live-glow' : ''"
-        >
-          <div class="wz-panel-header flex items-center justify-between">
-            <span :class="['text-xs', stateColor(e.state)]">
-              {{ LIFECYCLE.find(l => l.state === e.state)!.glyph }}
-              {{ e.state.toLowerCase() }}
-            </span>
-            <div class="flex items-center gap-2 sm:gap-3 wz-faint text-[10px]">
-              <span v-if="e._count.connections + e._count.connectedTo > 0" class="opacity-70 hidden sm:inline">
-                ⟶ {{ e._count.connections + e._count.connectedTo }}
-              </span>
-              <span>{{ new Date(e.createdAt).toLocaleDateString() }}</span>
-            </div>
-          </div>
-          <div class="p-3 sm:p-4">
-            <p class="text-sm leading-relaxed line-clamp-3 wz-strong">{{ e.seed }}</p>
-          </div>
-        </NuxtLink>
+        <GardenEmbryoCard v-for="e in surfaceSections.quiet" :key="e.id" :embryo="e" class="opacity-80" />
       </section>
     </div>
 
     <!-- other filters (ALL / by-state) — still tension-first among living -->
     <div v-else class="flex flex-col gap-2.5 sm:gap-3">
-      <NuxtLink
-        v-for="e in visible"
-        :key="e.id"
-        :to="`/embryo/${e.id}`"
-        class="wz-panel group block transition-colors"
-        :class="[
-          e.state === 'FOSSIL' ? 'fossil-card' : 'hover:border-[var(--term-accent-line)]',
-          e.state === 'GROWING' ? 'wz-live-glow' : '',
-        ]"
-      >
-        <div class="wz-panel-header flex items-center justify-between">
-          <span :class="['text-xs', stateColor(e.state)]">
-            {{ LIFECYCLE.find(l => l.state === e.state)!.glyph }}
-            {{ e.state.toLowerCase() }}
-          </span>
-          <div class="flex items-center gap-2 sm:gap-3 wz-faint text-[10px]">
-            <span v-if="e._count.connections + e._count.connectedTo > 0" class="opacity-70 hidden sm:inline">
-              ⟶ {{ e._count.connections + e._count.connectedTo }}
-            </span>
-            <span v-if="e.tensions.filter(t => !t.resolved).length" class="text-[var(--term-warn)]">
-              ⚡ {{ e.tensions.filter(t => !t.resolved).length }}
-            </span>
-            <span v-if="e.agentNotes.length" class="wz-accent opacity-70">
-              ↯ {{ e.agentNotes.length }}
-            </span>
-            <span>{{ new Date(e.createdAt).toLocaleDateString() }}</span>
-          </div>
-        </div>
-        <div class="p-3 sm:p-4">
-          <p
-            class="text-sm leading-relaxed line-clamp-3"
-            :class="e.state === 'FOSSIL' ? 'text-[var(--term-text-dim)]' : 'wz-strong'"
-          >
-            {{ e.seed }}
-          </p>
-          <p v-if="e.state === 'FOSSIL' && e.fossilReason" class="text-[11px] text-[var(--term-text-dim)] mt-2 opacity-60 line-clamp-1">
-            ◈ {{ e.fossilReason }}
-          </p>
-        </div>
-      </NuxtLink>
+      <GardenEmbryoCard v-for="e in visible" :key="e.id" :embryo="e" />
     </div>
 
   </div>
 </template>
-
-<style scoped>
-.fossil-card {
-  opacity: 0.55;
-  border-style: dashed !important;
-  transition: opacity 0.15s ease;
-}
-.fossil-card:hover {
-  opacity: 0.75;
-}
-.stratum-recent { opacity: 0.78; }
-.stratum-mid { opacity: 0.55; padding-left: 8px; }
-.stratum-deep { opacity: 0.38; padding-left: 16px; }
-</style>
