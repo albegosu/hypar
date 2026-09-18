@@ -163,6 +163,11 @@ function dismissGerminate() {
 }
 
 async function askAgent() {
+  // Pin the target: the component persists across route changes, so props may
+  // point at a different embryo by the time this stream resolves.
+  const embryoId = props.embryoId
+  const isCurrent = () => props.embryoId === embryoId
+
   askingAgent.value = true
   agentError.value = null
   agentThinking.value = true
@@ -170,7 +175,7 @@ async function askAgent() {
   streamedMove.value = null
 
   try {
-    const response = await fetch(`/api/embryos/${props.embryoId}/agent`, {
+    const response = await fetch(`/api/embryos/${embryoId}/agent`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -202,17 +207,19 @@ async function askAgent() {
         try {
           const data = JSON.parse(line.slice(6))
           if (data.type === 'error') {
-            agentError.value = data.message
+            if (isCurrent()) agentError.value = data.message
           }
           else if (data.type === 'chunk' && typeof data.text === 'string') {
             raw += data.text
-            streamPreview.value = extractPartialQuestion(raw) ?? streamPreview.value
+            if (isCurrent()) streamPreview.value = extractPartialQuestion(raw) ?? streamPreview.value
           }
           else if (data.type === 'done') {
-            streamPreview.value = ''
-            if (isAgentMove(data.move)) streamedMove.value = data.move
-            germinatedNotice.value = Boolean(data.germinated)
-            await store.fetchOne(props.embryoId, { silent: true })
+            if (isCurrent()) {
+              streamPreview.value = ''
+              if (isAgentMove(data.move)) streamedMove.value = data.move
+              germinatedNotice.value = Boolean(data.germinated)
+            }
+            await store.fetchOne(embryoId, { silent: true })
           }
         }
         catch {}
@@ -220,12 +227,13 @@ async function askAgent() {
     }
   }
   catch (e: unknown) {
-    agentError.value = e instanceof Error ? e.message : 'Agent unavailable'
+    if (isCurrent()) agentError.value = e instanceof Error ? e.message : 'Agent unavailable'
   }
   finally {
+    // Always release the in-flight flags; only the visible preview is scoped.
     askingAgent.value = false
     agentThinking.value = false
-    streamPreview.value = ''
+    if (isCurrent()) streamPreview.value = ''
   }
 }
 

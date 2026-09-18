@@ -1,5 +1,5 @@
 <template>
-  <div class="hypar-fluid" aria-hidden="true">
+  <div ref="rootRef" class="hypar-fluid" aria-hidden="true">
     <canvas ref="masterRef" class="hypar-fluid__master" />
     <div class="hypar-fluid__vignette" />
 
@@ -134,6 +134,7 @@ const STEP = 5
 const ARM = 1.65
 const PIXEL = 1
 
+const rootRef = ref<HTMLElement | null>(null)
 const masterRef = ref<HTMLCanvasElement | null>(null)
 
 let raf = 0
@@ -141,6 +142,10 @@ let masterW = 0
 let masterH = 0
 let masterTheme = ''
 let reducedMotion = false
+
+/** Cached geo shape refs — the drifting glass windows over the fixed master. */
+interface Geo { node: HTMLElement; dup: HTMLElement; canvas: HTMLCanvasElement }
+let geos: Geo[] = []
 
 function hash2(x: number, y: number): number {
   const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123
@@ -216,67 +221,96 @@ function paintMaster(w: number, h: number, mode: string) {
   masterTheme = mode
 }
 
-function syncGeos() {
-  const canvas = masterRef.value
-  if (!canvas) return
+function collectGeos() {
+  const root = rootRef.value
+  if (!root) {
+    geos = []
+    return
+  }
+  const out: Geo[] = []
+  for (const node of root.querySelectorAll<HTMLElement>('[data-fluid-geo]')) {
+    const dup = node.querySelector<HTMLElement>('.hypar-fluid__dup')
+    const canvas = node.querySelector<HTMLCanvasElement>('.hypar-fluid__canvas')
+    if (dup && canvas) out.push({ node, dup, canvas })
+  }
+  geos = out
+}
 
+/**
+ * Blit the master into each geo canvas. The pixels never change frame to
+ * frame (the master and its SVG filter are deterministic), so this runs only
+ * when the master is repainted — on resize or theme change — not per frame.
+ */
+function drawGeoContent() {
+  const master = masterRef.value
+  if (!master) return
   const vw = document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
-  const nodes = document.querySelectorAll<HTMLElement>('[data-fluid-geo]')
+  const tw = Math.max(1, Math.round(vw * PIXEL))
+  const th = Math.max(1, Math.round(vh * PIXEL))
 
-  for (const node of nodes) {
-    const rect = node.getBoundingClientRect()
-    if (rect.width < 2 || rect.height < 2) continue
-    const dup = node.querySelector<HTMLElement>('.hypar-fluid__dup')
-    const geoCanvas = node.querySelector<HTMLCanvasElement>('.hypar-fluid__canvas')
-    if (!dup || !geoCanvas) continue
-
-    dup.style.left = `${-rect.left}px`
-    dup.style.top = `${-rect.top}px`
-    dup.style.width = `${vw}px`
-    dup.style.height = `${vh}px`
-
-    const tw = Math.max(1, Math.round(vw * PIXEL))
-    const th = Math.max(1, Math.round(vh * PIXEL))
-    if (geoCanvas.width !== tw || geoCanvas.height !== th) {
-      geoCanvas.width = tw
-      geoCanvas.height = th
+  for (const g of geos) {
+    g.dup.style.width = `${vw}px`
+    g.dup.style.height = `${vh}px`
+    if (g.canvas.width !== tw || g.canvas.height !== th) {
+      g.canvas.width = tw
+      g.canvas.height = th
     }
-    const ctx = geoCanvas.getContext('2d')
+    const ctx = g.canvas.getContext('2d')
     if (!ctx) continue
     try {
-      ctx.drawImage(canvas, 0, 0, tw, th)
+      ctx.drawImage(master, 0, 0, tw, th)
     }
     catch {
-      /* frame skip */
+      /* master not paintable yet — retried on the next repaint */
     }
   }
 }
 
-function syncFrame() {
+/**
+ * Per-frame work: reveal the fixed master through each drifting window by
+ * pinning its duplicate to the viewport origin. Reads are batched before
+ * writes so six moving shapes don't thrash layout each frame.
+ */
+function syncGeoPositions() {
+  if (!geos.length) return
+  const rects = geos.map(g => g.node.getBoundingClientRect())
+  for (let i = 0; i < geos.length; i++) {
+    const rect = rects[i]!
+    if (rect.width < 2 || rect.height < 2) continue
+    const dup = geos[i]!.dup
+    dup.style.left = `${-rect.left}px`
+    dup.style.top = `${-rect.top}px`
+  }
+}
+
+function repaintMasterIfNeeded() {
   const vw = document.documentElement.clientWidth
   const vh = document.documentElement.clientHeight
   const mode = theme.value
   if (masterW !== vw || masterH !== vh || masterTheme !== mode) {
     paintMaster(vw, vh, mode)
+    drawGeoContent()
   }
-  syncGeos()
 }
 
 function loop() {
-  syncGeos()
+  syncGeoPositions()
   raf = requestAnimationFrame(loop)
 }
 
 function onResize() {
   masterW = 0
-  syncFrame()
+  repaintMasterIfNeeded()
+  syncGeoPositions()
 }
 
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  syncFrame()
-  // Geos only need continuous sync while they drift
+  collectGeos()
+  repaintMasterIfNeeded()
+  syncGeoPositions()
+  // Geos only need continuous position sync while they drift
   if (!reducedMotion) raf = requestAnimationFrame(loop)
   window.addEventListener('resize', onResize)
 })
@@ -288,6 +322,7 @@ onBeforeUnmount(() => {
 
 watch(theme, () => {
   masterTheme = ''
-  syncFrame()
+  repaintMasterIfNeeded()
+  syncGeoPositions()
 })
 </script>

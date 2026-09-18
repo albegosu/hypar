@@ -54,6 +54,7 @@ async function openConnectDialog() {
   const existing = new Set([
     id.value,
     ...(store.current?.connections.map(c => c.targetId) ?? []),
+    ...(store.current?.connectedTo.map(c => c.sourceId) ?? []),
   ])
   connectCandidates.value = all
     .filter(e => !existing.has(e.id))

@@ -40,8 +40,13 @@ async function create() {
 
 async function copy() {
   if (!fresh.value) return
-  await navigator.clipboard.writeText(fresh.value)
-  copied.value = true
+  try {
+    await navigator.clipboard.writeText(fresh.value)
+    copied.value = true
+  }
+  catch {
+    failure.value = 'could not copy — select the token and copy it manually.'
+  }
 }
 
 async function revoke(id: string) {
