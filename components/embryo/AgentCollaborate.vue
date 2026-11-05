@@ -24,6 +24,8 @@ const { t } = useI18n({ useScope: 'global' })
 const askingAgent = ref(false)
 const agentError = ref<string | null>(null)
 const agentThinking = ref(false)
+/** Auto-research (ADR 0007) runs before the question streams. */
+const researching = ref(false)
 const streamPreview = ref('')
 const streamedMove = ref<AgentMove | null>(null)
 const replyInput = ref('')
@@ -171,6 +173,7 @@ const replySuggestions = computed<AiSuggestion[]>(() => {
 const speechLang = computed(() => (locale.value === 'es' ? 'es-ES' : 'en-US'))
 
 const emptyHint = computed(() => {
+  if (researching.value) return 'the agent is searching the web before asking...'
   if (agentThinking.value || (neverEngaged.value && !firstEngageFailed.value && !isClosed.value)) {
     return 'the agent is reading the seed...'
   }
@@ -231,7 +234,14 @@ async function askAgent() {
           if (data.type === 'error') {
             if (isCurrent()) agentError.value = data.message
           }
+          else if (data.type === 'researching') {
+            if (isCurrent()) researching.value = true
+          }
+          else if (data.type === 'research_failed') {
+            if (isCurrent()) researching.value = false
+          }
           else if (data.type === 'chunk' && typeof data.text === 'string') {
+            researching.value = false
             raw += data.text
             if (isCurrent()) streamPreview.value = extractPartialQuestion(raw) ?? streamPreview.value
           }
@@ -255,6 +265,7 @@ async function askAgent() {
     // Always release the in-flight flags; only the visible preview is scoped.
     askingAgent.value = false
     agentThinking.value = false
+    researching.value = false
     if (isCurrent()) streamPreview.value = ''
   }
 }
@@ -383,7 +394,7 @@ watch(
       >
         {{ dialogue.length ? 'Ask again' : 'Engage' }}
       </button>
-      <span v-else-if="askingAgent" class="text-[11px] wz-accent">Thinking…</span>
+      <span v-else-if="askingAgent" class="text-[11px] wz-accent">{{ researching ? 'Searching the web…' : 'Thinking…' }}</span>
     </div>
 
     <!-- Explicit germination moment (LATENT → GERMINATING) -->

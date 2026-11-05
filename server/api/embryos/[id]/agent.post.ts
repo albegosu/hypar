@@ -4,6 +4,9 @@ import { prisma } from '~/server/utils/prisma'
 import { requireSessionUserId } from '~/server/utils/session'
 import { logger } from '~/server/utils/logger'
 import { resolveChatModel } from '~/server/utils/llm-provider'
+import { researchEmbryo } from '~/server/utils/embryo-research'
+import { getUserSettings } from '~/server/utils/user-settings'
+import { shouldAutoResearch } from '~/utils/research'
 import { classifyLlmError } from '~/utils/llm-errors'
 import {
   buildAgentSystemPrompt,
@@ -71,19 +74,24 @@ export default defineEventHandler(async (event) => {
   const candidates = selectAgentPeers({ living, fossils, alreadyConnected })
   const dialogue = dialogueFromEvents(embryo.events).slice(-12)
 
-  const userMessage = buildAgentUserMessage({
+  const openTensions = embryo.tensions.map(t => t.question)
+  const promptInput = {
     seed: embryo.seed,
     state: embryo.state,
-    openTensions: embryo.tensions.map(t => t.question),
+    openTensions,
     otherEmbryos: candidates,
     dialogue,
     source: { title: embryo.sourceTitle, context: embryo.sourceContext },
     references: referenceIndex?.markdown,
-  })
+  }
   const sparked = hasSourceContext({ title: embryo.sourceTitle, context: embryo.sourceContext })
   const withReferences = !!referenceIndex?.markdown?.trim()
 
   const { model, timeoutMs, label, own, maxOutputTokens } = await resolveChatModel(userId, requestedModel)
+
+  // ADR 0007: with auto-research on, the researcher runs once per state before the question.
+  const settings = await getUserSettings(userId)
+  const autoResearch = settings.webResearch && settings.autoResearch && shouldAutoResearch(embryo.state, embryo.events)
 
   setResponseHeader(event, 'Content-Type', 'text/event-stream')
   setResponseHeader(event, 'Cache-Control', 'no-cache')
@@ -94,21 +102,46 @@ export default defineEventHandler(async (event) => {
   let streamError: unknown = null
 
   try {
-    const result = streamText({
-      model,
-      system: buildAgentSystemPrompt(embryo.state, { sparked, references: withReferences }),
-      prompt: userMessage,
-      maxOutputTokens,
-      abortSignal: AbortSignal.timeout(timeoutMs),
-      onError: ({ error }) => {
-        streamError ??= error
-      },
-    })
-
     const encoder = new TextEncoder()
+    const send = (controller: ReadableStreamDefaultController, data: unknown) =>
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          let researched = 0
+          if (autoResearch) {
+            send(controller, { type: 'researching' })
+            try {
+              const outcome = await researchEmbryo({
+                userId,
+                embryo,
+                dialogue,
+                openTensions,
+                auto: true,
+                timeoutMs,
+              })
+              researched = outcome.findings.length
+              openTensions.push(...outcome.findings.map(f => f.question))
+            }
+            catch (err) {
+              // Research is extra context: its failure never blocks the question.
+              logger.warn('auto research failed', { embryoId: id, kind: classifyLlmError(err).kind })
+              send(controller, { type: 'research_failed' })
+            }
+          }
+
+          const result = streamText({
+            model,
+            system: buildAgentSystemPrompt(embryo.state, { sparked, references: withReferences }),
+            prompt: buildAgentUserMessage(promptInput),
+            maxOutputTokens,
+            abortSignal: AbortSignal.timeout(timeoutMs),
+            onError: ({ error }) => {
+              streamError ??= error
+            },
+          })
+
           for await (const chunk of result.textStream) {
             fullText += chunk
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`))
@@ -282,6 +315,7 @@ export default defineEventHandler(async (event) => {
             fossil,
             transplant,
             germinated,
+            researched,
           })}\n\n`))
           controller.close()
         }

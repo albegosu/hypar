@@ -71,8 +71,10 @@ Agent-detected links are stored as unconfirmed `Connection` rows (`detectedBy: A
 | `GET/POST /api/embryos` | List (own) / create `LATENT` |
 | `GET/PATCH /api/embryos/:id` | Detail / actions (`transition`, tensions, `connect`, `reply`, accept path/fossil, dismiss note) |
 | `POST /api/embryos/:id/agent` | SSE collaborator turn (optional `{ model }`) |
+| `POST /api/embryos/:id/research` | Web research; findings become sourced tensions |
 | `POST /api/embryos/:id/fossilize` | Close with a required reason |
 | `GET /api/llm/models` | Models from the user's provider, or Ollama tags on the fallback |
+| `GET/PUT /api/settings` | Web research switches and whether research is available |
 | `GET/PUT/DELETE /api/llm/provider` | The user's provider connection (key encrypted, never returned) |
 | `GET /api/health` | `{ status, checks.db, ts }` — unauthenticated, used by Compose |
 

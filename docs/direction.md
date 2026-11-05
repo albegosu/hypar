@@ -35,7 +35,7 @@ No success metric is set on purpose. Measuring the harness is not relevant yet. 
 **Roles inside, one voice outside.** *(direction, not runtime)*
 
 - **Collaborator** — the only voice. One challenging question per turn ([ADR 0002](/decisions/0002-agent-one-question)).
-- **Researcher** — searches the web to refute (prior art, counter-evidence) and to extend (evidence, adjacent work). Its output arrives as sourced HITL notes or tensions, never as a second voice.
+- **Researcher** — searches the web to refute (prior art, counter-evidence) and to extend (evidence, adjacent work). Its output arrives as sourced tensions, never as a second voice. *(runtime: Research button and optional auto-research, [ADR 0007](/decisions/0007-external-knowledge))*
 - **Critic** — typed gate suggestions with confidence (ready to mature, fossil kind, which path wins). It is separate from the generator and preferably from another model family. A calibrated decision model such as Jev is a candidate.
 - **Bring your own provider** — each user connects their own LLM provider: at least Anthropic, OpenAI and Ollama Cloud, with a server-wide Ollama as the fallback ([ADR 0008](/decisions/0008-bring-your-own-provider)). *(runtime for the collaborator; researcher and critic models come with those roles)*
 

@@ -64,7 +64,7 @@ async function connect() {
     })
     apiKey.value = ''
     formOpen.value = false
-    await refreshModels()
+    await Promise.all([refreshModels(), refreshNuxtData('user-settings')])
   }
   catch (err) {
     failure.value = errorText(err, 'could not save the key.')
@@ -94,7 +94,7 @@ async function disconnect() {
   failure.value = null
   try {
     view.value = await $fetch<ProviderView>('/api/llm/provider', { method: 'DELETE' })
-    await refreshModels()
+    await Promise.all([refreshModels(), refreshNuxtData('user-settings')])
   }
   catch (err) {
     failure.value = errorText(err, 'could not disconnect.')
