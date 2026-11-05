@@ -82,5 +82,5 @@ experiment in hypar  →  observe  →  document in docs/experiments/
 | Active tensions | [Open Questions](/open-questions) |
 | Experiment log | [Experiments](/experiments/) |
 | Settled choices | [Decisions](/decisions/) |
-| How it is built | [Architecture](/architecture) |
+| How it is built | [Architecture](/architecture/) |
 | Pivot story | [History](/history) |
