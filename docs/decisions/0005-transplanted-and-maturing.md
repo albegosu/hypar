@@ -1,11 +1,11 @@
 ---
-status: proposed
+status: accepted
 date: 2026-11-05
 ---
 
 # ADR 0005: TRANSPLANTED end state and MATURING
 
-- **Status:** proposed. The direction is decided; the open details are listed below.
+- **Status:** accepted
 - **Date:** 2026-11-05
 - **Extends:** [ADR 0003 — No-delete fossils](./0003-no-delete-fossils)
 
@@ -21,9 +21,9 @@ The [2026-11 redefinition](/direction) makes hypar a creative harness that guide
 - Add a terminal state **`TRANSPLANTED`**: the idea has sprouted and now lives outside the garden (productised or in use).
 - A transplant keeps an **outcome link** (what it became) and a **required reason** (what made it work), the success counterpart to the fossil reason. Nothing is deleted.
 
-Proposed defaults for the open details:
+Rules:
 
-| Question | Proposal |
+| Question | Decision |
 |---|---|
 | Which state can be transplanted? | Only `MATURING`, so the idea passes through validation first |
 | Who sets it? | The agent may **propose** it (HITL, like fossil proposals); only the user confirms |

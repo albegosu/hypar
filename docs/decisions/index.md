@@ -44,7 +44,7 @@ Copy [`_template.md`](./_template.md) when proposing a new ADR.
 | [0002 — Agent one-question constraint](./0002-agent-one-question) | accepted | Exactly one challenging question per agent turn |
 | [0003 — No-delete fossils](./0003-no-delete-fossils) | accepted | No delete; close with required reason as fossil |
 | [0004 — Glass visual language](./0004-glass-visual-language) | accepted | Glass + rounded light/dark app UI; not terminal chrome |
-| [0005 — TRANSPLANTED and MATURING](./0005-transplanted-and-maturing) | proposed | Success end state next to fossil; `MATURE` becomes `MATURING` |
+| [0005 — TRANSPLANTED and MATURING](./0005-transplanted-and-maturing) | accepted | Success end state next to fossil; `MATURE` becomes `MATURING` |
 | [0006 — Agent roles, one voice](./0006-agent-roles-one-voice) | accepted | Collaborator, researcher, critic inside; one question outside |
 | [0007 — External knowledge](./0007-external-knowledge) | accepted | Web research to refute and extend; every claim sourced |
 | [0008 — Bring your own provider](./0008-bring-your-own-provider) | accepted | Per-user Anthropic, OpenAI, Ollama; encrypted keys |
