@@ -1,4 +1,5 @@
-export const AGENT_MOVES = ['DEFINE', 'PROBE', 'INVERT', 'VARIETY', 'SIMPLEST'] as const
+/** SIMPLEST is kept for events logged before MATURING replaced MATURE (ADR 0005). */
+export const AGENT_MOVES = ['DEFINE', 'PROBE', 'INVERT', 'VARIETY', 'VALIDATE', 'SIMPLEST'] as const
 export type AgentMove = (typeof AGENT_MOVES)[number]
 
 export const FOSSIL_KINDS = ['ILL_DEFINED', 'WRONG_PATH', 'SUPERSEDED'] as const
@@ -8,8 +9,9 @@ export const METHOD_COPY: Record<string, string> = {
   LATENT: 'waiting to name the real problem',
   GERMINATING: 'probing assumptions',
   GROWING: 'generating paths, not the answer',
-  MATURE: 'tension resolved — close or reopen',
+  MATURING: 'validating — transplant, fossilize or keep testing',
   FOSSIL: 'path closed, reason kept',
+  TRANSPLANTED: 'living outside the garden, reason kept',
 }
 
 /** Short move labels for the challenge hero — legible, not a method tutorial. */
@@ -18,6 +20,7 @@ export const MOVE_COPY: Record<AgentMove, string> = {
   PROBE: 'test the assumptions',
   INVERT: 'what would make this wrong?',
   VARIETY: 'open alternative paths',
+  VALIDATE: 'what would prove or kill it?',
   SIMPLEST: 'close or reopen',
 }
 
@@ -54,9 +57,9 @@ const STANCE_BY_STATE: Record<string, MethodStance> = {
     move: 'VARIETY',
     instruction: `Generate paths, not the answer. Creativity here is variety: alternative directions, not the clever first fix. The question should open or force a choice between paths. You MAY include 2–3 short paths (directions, not complete solutions). Do not pick a winner.`,
   },
-  MATURE: {
-    move: 'SIMPLEST',
-    instruction: `Select the simplest effective form. Is remaining tension real, or is this ready to close? If it should close, you MAY propose fossil with kind ILL_DEFINED (problem was never named), WRONG_PATH (a simpler path existed), or SUPERSEDED (another idea replaced this). Do not fossilize — only propose.`,
+  MATURING: {
+    move: 'VALIDATE',
+    instruction: `Validate. Ask for the evidence, or the cheapest experiment, that would prove this idea valid or kill it, and prefer the simplest effective form. If it has clearly failed, you MAY propose fossil with kind ILL_DEFINED (problem was never named), WRONG_PATH (a simpler path existed), or SUPERSEDED (another idea replaced this). If the user says it already works and is in use, you MAY propose transplant with the reason it worked. Never both. Do not close it yourself — only propose.`,
   },
 }
 

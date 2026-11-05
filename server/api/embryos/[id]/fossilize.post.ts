@@ -20,6 +20,9 @@ export default defineEventHandler(async (event) => {
   if (embryo.state === 'FOSSIL') {
     throw createError({ statusCode: 409, statusMessage: 'Already a fossil' })
   }
+  if (embryo.state === 'TRANSPLANTED') {
+    throw createError({ statusCode: 409, statusMessage: 'Transplanted embryos cannot be fossilized' })
+  }
 
   const fossilBy = 'USER'
 

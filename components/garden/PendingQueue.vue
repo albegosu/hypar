@@ -3,6 +3,7 @@ import type { AiQueueItem } from 'ai-elements-nuxt/types'
 import { useI18n } from 'vue-i18n'
 import { useEmbryoStore } from '~/stores/embryos'
 import { truncateSeed } from '~/utils/embryo-display'
+import { isClosedState } from '~/utils/embryo-lab'
 
 const store = useEmbryoStore()
 const { t } = useI18n({ useScope: 'global' })
@@ -14,7 +15,7 @@ interface PendingItem extends AiQueueItem {
 const items = computed<PendingItem[]>(() => {
   const list: PendingItem[] = []
   for (const e of store.embryos) {
-    if (e.state === 'FOSSIL') continue
+    if (isClosedState(e.state)) continue
     const notes = e.agentNotes.filter(n => n.type === 'PENDING_QUESTION' && !n.dismissed)
     for (const note of notes) {
       list.push({

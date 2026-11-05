@@ -4,22 +4,25 @@ export const LIFECYCLE: Array<{ state: EmbryoState; label: string; glyph: string
   { state: 'LATENT', label: 'latent', glyph: '◌' },
   { state: 'GERMINATING', label: 'germinating', glyph: '◎' },
   { state: 'GROWING', label: 'growing', glyph: '●' },
-  { state: 'MATURE', label: 'mature', glyph: '◉' },
+  { state: 'MATURING', label: 'maturing', glyph: '◉' },
   { state: 'FOSSIL', label: 'fossil', glyph: '◈' },
+  { state: 'TRANSPLANTED', label: 'transplanted', glyph: '✳' },
 ]
 
-/** Forward-only next state (excludes FOSSIL — closing is a separate action). */
-export const LIFECYCLE_FORWARD: Exclude<EmbryoState, 'FOSSIL'>[] = [
+export type LivingState = Exclude<EmbryoState, 'FOSSIL' | 'TRANSPLANTED'>
+
+/** Forward-only next state (excludes the end states — closing is a separate action). */
+export const LIFECYCLE_FORWARD: LivingState[] = [
   'LATENT',
   'GERMINATING',
   'GROWING',
-  'MATURE',
+  'MATURING',
 ]
 
 export function nextLifecycleState(
   state: EmbryoState,
-): Exclude<EmbryoState, 'FOSSIL'> | null {
-  const idx = LIFECYCLE_FORWARD.indexOf(state as Exclude<EmbryoState, 'FOSSIL'>)
+): LivingState | null {
+  const idx = LIFECYCLE_FORWARD.indexOf(state as LivingState)
   if (idx < 0 || idx >= LIFECYCLE_FORWARD.length - 1) return null
   return LIFECYCLE_FORWARD[idx + 1]!
 }
@@ -40,8 +43,9 @@ export function stateColor(state: EmbryoState) {
     LATENT: 'text-[var(--term-text-faint)]',
     GERMINATING: 'text-[var(--term-accent)]',
     GROWING: 'text-[var(--term-accent-strong)]',
-    MATURE: 'text-[var(--term-text-strong)]',
+    MATURING: 'text-[var(--term-text-strong)]',
     FOSSIL: 'text-[var(--term-text-dim)]',
+    TRANSPLANTED: 'text-[var(--term-accent-strong)]',
   }[state]
 }
 

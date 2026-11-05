@@ -25,7 +25,7 @@ describe('embryo-stance eval fixtures', () => {
 
   it('has the required cases', () => {
     const states = fixtures.map(f => f.state)
-    expect(states).toEqual(expect.arrayContaining(['LATENT', 'GERMINATING', 'GROWING', 'MATURE']))
+    expect(states).toEqual(expect.arrayContaining(['LATENT', 'GERMINATING', 'GROWING', 'MATURING']))
     expect(fixtures.some(f => /checklist/i.test(f.seed) && f.state === 'LATENT')).toBe(true)
   })
 

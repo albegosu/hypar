@@ -1,7 +1,22 @@
-export const EMBRYO_STATES = ['LATENT', 'GERMINATING', 'GROWING', 'MATURE', 'FOSSIL'] as const
+export const EMBRYO_STATES = ['LATENT', 'GERMINATING', 'GROWING', 'MATURING', 'FOSSIL', 'TRANSPLANTED'] as const
 export type EmbryoStateName = typeof EMBRYO_STATES[number]
 
-export const LIVING_STATES = ['LATENT', 'GERMINATING', 'GROWING', 'MATURE'] as const
+export const LIVING_STATES = ['LATENT', 'GERMINATING', 'GROWING', 'MATURING'] as const
+
+/** End states: closed to the agent and to lifecycle changes (ADR 0003, ADR 0005). */
+export const CLOSED_STATES = ['FOSSIL', 'TRANSPLANTED'] as const
+
+export function isClosedState(state: string): boolean {
+  return (CLOSED_STATES as readonly string[]).includes(state)
+}
+
+/** Why an embryo cannot be transplanted, or null when it can. Only MATURING ideas leave the garden. */
+export function transplantGuard(state: string): string | null {
+  if (state === 'TRANSPLANTED') return 'Already transplanted'
+  if (state === 'FOSSIL') return 'Fossils cannot be transplanted'
+  if (state !== 'MATURING') return 'Only maturing embryos can be transplanted'
+  return null
+}
 
 export const AGENT_CONNECTION_TYPES = ['REINFORCES', 'CONTRADICTS', 'EXTENDS', 'RESURRECTS'] as const
 
@@ -87,7 +102,8 @@ export function hasOpenTension(e: {
     && (n.type === 'PENDING_QUESTION'
       || n.type === 'PENDING_CONNECTION'
       || n.type === 'PENDING_PATH'
-      || n.type === 'PENDING_FOSSIL'),
+      || n.type === 'PENDING_FOSSIL'
+      || n.type === 'PENDING_TRANSPLANT'),
   )
 }
 
@@ -103,7 +119,8 @@ export function tensionPriority(e: {
     !n.dismissed
     && (n.type === 'PENDING_CONNECTION'
       || n.type === 'PENDING_PATH'
-      || n.type === 'PENDING_FOSSIL'),
+      || n.type === 'PENDING_FOSSIL'
+      || n.type === 'PENDING_TRANSPLANT'),
   ).length * 5
   return score
 }

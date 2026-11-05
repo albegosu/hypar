@@ -17,7 +17,7 @@ A playground for exploring how humans and AI agents collaborate on knowledge wor
 The first research focus is the **Embryo** — a living unit of knowledge that replaces the static note.
 
 - **Seed** — a raw thought captured in one sentence (immutable after create)
-- **Lifecycle** — `LATENT → GERMINATING → GROWING → MATURE → FOSSIL` (method stance: define → probe → paths → simplest)
+- **Lifecycle** — `LATENT → GERMINATING → GROWING → MATURING`, ending in `FOSSIL` (it died) or `TRANSPLANTED` (it works) (method stance: define → probe → paths → validate)
 - **No delete** — dead ideas persist as fossils with a required reason (and optional kind: ill-defined / wrong path / superseded)
 - **Agent as collaborator** — streams one challenging question per turn; auto-engages on first visit; you can reply
 - **Tensions, paths, connections** — open questions, alternative directions, typed links (`REINFORCES` / `CONTRADICTS` / `EXTENDS` / `RESURRECTS`)

@@ -14,7 +14,7 @@ describe('stanceFor', () => {
     expect(stanceFor('LATENT').move).toBe('DEFINE')
     expect(stanceFor('GERMINATING').move).toBe('PROBE')
     expect(stanceFor('GROWING').move).toBe('VARIETY')
-    expect(stanceFor('MATURE').move).toBe('SIMPLEST')
+    expect(stanceFor('MATURING').move).toBe('VALIDATE')
   })
 
   it('falls back to DEFINE for unknown state', () => {
@@ -22,7 +22,7 @@ describe('stanceFor', () => {
   })
 
   it('has copy for every lifecycle state', () => {
-    for (const state of ['LATENT', 'GERMINATING', 'GROWING', 'MATURE', 'FOSSIL']) {
+    for (const state of ['LATENT', 'GERMINATING', 'GROWING', 'MATURING', 'FOSSIL', 'TRANSPLANTED']) {
       expect(METHOD_COPY[state]).toBeTruthy()
     }
   })

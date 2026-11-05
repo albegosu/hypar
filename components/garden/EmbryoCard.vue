@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { EmbryoSummary } from '~/stores/embryos'
-import type { FossilStratum } from '~/utils/embryo-lab'
+import { isClosedState, type FossilStratum } from '~/utils/embryo-lab'
 import { LIFECYCLE, stateColor } from '~/utils/embryo-display'
 
 const props = defineProps<{
@@ -10,11 +10,17 @@ const props = defineProps<{
 }>()
 
 const isFossil = computed(() => props.embryo.state === 'FOSSIL')
+const isTransplanted = computed(() => props.embryo.state === 'TRANSPLANTED')
+const isClosed = computed(() => isClosedState(props.embryo.state))
 const glyph = computed(() => LIFECYCLE.find(l => l.state === props.embryo.state)!.glyph)
 const openTensions = computed(() => props.embryo.tensions.filter(t => !t.resolved).length)
 const links = computed(() => props.embryo._count.connections + props.embryo._count.connectedTo)
 const date = computed(() => {
-  const iso = isFossil.value ? (props.embryo.fossilizedAt ?? props.embryo.createdAt) : props.embryo.createdAt
+  const iso = isFossil.value
+    ? (props.embryo.fossilizedAt ?? props.embryo.createdAt)
+    : isTransplanted.value
+      ? (props.embryo.transplantedAt ?? props.embryo.createdAt)
+      : props.embryo.createdAt
   return new Date(iso).toLocaleDateString()
 })
 </script>
@@ -34,7 +40,7 @@ const date = computed(() => {
         {{ glyph }} {{ embryo.state.toLowerCase() }}
       </span>
       <div class="flex items-center gap-2 sm:gap-3 wz-faint text-[10px]">
-        <template v-if="!isFossil">
+        <template v-if="!isClosed">
           <span v-if="links > 0" class="opacity-70 hidden sm:inline">⟶ {{ links }}</span>
           <span v-if="openTensions" class="text-[var(--term-warn)]">⚡ {{ openTensions }}</span>
           <span v-if="embryo.agentNotes.length" class="wz-accent opacity-70">↯ {{ embryo.agentNotes.length }}</span>
@@ -54,6 +60,12 @@ const date = computed(() => {
         class="text-[11px] text-[var(--term-text-dim)] mt-2 opacity-60 line-clamp-1"
       >
         ◈ {{ embryo.fossilReason }}
+      </p>
+      <p
+        v-if="isTransplanted && embryo.transplantReason"
+        class="text-[11px] wz-muted mt-2 line-clamp-1"
+      >
+        ✳ {{ embryo.transplantReason }}
       </p>
     </div>
   </NuxtLink>

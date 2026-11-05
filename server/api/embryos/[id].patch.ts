@@ -3,15 +3,14 @@ import { prisma } from '~/server/utils/prisma'
 import { requireSessionUserId } from '~/server/utils/session'
 import { parseFossilNote } from '~/utils/embryo-method'
 import { parseConnectionNote } from '~/utils/embryo-display'
-
-const VALID_STATES = ['LATENT', 'GERMINATING', 'GROWING', 'MATURE'] as const
+import { LIVING_STATES, transplantGuard } from '~/utils/embryo-lab'
 
 const CONNECTION_TYPES = ['REINFORCES', 'CONTRADICTS', 'EXTENDS', 'RESURRECTS'] as const
 
 const bodySchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('transition'),
-    state: z.enum(VALID_STATES),
+    state: z.enum(LIVING_STATES),
   }),
   z.object({
     action: z.literal('add_tension'),
@@ -52,6 +51,15 @@ const bodySchema = z.discriminatedUnion('action', [
     action: z.literal('accept_fossil'),
     noteId: z.string(),
   }),
+  z.object({
+    action: z.literal('accept_transplant'),
+    noteId: z.string(),
+    outcome: z.string().trim().min(1).max(2000),
+  }),
+  z.object({
+    action: z.literal('add_note'),
+    note: z.string().trim().min(1).max(10000),
+  }),
 ])
 
 export default defineEventHandler(async (event) => {
@@ -65,6 +73,71 @@ export default defineEventHandler(async (event) => {
   }
   if (embryo.state === 'FOSSIL') {
     throw createError({ statusCode: 409, statusMessage: 'Fossils cannot be modified' })
+  }
+  // ADR 0005: a transplanted idea only takes the user's notes, as its artefact evolves outside.
+  if (embryo.state === 'TRANSPLANTED' && body.action !== 'add_note') {
+    throw createError({ statusCode: 409, statusMessage: 'Transplanted embryos only accept notes' })
+  }
+
+  if (body.action === 'add_note') {
+    if (embryo.state !== 'TRANSPLANTED') {
+      throw createError({ statusCode: 409, statusMessage: 'Notes are for transplanted embryos' })
+    }
+    return prisma.embryoEvent.create({
+      data: {
+        embryoId: id,
+        type: 'USER_NOTE',
+        initiatedBy: 'USER',
+        payload: { note: body.note },
+      },
+    })
+  }
+
+  if (body.action === 'accept_transplant') {
+    const blocked = transplantGuard(embryo.state)
+    if (blocked) {
+      throw createError({ statusCode: 409, statusMessage: blocked })
+    }
+    const note = await prisma.agentNote.findFirst({
+      where: { id: body.noteId, embryoId: id, type: 'PENDING_TRANSPLANT', dismissed: false },
+    })
+    if (!note) {
+      throw createError({ statusCode: 404, statusMessage: 'Pending transplant not found' })
+    }
+    const reason = note.content.trim()
+    if (!reason) {
+      throw createError({ statusCode: 400, statusMessage: 'Transplant reason is empty' })
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const transplanted = await tx.embryo.update({
+        where: { id },
+        data: {
+          state: 'TRANSPLANTED',
+          transplantedAt: new Date(),
+          transplantReason: reason,
+          transplantOutcome: body.outcome,
+          events: {
+            create: {
+              type: 'TRANSPLANTED',
+              initiatedBy: 'USER',
+              payload: {
+                reason,
+                outcome: body.outcome,
+                previousState: embryo.state,
+                fromProposal: true,
+                noteId: note.id,
+              },
+            },
+          },
+        },
+      })
+      await tx.agentNote.update({
+        where: { id: note.id },
+        data: { dismissed: true },
+      })
+      return transplanted
+    })
   }
 
   if (body.action === 'transition') {

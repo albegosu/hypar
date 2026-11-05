@@ -53,7 +53,7 @@ Kinds (product surface, encoded in the reason string):
 
 ### When the agent suggests
 
-On `MATURE`, the agent may propose a kind + reason as a pending note. You accept (fossilize) or dismiss. There is no multi-turn negotiation with the agent at close time.
+On `MATURING`, the agent may propose a kind + reason as a pending note. You accept (fossilize) or dismiss. There is no multi-turn negotiation with the agent at close time.
 
 ### What cannot happen
 

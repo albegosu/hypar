@@ -6,14 +6,14 @@ First-read for coding agents (Cursor, Claude, Grok Bot, etc.). Keep claims align
 
 **hypar** is a **creative harness**: an ideas lab that guides any idea to be discarded or watered, with an agent that challenges, researches and validates it. It is a product for people with ideas; UI patterns that survive are also extracted into [`ai-elements-nuxt`](https://github.com/albegosu/ai-elements-nuxt). The 2026-11 redefinition is in [docs/direction.md](docs/direction.md). Much of it is direction, not runtime, so check the code before assuming a feature exists.
 
-Current focus: **Embryos** (seed → `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`). This is **not** the archived RAG product.
+Current focus: **Embryos** (seed → `LATENT → GERMINATING → GROWING → MATURING` → `FOSSIL` or `TRANSPLANTED`). This is **not** the archived RAG product.
 
 Archived RAG lives on branch [`archive/rag-v1`](https://github.com/albegosu/hypar/tree/archive/rag-v1) / tag [`v0.4-rag`](https://github.com/albegosu/hypar/releases/tag/v0.4-rag). See [docs/history.md](docs/history.md).
 
 ## Non-negotiables
 
-- **No delete** — ideas close as fossils with a **required reason** (optional kind: ill-defined / wrong path / superseded). Fossils reject further PATCH/agent (`409`).
-- **Agent = one challenging question per turn** — no summaries, validation, comfort, or preamble. Paths / fossil / connection proposals are additive HITL fields, not a second question.
+- **No delete** — ideas close as fossils with a **required reason** (optional kind: ill-defined / wrong path / superseded), or as transplanted with a **required reason and outcome** when they work (ADR 0005). Fossils reject further PATCH/agent (`409`); transplanted embryos reject agent calls and every PATCH except user notes.
+- **Agent = one challenging question per turn** — no summaries, validation, comfort, or preamble. Paths / fossil / transplant / connection proposals are additive HITL fields, not a second question.
 - **Patterns extract to ai-elements-nuxt** — UI maps embryo events onto headless `Ai*` primitives; do not grow a generic chatbot transcript.
 
 ## Where truth lives

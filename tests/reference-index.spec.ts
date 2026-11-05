@@ -35,7 +35,7 @@ describe('shouldUseReferences', () => {
     expect(shouldUseReferences('GERMINATING')).toBe(true)
     expect(shouldUseReferences('GROWING')).toBe(true)
     expect(shouldUseReferences('LATENT')).toBe(false)
-    expect(shouldUseReferences('MATURE')).toBe(false)
+    expect(shouldUseReferences('MATURING')).toBe(false)
     expect(shouldUseReferences('FOSSIL')).toBe(false)
   })
 })

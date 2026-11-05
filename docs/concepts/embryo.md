@@ -40,12 +40,12 @@ The system works best when embryos are atomic — one idea, one tension, one thr
 
 ## The agent's relationship to an embryo
 
-While an embryo is alive — in any state other than fossil — the agent has a relationship to it. On first visit, the detail page **auto-engages**. After that, you can reply and the agent asks again. The agent:
+While an embryo is alive — in any state other than fossil or transplanted — the agent has a relationship to it. On first visit, the detail page **auto-engages**. After that, you can reply and the agent asks again. The agent:
 
 - Asks one question per turn, with a [stance that follows the lifecycle](/concepts/agent)
 - May propose typed links to other **living** embryos (you confirm)
 - In `GROWING`, may attach alternative **paths** you can keep as tensions
-- In `MATURE`, may propose [fossilization](/concepts/fossils) with a kind of death
+- In `MATURING`, may propose [fossilization](/concepts/fossils) with a kind of death, or a [transplant](/concepts/lifecycle#transplanted) when the idea works
 
 The agent does not manage embryos passively. It participates in their development.
 
