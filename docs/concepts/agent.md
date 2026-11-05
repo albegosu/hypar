@@ -88,14 +88,18 @@ Per invocation the agent receives:
 - What sparked the seed, when it was planted from a [second-brain](/guide/second-brain) capture: its title and essence, as context for the seed, never as the idea
 - While `GERMINATING` or `GROWING` only: the index of the user's second-brain wiki, if they connected one — topic and item names, as **contrast** and never as a recommendation ([experiment](/experiments/saved-references-as-contrast))
 
-It does **not** currently have:
+It does **not** have the rest of the garden beyond that cap. Connection surfacing would benefit from fossils; question-asking benefits from a narrow thread. See [Open Questions](/open-questions).
 
-- The rest of the garden beyond that cap
-- External knowledge by default
+### Web research
 
-This is a lab constraint, not the long-term research answer. Connection surfacing would benefit from fossils; question-asking benefits from a narrow thread. See [Open Questions](/open-questions).
+The researcher ([ADR 0007](/decisions/0007-external-knowledge)) searches the web through the user's provider: Anthropic and OpenAI with their native search tools, Ollama Cloud with its web search API. Local Ollama cannot search.
 
-You can pick the Ollama model in **Settings**; the choice is a cookie sent on the next agent POST.
+- **When:** the **Research** button on an embryo, or automatically once per state when an embryo is in `GERMINATING` or `MATURING`, before the question, if the user turned that on in Settings.
+- **What it looks for:** it leans by state. `GERMINATING` refutes (prior art, counter-evidence), `GROWING` extends (adjacent work, analogies), `MATURING` does both to validate.
+- **What it leaves:** up to 4 findings, each stored as an open agent tension with its claim, its stance (refute or extend) and its source. A finding whose URL was not in the search results is dropped. The collaborator then reads those tensions like any other.
+- **Privacy:** the idea's text goes to the provider's search. Settings has the switch to turn research off.
+
+The provider and model are chosen in **Settings** ([ADR 0008](/decisions/0008-bring-your-own-provider)).
 
 ---
 

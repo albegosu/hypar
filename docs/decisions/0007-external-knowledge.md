@@ -21,6 +21,14 @@ Evidence warns that research agents drift toward *local elaboration* (ideas clus
 - Research results enter as HITL material (notes, tensions), never as an unconfirmed fact on the embryo.
 - The user's own material (seeds, second-brain, fossils) stays a first-class source of variety, next to the web.
 
+## Implementation (2026-11)
+
+- `POST /api/embryos/:id/research` runs the researcher; `server/utils/embryo-research.ts`. Anthropic and OpenAI use their native web search tools, Ollama Cloud a search tool over its web search API. Local Ollama has no search and the UI says so.
+- Each finding becomes an **open agent tension** with `claim`, `stance` (`REFUTE` / `EXTEND`), `sourceUrl` and `sourceTitle`. A tension is a question the user resolves, so the finding never becomes a fact on the embryo. Findings whose URL was not returned by the search are dropped rather than marked as opinion.
+- Triggers: a **Research** button per embryo, and an opt-in auto mode that runs once per state in `GERMINATING` and `MATURING` before the collaborator's question.
+- Privacy: research is on by default with a visible notice, and `UserSettings.webResearch` turns it off per user.
+- First guess at the balance (`utils/research.ts`): `GERMINATING` refutes, `GROWING` extends, `MATURING` does both.
+
 ## Consequences
 
 - Drops the non-goal "the agent has no external knowledge".

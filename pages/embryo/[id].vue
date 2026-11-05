@@ -46,6 +46,25 @@ const connectionView = ref<'list' | 'graph'>('graph')
 const tensionsOpen = ref(false)
 const historyOpen = ref(false)
 
+// Web research (ADR 0007): findings land as sourced tensions.
+const { data: userSettings } = useFetch<{
+  research: { available: true; label: string } | { available: false; reason: string }
+}>('/api/settings', { lazy: true, server: false })
+const researchState = computed(() => userSettings.value?.research ?? null)
+const researching = ref(false)
+const researchMessage = ref<{ ok: boolean; text: string } | null>(null)
+
+async function runResearch() {
+  researching.value = true
+  researchMessage.value = null
+  const count = await store.research(id.value)
+  researching.value = false
+  tensionsOpen.value = true
+  researchMessage.value = count === null
+    ? { ok: false, text: store.error ?? 'Research failed' }
+    : { ok: true, text: count ? `${count} sourced tension${count === 1 ? '' : 's'} added` : 'nothing relevant turned up' }
+}
+
 const filteredCandidates = computed(() => {
   const q = connectSearch.value.toLowerCase().trim()
   if (!q) return connectCandidates.value
@@ -184,6 +203,7 @@ const EVENT_LABELS: Record<string, string> = {
   TRANSPLANT_PROPOSED: 'transplant proposed',
   TRANSPLANTED: 'transplanted',
   USER_NOTE: 'note',
+  RESEARCHED: 'researched the web',
 }
 
 function stepClass(state: EmbryoState) {
@@ -551,10 +571,10 @@ function stepClass(state: EmbryoState) {
 
       <!-- 4. Tensions (collapsed by default) -->
       <div class="wz-panel" :class="{ 'fossil-panel': isFossil }">
-        <div class="wz-panel-header">
+        <div class="wz-panel-header flex items-center gap-2">
           <button
             type="button"
-            class="wz-collapse-toggle"
+            class="wz-collapse-toggle flex-1 min-w-0"
             :aria-expanded="tensionsOpen"
             @click="tensionsOpen = !tensionsOpen"
           >
@@ -564,7 +584,27 @@ function stepClass(state: EmbryoState) {
             </span>
             <span class="wz-faint text-[10px]">{{ tensionsOpen ? 'Hide' : 'Show' }}</span>
           </button>
+          <button
+            v-if="!isClosed && researchState"
+            type="button"
+            class="wz-btn-outline text-[11px] py-0.5 shrink-0 disabled:opacity-40"
+            :disabled="researching || !researchState.available"
+            :title="researchState.available
+              ? `Search the web with ${researchState.label} to refute and extend this idea. The idea's text is sent to its search.`
+              : researchState.reason"
+            @click="runResearch"
+          >
+            {{ researching ? 'Searching…' : 'Research' }}
+          </button>
         </div>
+        <p
+          v-if="researchMessage"
+          class="px-4 pt-2 text-[11px]"
+          :class="researchMessage.ok ? 'wz-faint' : 'text-[var(--term-danger)]'"
+          role="status"
+        >
+          {{ researchMessage.text }}
+        </p>
         <template v-if="tensionsOpen">
           <div class="divide-y divide-[var(--term-accent-faint)]">
             <div
@@ -573,9 +613,19 @@ function stepClass(state: EmbryoState) {
               class="px-4 py-3 flex items-start justify-between gap-3"
               :class="t.resolved ? 'opacity-40' : ''"
             >
-              <div>
-                <span class="text-[10px] wz-faint mr-2">{{ t.raisedBy.toLowerCase() }}</span>
+              <div class="min-w-0">
+                <span class="text-[10px] wz-faint mr-2">{{ t.stance ? t.stance.toLowerCase() : t.raisedBy.toLowerCase() }}</span>
                 <span class="text-xs wz-strong">{{ t.question }}</span>
+                <p v-if="t.claim" class="text-[11px] wz-muted mt-1">
+                  {{ t.claim }}
+                  <a
+                    v-if="safeHttpUrl(t.sourceUrl)"
+                    :href="safeHttpUrl(t.sourceUrl)!"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline wz-faint break-all"
+                  >{{ t.sourceTitle || 'source' }}</a>
+                </p>
               </div>
               <button
                 v-if="!t.resolved && !isClosed"

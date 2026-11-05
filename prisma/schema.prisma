@@ -31,6 +31,13 @@ enum EventType {
   TRANSPLANT_PROPOSED
   TRANSPLANTED
   USER_NOTE
+  RESEARCHED
+}
+
+// What a web finding does to the idea (ADR 0007)
+enum ResearchStance {
+  REFUTE
+  EXTEND
 }
 
 enum EventInitiator {
@@ -111,6 +118,11 @@ model Tension {
   raisedBy   EventInitiator
   resolvedAt DateTime?
   createdAt  DateTime       @default(now())
+  // Web research (ADR 0007): the sourced finding behind an agent tension.
+  claim       String?
+  stance      ResearchStance?
+  sourceUrl   String?
+  sourceTitle String?
 
   embryo     Embryo         @relation(fields: [embryoId], references: [id], onDelete: Cascade)
 
@@ -203,6 +215,20 @@ model ProviderConnection {
   user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// Per-user preferences. No row means the defaults.
+model UserSettings {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  // ADR 0007: the idea's text may go to the provider's web search.
+  webResearch  Boolean  @default(true)
+  // Research before the agent's question when an embryo enters GERMINATING or MATURING.
+  autoResearch Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 // ── better-auth tables ────────────────────────────────────────
 
 model User {
@@ -224,6 +250,7 @@ model User {
   integrationTokens IntegrationToken[]
   referenceIndex    ReferenceIndex?
   providerConnection ProviderConnection?
+  settings           UserSettings?
 }
 
 model Session {

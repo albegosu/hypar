@@ -13,6 +13,11 @@ export interface Tension {
   raisedBy: EventInitiator
   resolvedAt: string | null
   createdAt: string
+  /** Web research (ADR 0007): the sourced finding behind an agent tension. */
+  claim?: string | null
+  stance?: 'REFUTE' | 'EXTEND' | null
+  sourceUrl?: string | null
+  sourceTitle?: string | null
 }
 
 export interface AgentNote {
@@ -176,6 +181,19 @@ export const useEmbryoStore = defineStore('embryos', () => {
     }
     catch (e: any) {
       error.value = e?.data?.statusMessage ?? 'Failed to add tension'
+      return null
+    }
+  }
+
+  /** Web research (ADR 0007). Returns how many sourced tensions were added, or null on failure. */
+  async function research(id: string): Promise<number | null> {
+    try {
+      const res = await $fetch<{ count: number }>(`/api/embryos/${id}/research`, { method: 'POST' })
+      await fetchOne(id, { silent: true })
+      return res.count
+    }
+    catch (e: any) {
+      error.value = e?.data?.statusMessage ?? 'Research failed'
       return null
     }
   }
@@ -407,6 +425,7 @@ export const useEmbryoStore = defineStore('embryos', () => {
     create,
     transition,
     addTension,
+    research,
     resolveTension,
     fossilize,
     transplant,
