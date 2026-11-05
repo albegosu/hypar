@@ -1,6 +1,6 @@
 # Architecture
 
-Hypar is a **single Nuxt 3 application**: Vue 3 on the client, **Nitro** (`h3`) server routes on the same port, **Prisma 7** + **PostgreSQL** for persistence, and the **Vercel AI SDK** for agent interactions via Ollama.
+Hypar is a **single Nuxt 3 application**: Vue 3 on the client, **Nitro** (`h3`) server routes on the same port, **Prisma 7** + **PostgreSQL** for persistence, and the **Vercel AI SDK** for agent interactions, through the user's own provider (Anthropic, OpenAI, Ollama Cloud) or the server Ollama fallback.
 
 There is no separate API repo and no CORS split — the UI calls relative `/api/*` routes.
 
@@ -72,7 +72,8 @@ Agent-detected links are stored as unconfirmed `Connection` rows (`detectedBy: A
 | `GET/PATCH /api/embryos/:id` | Detail / actions (`transition`, tensions, `connect`, `reply`, accept path/fossil, dismiss note) |
 | `POST /api/embryos/:id/agent` | SSE collaborator turn (optional `{ model }`) |
 | `POST /api/embryos/:id/fossilize` | Close with a required reason |
-| `GET /api/llm/models` | Ollama tags for the settings selector |
+| `GET /api/llm/models` | Models from the user's provider, or Ollama tags on the fallback |
+| `GET/PUT/DELETE /api/llm/provider` | The user's provider connection (key encrypted, never returned) |
 | `GET /api/health` | `{ status, checks.db, ts }` — unauthenticated, used by Compose |
 
 All embryo and LLM routes call `requireSessionUserId`. Ownership is `userId` on every query.

@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client'
 import { prisma } from '~/server/utils/prisma'
 import { requireSessionUserId } from '~/server/utils/session'
 import { logger } from '~/server/utils/logger'
-import { createOllamaChatModel } from '~/server/utils/ollama'
+import { resolveChatModel } from '~/server/utils/llm-provider'
 import { classifyLlmError } from '~/utils/llm-errors'
 import {
   buildAgentSystemPrompt,
@@ -83,20 +83,26 @@ export default defineEventHandler(async (event) => {
   const sparked = hasSourceContext({ title: embryo.sourceTitle, context: embryo.sourceContext })
   const withReferences = !!referenceIndex?.markdown?.trim()
 
-  const { model, timeoutMs } = createOllamaChatModel(requestedModel)
+  const { model, timeoutMs, label, own, maxOutputTokens } = await resolveChatModel(userId, requestedModel)
 
   setResponseHeader(event, 'Content-Type', 'text/event-stream')
   setResponseHeader(event, 'Cache-Control', 'no-cache')
   setResponseHeader(event, 'Connection', 'keep-alive')
 
   let fullText = ''
+  // streamText reports provider failures (bad key, unknown model) here and ends textStream empty.
+  let streamError: unknown = null
 
   try {
     const result = streamText({
       model,
       system: buildAgentSystemPrompt(embryo.state, { sparked, references: withReferences }),
       prompt: userMessage,
+      maxOutputTokens,
       abortSignal: AbortSignal.timeout(timeoutMs),
+      onError: ({ error }) => {
+        streamError ??= error
+      },
     })
 
     const encoder = new TextEncoder()
@@ -107,6 +113,7 @@ export default defineEventHandler(async (event) => {
             fullText += chunk
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', text: chunk })}\n\n`))
           }
+          if (streamError) throw streamError
 
           const parsed = parseAgentResponse(fullText)
 
@@ -288,7 +295,9 @@ export default defineEventHandler(async (event) => {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
             type: 'error',
             message: classified.kind === 'unauthorized' || /unauthorized/i.test(classified.rawMessage)
-              ? 'Ollama Cloud rejected the request. Check OLLAMA_API_KEY.'
+              ? own
+                ? `${label} rejected your key. Update it in Settings.`
+                : `${label} rejected the request. Check OLLAMA_API_KEY.`
               : classified.rawMessage.slice(0, 280) || 'Agent unavailable',
           })}\n\n`))
           controller.close()
