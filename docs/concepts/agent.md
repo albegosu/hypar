@@ -25,10 +25,10 @@ The question is not generic. It follows the [lifecycle](/concepts/lifecycle) as 
 | Latent | **DEFINE** | Names the real problem. If the seed is already a solution, recovers what it is papering over. |
 | Germinating | **PROBE** (or **INVERT**) | Tests assumptions. *What would have to be true for this to be wrong?* |
 | Growing | **VARIETY** | Opens alternative *paths* — directions, not the first clever answer. Paths are proposals the user can keep as tensions or dismiss. |
-| Mature | **SIMPLEST** | Asks whether this is the simplest effective form, and whether it is time to close. |
-| Fossil | — | No agent input. |
+| Maturing | **VALIDATE** | Asks for the evidence, or the cheapest experiment, that would prove the idea or kill it. |
+| Fossil · Transplanted | — | No agent input. |
 
-The spoken turn is still **exactly one question**. Paths and fossil proposals are additive fields, not a second question. The move name is logged on the `AGENT_QUESTION` event and shown lightly on the challenge hero (move + short hint) so stance is legible without becoming a method tutorial.
+The spoken turn is still **exactly one question**. Paths, fossil and transplant proposals are additive fields, not a second question. The move name is logged on the `AGENT_QUESTION` event and shown lightly on the challenge hero (move + short hint) so stance is legible without becoming a method tutorial.
 
 The turn **streams**: the client previews the forming `question` field, then persists the parsed JSON on `done`.
 
@@ -48,13 +48,17 @@ Connections are surfaced as proposals, not facts. You decide whether the connect
 
 ### Suggests fossilization
 
-On `MATURE` embryos the agent may attach a `PENDING_FOSSIL` note with one of three kinds of death:
+On `MATURING` embryos the agent may attach a `PENDING_FOSSIL` note with one of three kinds of death:
 
 - **Ill-defined problem** (`ILL_DEFINED`) — the idea closed because the problem was never named
 - **Wrong path** (`WRONG_PATH`) — a simpler path existed
 - **Superseded** (`SUPERSEDED`) — another idea replaced this one
 
 You accept (fossilize with that reason) or dismiss. The agent does not fossilize silently.
+
+### Suggests transplant
+
+On `MATURING` embryos, when you say the idea already works and is in use, the agent may attach a `PENDING_TRANSPLANT` note with the reason it worked. Accepting asks you what it became (a link or a reference). It never proposes fossil and transplant in the same turn ([ADR 0005](/decisions/0005-transplanted-and-maturing)).
 
 ### Records reasoning
 

@@ -138,7 +138,7 @@ async function seedUser(prisma: PrismaClient, userId: string, email: string) {
     data: {
       userId,
       seed: 'The garden metaphor holds; tensions have resolved.',
-      state: 'MATURE',
+      state: 'MATURING',
       createdAt: ago(22, 8),
       updatedAt: ago(1, 6),
       events: {
@@ -148,8 +148,8 @@ async function seedUser(prisma: PrismaClient, userId: string, email: string) {
           { type: 'AGENT_QUESTION', initiatedBy: 'AGENT', payload: { question: 'What would falsify the metaphor rather than decorate it?', move: 'INVERT' }, createdAt: ago(22, 7) },
           { type: 'USER_RESPONSE', initiatedBy: 'USER', payload: { reply: 'If fossils were just a trash folder with a nicer name.', question: 'What would falsify the metaphor rather than decorate it?' }, createdAt: ago(21, 3) },
           { type: 'STATE_CHANGED', initiatedBy: 'USER', payload: { from: 'GERMINATING', to: 'GROWING' }, createdAt: ago(16, 2) },
-          { type: 'STATE_CHANGED', initiatedBy: 'USER', payload: { from: 'GROWING', to: 'MATURE' }, createdAt: ago(4, 2) },
-          { type: 'AGENT_QUESTION', initiatedBy: 'AGENT', payload: { question: 'Is remaining tension real, or is this ready to close?', move: 'SIMPLEST' }, createdAt: ago(2, 1) },
+          { type: 'STATE_CHANGED', initiatedBy: 'USER', payload: { from: 'GROWING', to: 'MATURING' }, createdAt: ago(4, 2) },
+          { type: 'AGENT_QUESTION', initiatedBy: 'AGENT', payload: { question: 'Is remaining tension real, or is this ready to close?', move: 'VALIDATE' }, createdAt: ago(2, 1) },
           { type: 'USER_RESPONSE', initiatedBy: 'USER', payload: { reply: 'The metaphor is doing work. Close it if nothing new is at stake.', question: 'Is remaining tension real, or is this ready to close?' }, createdAt: ago(1, 8) },
           { type: 'FOSSIL_PROPOSED', initiatedBy: 'AGENT', payload: { kind: 'SUPERSEDED', reason: 'the method is now the product; this claim no longer needs to stay alive' }, createdAt: ago(1, 6) },
         ],
@@ -224,10 +224,10 @@ async function seedUser(prisma: PrismaClient, userId: string, email: string) {
       events: {
         create: [
           { type: 'CREATED', initiatedBy: 'USER', createdAt: ago(80, 6) },
-          { type: 'STATE_CHANGED', initiatedBy: 'USER', payload: { from: 'LATENT', to: 'MATURE' }, createdAt: ago(60, 1) },
+          { type: 'STATE_CHANGED', initiatedBy: 'USER', payload: { from: 'LATENT', to: 'MATURING' }, createdAt: ago(60, 1) },
           { type: 'AGENT_QUESTION', initiatedBy: 'AGENT', payload: { question: 'What does a document hide that a seed would force into the open?', move: 'SIMPLEST' }, createdAt: ago(55, 3) },
           { type: 'USER_RESPONSE', initiatedBy: 'USER', payload: { reply: 'The unresolved question. Documents arrive already answered.', question: 'What does a document hide that a seed would force into the open?' }, createdAt: ago(54, 1) },
-          { type: 'FOSSILIZED', initiatedBy: 'USER', payload: { reason: 'superseded by another idea: the unit is the seed, not the document', kind: 'SUPERSEDED', previousState: 'MATURE' }, createdAt: ago(48, 2) },
+          { type: 'FOSSILIZED', initiatedBy: 'USER', payload: { reason: 'superseded by another idea: the unit is the seed, not the document', kind: 'SUPERSEDED', previousState: 'MATURING' }, createdAt: ago(48, 2) },
         ],
       },
     },

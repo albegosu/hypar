@@ -6,6 +6,7 @@ import {
   FOSSIL_STRATUM_COPY,
   fossilStratum,
   hasOpenTension,
+  isClosedState,
   tensionPriority,
   type FossilStratum,
 } from '~/utils/embryo-lab'
@@ -44,8 +45,10 @@ const visible = computed(() => {
       return tb - ta
     }
     if (activeFilter.value === 'SURFACE') return byTensionThenRecency(a, b)
-    if (a.state === 'FOSSIL' && b.state !== 'FOSSIL') return 1
-    if (a.state !== 'FOSSIL' && b.state === 'FOSSIL') return -1
+    const ca = isClosedState(a.state)
+    const cb = isClosedState(b.state)
+    if (ca && !cb) return 1
+    if (!ca && cb) return -1
     return byTensionThenRecency(a, b)
   })
 })
@@ -114,7 +117,7 @@ onMounted(() => store.fetchAll())
     <div class="wz-panel">
       <div class="wz-panel-header flex items-center justify-between">
         <span class="wz-label text-[10px]">New seed</span>
-        <span class="wz-faint text-[10px]">{{ store.alive.length }} alive · {{ store.byState.FOSSIL.length }} fossil</span>
+        <span class="wz-faint text-[10px]">{{ store.alive.length }} alive · {{ store.byState.TRANSPLANTED.length }} transplanted · {{ store.byState.FOSSIL.length }} fossil</span>
       </div>
       <div class="p-3 sm:p-4 flex gap-3">
         <textarea

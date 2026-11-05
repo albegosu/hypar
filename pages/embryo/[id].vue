@@ -14,6 +14,7 @@ import {
   stateColor,
 } from '~/utils/embryo-display'
 import { safeHttpUrl } from '~/utils/safe-url'
+import { isClosedState } from '~/utils/embryo-lab'
 
 const route = useRoute()
 const store = useEmbryoStore()
@@ -27,6 +28,12 @@ const addingTension = ref(false)
 const fossilizing = ref(false)
 const resurrecting = ref(false)
 const advancing = ref(false)
+const showTransplantDialog = ref(false)
+const transplantReason = ref('')
+const transplantOutcome = ref('')
+const transplanting = ref(false)
+const noteInput = ref('')
+const addingNote = ref(false)
 
 const showConnectDialog = ref(false)
 const connectSearch = ref('')
@@ -63,6 +70,13 @@ async function openConnectDialog() {
 
 const embryo = computed(() => store.current)
 const isFossil = computed(() => embryo.value?.state === 'FOSSIL')
+const isTransplanted = computed(() => embryo.value?.state === 'TRANSPLANTED')
+/** Fossil or transplanted: no lifecycle, tension or connection changes (ADR 0003, ADR 0005). */
+const isClosed = computed(() => !!embryo.value && isClosedState(embryo.value.state))
+const transplantOutcomeUrl = computed(() => safeHttpUrl(embryo.value?.transplantOutcome))
+const userNotes = computed(() =>
+  (embryo.value?.events ?? []).filter(ev => ev.type === 'USER_NOTE' && ev.payload?.note),
+)
 const sourceUrl = computed(() => safeHttpUrl(embryo.value?.sourceUrl))
 const sourceRef = computed(() => safeHttpUrl(embryo.value?.sourceRef))
 const hasLinks = computed(() =>
@@ -108,6 +122,28 @@ async function submitFossilize() {
   fossilizing.value = false
 }
 
+async function submitTransplant() {
+  const reason = transplantReason.value.trim()
+  const outcome = transplantOutcome.value.trim()
+  if (!reason || !outcome) return
+  transplanting.value = true
+  const ok = await store.transplant(id.value, reason, outcome)
+  transplanting.value = false
+  if (!ok) return
+  showTransplantDialog.value = false
+  transplantReason.value = ''
+  transplantOutcome.value = ''
+}
+
+async function submitNote() {
+  const note = noteInput.value.trim()
+  if (!note) return
+  addingNote.value = true
+  const ok = await store.addNote(id.value, note)
+  addingNote.value = false
+  if (ok) noteInput.value = ''
+}
+
 function applyFossilKind(kind: FossilKind) {
   const prev = fossilKind.value
   fossilKind.value = kind
@@ -145,6 +181,9 @@ const EVENT_LABELS: Record<string, string> = {
   USER_RESPONSE: 'responded',
   FOSSIL_PROPOSED: 'fossil proposed',
   FOSSILIZED: 'fossilized',
+  TRANSPLANT_PROPOSED: 'transplant proposed',
+  TRANSPLANTED: 'transplanted',
+  USER_NOTE: 'note',
 }
 
 function stepClass(state: EmbryoState) {
@@ -223,7 +262,25 @@ function stepClass(state: EmbryoState) {
             <p class="text-xs text-[var(--term-text-dim)]">{{ embryo.fossilReason }}</p>
           </div>
 
-          <div v-if="!isFossil" class="flex flex-col gap-3 pt-1">
+          <div v-if="isTransplanted" class="pt-3 border-t border-[var(--term-accent-faint)] flex flex-col gap-2">
+            <div>
+              <p class="text-[10px] wz-faint uppercase tracking-wider mb-1">Became</p>
+              <a
+                v-if="transplantOutcomeUrl"
+                :href="transplantOutcomeUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-xs wz-accent underline break-all"
+              >{{ embryo.transplantOutcome }}</a>
+              <p v-else class="text-xs wz-muted break-words">{{ embryo.transplantOutcome }}</p>
+            </div>
+            <div>
+              <p class="text-[10px] wz-faint uppercase tracking-wider mb-1">Why it worked</p>
+              <p class="text-xs wz-muted">{{ embryo.transplantReason }}</p>
+            </div>
+          </div>
+
+          <div v-if="!isClosed" class="flex flex-col gap-3 pt-1">
             <div class="wz-stepper" aria-label="Lifecycle">
               <template v-for="(step, i) in LIFECYCLE" :key="step.state">
                 <span
@@ -250,11 +307,20 @@ function stepClass(state: EmbryoState) {
               >
                 {{ advancing ? '…' : `Advance to ${LIFECYCLE.find(l => l.state === nextState)!.label}` }}
               </button>
-              <span v-else class="text-[11px] wz-faint self-center">Ready to close — or keep probing</span>
+              <span v-else class="text-[11px] wz-faint self-center">Validate it — then transplant or fossilize</span>
+              <button
+                v-if="embryo.state === 'MATURING'"
+                type="button"
+                class="wz-btn-outline text-xs ml-auto"
+                @click="showTransplantDialog = true; showFossilDialog = false"
+              >
+                Transplant
+              </button>
               <button
                 type="button"
-                class="wz-btn-danger text-xs ml-auto"
-                @click="showFossilDialog = true"
+                class="wz-btn-danger text-xs"
+                :class="{ 'ml-auto': embryo.state !== 'MATURING' }"
+                @click="showFossilDialog = true; showTransplantDialog = false"
               >
                 Fossilize
               </button>
@@ -265,6 +331,64 @@ function stepClass(state: EmbryoState) {
 
       <!-- 2. Agent challenge (focal) -->
       <EmbryoAgentCollaborate :embryo-id="id" />
+
+      <div v-if="showTransplantDialog && !isClosed" class="wz-panel">
+        <div class="wz-panel-header">
+          <span class="wz-accent text-xs">Transplant — it works and lives outside the garden</span>
+        </div>
+        <div class="p-4 flex flex-col gap-3">
+          <input
+            v-model="transplantOutcome"
+            type="text"
+            placeholder="What did it become? A link or where it lives (required)"
+            class="wz-field-bare"
+          >
+          <textarea
+            v-model="transplantReason"
+            rows="2"
+            placeholder="What made it work? (required)"
+            class="wz-field-bare"
+          />
+          <div class="flex gap-2 justify-end">
+            <button class="wz-btn-ghost text-xs" @click="showTransplantDialog = false">Cancel</button>
+            <button
+              class="wz-btn-primary text-xs disabled:opacity-40"
+              :disabled="!transplantReason.trim() || !transplantOutcome.trim() || transplanting"
+              @click="submitTransplant"
+            >
+              {{ transplanting ? '…' : 'Confirm transplant' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="isTransplanted" class="wz-panel">
+        <div class="wz-panel-header">
+          <span class="wz-label">Notes from outside</span>
+        </div>
+        <div v-if="userNotes.length" class="divide-y divide-[var(--term-accent-faint)]">
+          <div v-for="ev in userNotes" :key="ev.id" class="px-4 py-2.5 flex gap-3">
+            <span class="text-[10px] wz-faint shrink-0 w-28">{{ new Date(ev.createdAt).toLocaleString() }}</span>
+            <span class="text-xs wz-muted break-words">{{ ev.payload?.note }}</span>
+          </div>
+        </div>
+        <div class="p-4 border-t border-[var(--term-accent-faint)] flex gap-3">
+          <input
+            v-model="noteInput"
+            type="text"
+            placeholder="How is it doing out there?"
+            class="wz-field-bare flex-1"
+            @keydown.enter="submitNote"
+          >
+          <button
+            class="wz-btn-outline text-xs disabled:opacity-40"
+            :disabled="!noteInput.trim() || addingNote"
+            @click="submitNote"
+          >
+            Add
+          </button>
+        </div>
+      </div>
 
       <div v-if="showFossilDialog" class="wz-panel border-[var(--term-danger)]">
         <div class="wz-panel-header" style="border-color: var(--term-danger)">
@@ -328,7 +452,7 @@ function stepClass(state: EmbryoState) {
               List
             </button>
             <button
-              v-if="!isFossil"
+              v-if="!isClosed"
               class="wz-btn-outline text-[11px] py-0.5"
               @click="openConnectDialog"
             >
@@ -404,7 +528,7 @@ function stepClass(state: EmbryoState) {
               {{ c.target.seed }}
             </NuxtLink>
             <button
-              v-if="!c.confirmedByUser && !isFossil"
+              v-if="!c.confirmedByUser && !isClosed"
               class="text-[10px] text-[var(--term-warn)] hover:wz-accent shrink-0 transition-colors"
               @click="store.confirmConnection(id, c.id)"
             >
@@ -454,7 +578,7 @@ function stepClass(state: EmbryoState) {
                 <span class="text-xs wz-strong">{{ t.question }}</span>
               </div>
               <button
-                v-if="!t.resolved && !isFossil"
+                v-if="!t.resolved && !isClosed"
                 class="text-[10px] wz-faint hover:wz-accent shrink-0 transition-colors"
                 @click="store.resolveTension(id, t.id)"
               >
@@ -464,7 +588,7 @@ function stepClass(state: EmbryoState) {
             </div>
             <p v-if="embryo.tensions.length === 0" class="px-4 py-3 wz-faint text-[11px]">No tensions yet</p>
           </div>
-          <div v-if="!isFossil" class="p-4 border-t border-[var(--term-accent-faint)] flex gap-3">
+          <div v-if="!isClosed" class="p-4 border-t border-[var(--term-accent-faint)] flex gap-3">
             <input
               v-model="tensionInput"
               type="text"

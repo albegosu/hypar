@@ -2,6 +2,7 @@
 import type { EmbryoDetail } from '~/stores/embryos'
 import type { AiWorkflowNode } from 'ai-elements-nuxt/types'
 import { LIFECYCLE, truncateSeed } from '~/utils/embryo-display'
+import { isClosedState } from '~/utils/embryo-lab'
 
 const props = defineProps<{
   embryo: EmbryoDetail
@@ -75,7 +76,7 @@ function layout() {
       type: 'current',
       label: truncateSeed(props.embryo.seed, 36),
       position: { x: CX, y: CY },
-      status: props.embryo.state === 'FOSSIL' ? 'completed' as const : 'running' as const,
+      status: isClosedState(props.embryo.state) ? 'completed' as const : 'running' as const,
       data: { state: props.embryo.state, current: true },
     },
   ]
@@ -91,7 +92,7 @@ function layout() {
         x: CX + Math.cos(angle) * RADIUS,
         y: CY + Math.sin(angle) * RADIUS,
       },
-      status: nb.state === 'FOSSIL' ? 'completed' as const : 'idle' as const,
+      status: isClosedState(nb.state) ? 'completed' as const : 'idle' as const,
       data: { state: nb.state, current: false },
     })
   })

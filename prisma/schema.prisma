@@ -12,8 +12,9 @@ enum EmbryoState {
   LATENT
   GERMINATING
   GROWING
-  MATURE
+  MATURING
   FOSSIL
+  TRANSPLANTED
 }
 
 enum EventType {
@@ -27,6 +28,9 @@ enum EventType {
   USER_RESPONSE
   FOSSIL_PROPOSED
   FOSSILIZED
+  TRANSPLANT_PROPOSED
+  TRANSPLANTED
+  USER_NOTE
 }
 
 enum EventInitiator {
@@ -48,6 +52,7 @@ enum AgentNoteType {
   PENDING_CONNECTION
   PENDING_FOSSIL
   PENDING_PATH
+  PENDING_TRANSPLANT
 }
 
 enum FossilTrigger {
@@ -65,6 +70,9 @@ model Embryo {
   fossilizedAt DateTime?
   fossilReason String?     // Required when fossilizing
   fossilBy     FossilTrigger?
+  transplantedAt    DateTime?
+  transplantReason  String?   // Required when transplanting: what made it work
+  transplantOutcome String?   // What it became: a URL or a reference (component, doc, repo, skill)
   sourceUrl    String?     // Original link when the seed arrived from an integration (e.g. second-brain)
   sourceRef    String?     // Where the integration keeps its own copy (e.g. the wiki source note)
   sourceTitle  String?     // Title of what sparked the seed (e.g. the capture's title)

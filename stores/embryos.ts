@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 
-export type EmbryoState = 'LATENT' | 'GERMINATING' | 'GROWING' | 'MATURE' | 'FOSSIL'
+export type EmbryoState = 'LATENT' | 'GERMINATING' | 'GROWING' | 'MATURING' | 'FOSSIL' | 'TRANSPLANTED'
 export type EventInitiator = 'USER' | 'AGENT' | 'SYSTEM'
 export type ConnectionType = 'REINFORCES' | 'CONTRADICTS' | 'EXTENDS' | 'RESURRECTS'
-export type AgentNoteType = 'OBSERVATION' | 'PENDING_QUESTION' | 'PENDING_CONNECTION' | 'PENDING_FOSSIL' | 'PENDING_PATH'
+export type AgentNoteType = 'OBSERVATION' | 'PENDING_QUESTION' | 'PENDING_CONNECTION' | 'PENDING_FOSSIL' | 'PENDING_PATH' | 'PENDING_TRANSPLANT'
 
 export interface Tension {
   id: string
@@ -32,6 +32,9 @@ export interface EmbryoSummary {
   updatedAt: string
   fossilizedAt: string | null
   fossilReason: string | null
+  transplantedAt?: string | null
+  transplantReason?: string | null
+  transplantOutcome?: string | null
   sourceUrl?: string | null
   sourceRef?: string | null
   sourceTitle?: string | null
@@ -79,8 +82,9 @@ export const useEmbryoStore = defineStore('embryos', () => {
       LATENT: [],
       GERMINATING: [],
       GROWING: [],
-      MATURE: [],
+      MATURING: [],
       FOSSIL: [],
+      TRANSPLANTED: [],
     }
     for (const e of embryos.value) {
       groups[e.state].push(e)
@@ -89,7 +93,7 @@ export const useEmbryoStore = defineStore('embryos', () => {
   })
 
   const alive = computed(() =>
-    embryos.value.filter(e => e.state !== 'FOSSIL'),
+    embryos.value.filter(e => e.state !== 'FOSSIL' && e.state !== 'TRANSPLANTED'),
   )
 
   async function fetchAll(state?: EmbryoState) {
@@ -144,7 +148,7 @@ export const useEmbryoStore = defineStore('embryos', () => {
     }
   }
 
-  async function transition(id: string, state: Exclude<EmbryoState, 'FOSSIL'>) {
+  async function transition(id: string, state: Exclude<EmbryoState, 'FOSSIL' | 'TRANSPLANTED'>) {
     try {
       await $fetch(`/api/embryos/${id}`, {
         method: 'PATCH',
@@ -215,6 +219,58 @@ export const useEmbryoStore = defineStore('embryos', () => {
     }
     catch (e: any) {
       error.value = e?.data?.statusMessage ?? 'Failed to fossilize'
+    }
+  }
+
+  async function transplant(id: string, reason: string, outcome: string) {
+    try {
+      await $fetch(`/api/embryos/${id}/transplant`, {
+        method: 'POST',
+        body: { reason, outcome },
+      })
+      await fetchOne(id, { silent: true })
+      const idx = embryos.value.findIndex(e => e.id === id)
+      if (idx !== -1) {
+        embryos.value[idx]!.state = 'TRANSPLANTED'
+        embryos.value[idx]!.transplantReason = reason
+        embryos.value[idx]!.transplantOutcome = outcome
+        embryos.value[idx]!.transplantedAt = new Date().toISOString()
+      }
+      return true
+    }
+    catch (e: any) {
+      error.value = e?.data?.statusMessage ?? 'Failed to transplant'
+      return false
+    }
+  }
+
+  async function acceptTransplant(embryoId: string, noteId: string, outcome: string) {
+    try {
+      await $fetch(`/api/embryos/${embryoId}`, {
+        method: 'PATCH',
+        body: { action: 'accept_transplant', noteId, outcome },
+      })
+      await fetchOne(embryoId, { silent: true })
+      return true
+    }
+    catch (e: any) {
+      error.value = e?.data?.statusMessage ?? 'Failed to accept transplant'
+      return false
+    }
+  }
+
+  async function addNote(embryoId: string, note: string) {
+    try {
+      await $fetch(`/api/embryos/${embryoId}`, {
+        method: 'PATCH',
+        body: { action: 'add_note', note },
+      })
+      await fetchOne(embryoId, { silent: true })
+      return true
+    }
+    catch (e: any) {
+      error.value = e?.data?.statusMessage ?? 'Failed to add note'
+      return false
     }
   }
 
@@ -353,6 +409,9 @@ export const useEmbryoStore = defineStore('embryos', () => {
     addTension,
     resolveTension,
     fossilize,
+    transplant,
+    acceptTransplant,
+    addNote,
     connect,
     confirmConnection,
     acceptConnection,

@@ -3,6 +3,8 @@ import {
   connectionsToPersist,
   fossilStratum,
   hasOpenTension,
+  isClosedState,
+  transplantGuard,
   parseEmbryoStateParam,
   selectAgentPeers,
   shouldAutoGerminate,
@@ -25,6 +27,31 @@ describe('parseEmbryoStateParam', () => {
   })
 })
 
+describe('closed states (ADR 0005)', () => {
+  it('treats fossil and transplanted as closed', () => {
+    expect(isClosedState('FOSSIL')).toBe(true)
+    expect(isClosedState('TRANSPLANTED')).toBe(true)
+    expect(isClosedState('MATURING')).toBe(false)
+    expect(parseEmbryoStateParam('TRANSPLANTED')).toBe('TRANSPLANTED')
+    expect(() => parseEmbryoStateParam('MATURE')).toThrow(/Invalid embryo state/)
+  })
+
+  it('only lets MATURING embryos be transplanted', () => {
+    expect(transplantGuard('MATURING')).toBeNull()
+    for (const state of ['LATENT', 'GERMINATING', 'GROWING']) {
+      expect(transplantGuard(state)).toMatch(/Only maturing/)
+    }
+    expect(transplantGuard('FOSSIL')).toMatch(/Fossils cannot/)
+    expect(transplantGuard('TRANSPLANTED')).toMatch(/Already transplanted/)
+  })
+
+  it('surfaces a pending transplant as open tension', () => {
+    const e = { tensions: [], agentNotes: [{ type: 'PENDING_TRANSPLANT', dismissed: false }] }
+    expect(hasOpenTension(e)).toBe(true)
+    expect(tensionPriority(e)).toBe(5)
+  })
+})
+
 describe('shouldAutoGerminate', () => {
   it('is true only for LATENT', () => {
     expect(shouldAutoGerminate('LATENT')).toBe(true)
@@ -37,7 +64,7 @@ describe('selectAgentPeers', () => {
   it('takes living then fossils and skips already-connected ids', () => {
     const living = [
       { id: 'a', seed: 'A', state: 'GROWING' },
-      { id: 'b', seed: 'B', state: 'MATURE' },
+      { id: 'b', seed: 'B', state: 'MATURING' },
     ]
     const fossils = [
       { id: 'f1', seed: 'old', state: 'FOSSIL' },

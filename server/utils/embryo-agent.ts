@@ -18,10 +18,11 @@ You are given an embryo: a raw, unfinished thought captured by the user. You may
 
 Respond with a JSON object (no markdown fences, no preamble) with these fields:
 - "question": exactly ONE question that challenges, extends, or destabilizes the idea. Be direct — no filler.
-- "move": DEFINE | PROBE | INVERT | VARIETY | SIMPLEST — the move you actually used.
+- "move": DEFINE | PROBE | INVERT | VARIETY | VALIDATE — the move you actually used.
 - "connections": an array of objects with "targetId", "type" (REINFORCES | CONTRADICTS | EXTENDS | RESURRECTS), and "reason" (one sentence). Only include if you see a genuine link to another embryo. Use RESURRECTS only when the target is a FOSSIL. Empty array if none.
 - "paths": an array of 0–3 short alternative directions (not complete solutions). Only when the state is GROWING. Empty array otherwise.
-- "fossil": null, or {"kind":"ILL_DEFINED"|"WRONG_PATH"|"SUPERSEDED","reason":"..."} only when the state is MATURE and the embryo looks ready to close. Do not propose fossil in other states.
+- "fossil": null, or {"kind":"ILL_DEFINED"|"WRONG_PATH"|"SUPERSEDED","reason":"..."} only when the state is MATURING and the idea has clearly failed. Do not propose fossil in other states.
+- "transplant": null, or {"reason":"..."} only when the state is MATURING and the user says the idea already works and is in use. The reason says what made it work. Never propose fossil and transplant together.
 
 Rules:
 - Follow the stance for the current state. Prefer the preferred move named below.
@@ -69,12 +70,17 @@ export interface AgentFossilProposal {
   reason: string
 }
 
+export interface AgentTransplantProposal {
+  reason: string
+}
+
 export interface AgentResponse {
   question: string
   move?: AgentMove
   connections: AgentConnection[]
   paths: string[]
   fossil: AgentFossilProposal | null
+  transplant: AgentTransplantProposal | null
 }
 
 export interface AgentDialogueTurn {
@@ -118,6 +124,12 @@ function parseFossil(value: unknown): AgentFossilProposal | null {
   return { kind, reason: reason.slice(0, 400) }
 }
 
+function parseTransplant(value: unknown): AgentTransplantProposal | null {
+  if (!value || typeof value !== 'object') return null
+  const reason = String((value as Record<string, unknown>).reason ?? '').trim()
+  return reason ? { reason: reason.slice(0, 400) } : null
+}
+
 export function parseAgentResponse(text: string): AgentResponse {
   const cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
   try {
@@ -137,10 +149,11 @@ export function parseAgentResponse(text: string): AgentResponse {
         : [],
       paths: parsePaths(parsed.paths),
       fossil: parseFossil(parsed.fossil),
+      transplant: parseTransplant(parsed.transplant),
     }
   }
   catch {
-    return { question: text.trim(), connections: [], paths: [], fossil: null }
+    return { question: text.trim(), connections: [], paths: [], fossil: null, transplant: null }
   }
 }
 

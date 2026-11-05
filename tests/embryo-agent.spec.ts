@@ -20,6 +20,7 @@ describe('parseAgentResponse', () => {
     expect(parsed.move).toBeUndefined()
     expect(parsed.paths).toEqual([])
     expect(parsed.fossil).toBeNull()
+    expect(parsed.transplant).toBeNull()
     expect(parsed.connections).toEqual([
       { targetId: 'abc', type: 'CONTRADICTS', reason: 'Opposite claim' },
     ])
@@ -53,6 +54,24 @@ describe('parseAgentResponse', () => {
       fossil: { kind: 'NOPE', reason: 'x' },
     }))
     expect(bad.fossil).toBeNull()
+  })
+
+  it('parses a transplant proposal and ignores an empty one', () => {
+    const ok = parseAgentResponse(JSON.stringify({
+      question: 'What would break it at ten times the use?',
+      move: 'VALIDATE',
+      transplant: { reason: 'it is already the default card in the library' },
+    }))
+    expect(ok.move).toBe('VALIDATE')
+    expect(ok.transplant).toEqual({ reason: 'it is already the default card in the library' })
+    expect(parseAgentResponse('{"question":"Done?","transplant":{"reason":"  "}}').transplant).toBeNull()
+    expect(parseAgentResponse('not json').transplant).toBeNull()
+  })
+
+  it('tells the agent to validate while maturing and never close both ways', () => {
+    const prompt = buildAgentSystemPrompt('MATURING')
+    expect(prompt).toContain('Preferred move: VALIDATE')
+    expect(prompt).toContain('Never propose fossil and transplant together')
   })
 
   it('keeps RESURRECTS and coerces unknown connection types', () => {
@@ -193,7 +212,7 @@ describe('saved references', () => {
   })
 
   it('never adds it while defining or closing', () => {
-    for (const state of ['LATENT', 'MATURE']) {
+    for (const state of ['LATENT', 'MATURING']) {
       const message = buildAgentUserMessage({ ...base, state, references: index })
       expect(message).not.toContain('Saved references')
       expect(message).toBe(buildAgentUserMessage({ ...base, state }))

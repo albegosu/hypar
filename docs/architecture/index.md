@@ -38,13 +38,13 @@ The data model centers on the **Embryo** — a unit of knowledge with a lifecycl
 | **EmbryoEvent** | Append-only audit: state changes, tensions, agent questions, replies. |
 | **Tension** | An open question attached to an embryo. Raised by user or agent. |
 | **Connection** | A typed directed link: `REINFORCES`, `CONTRADICTS`, `EXTENDS`, `RESURRECTS`. |
-| **AgentNote** | HITL pending work: question, connection, path, or fossil proposal. |
+| **AgentNote** | HITL pending work: question, connection, path, fossil or transplant proposal. |
 
-States: `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`
+States: `LATENT → GERMINATING → GROWING → MATURING`, ending in `FOSSIL` or `TRANSPLANTED` ([ADR 0005](/decisions/0005-transplanted-and-maturing))
 
 No delete. Fossilization preserves the idea, the reason it died, and its full event history.
 
-User transitions are free jumps among living states (including backward). The only automatic advance is **first successful agent turn on `LATENT` → `GERMINATING`**. Fossils reject further PATCH and agent calls (`409`).
+User transitions are free jumps among living states (including backward). The only automatic advance is **first successful agent turn on `LATENT` → `GERMINATING`**. Fossils reject further PATCH and agent calls (`409`). Transplanted embryos reject agent calls and every PATCH except `add_note`.
 
 ---
 

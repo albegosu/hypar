@@ -10,6 +10,7 @@ import {
   type AgentMove,
 } from '~/utils/embryo-method'
 import { appendTranscript, parseConnectionNote } from '~/utils/embryo-display'
+import { isClosedState } from '~/utils/embryo-lab'
 
 const props = defineProps<{
   embryoId: string
@@ -32,6 +33,8 @@ const germinatedNotice = ref(false)
 
 const embryo = computed(() => store.current)
 const isFossil = computed(() => embryo.value?.state === 'FOSSIL')
+/** Fossil or transplanted: closed to the agent (ADR 0003, ADR 0005). */
+const isClosed = computed(() => !!embryo.value && isClosedState(embryo.value.state))
 
 const pendingConnections = computed(() =>
   embryo.value?.agentNotes.filter(n => n.type === 'PENDING_CONNECTION') ?? [],
@@ -45,6 +48,25 @@ const pendingFossil = computed(() =>
 const pendingFossilParsed = computed(() =>
   pendingFossil.value ? parseFossilNote(pendingFossil.value.content) : null,
 )
+const pendingTransplant = computed(() =>
+  embryo.value?.agentNotes.find(n => n.type === 'PENDING_TRANSPLANT') ?? null,
+)
+const transplantOutcome = ref('')
+const confirmingTransplant = ref(false)
+const transplanting = ref(false)
+
+async function submitTransplant() {
+  const note = pendingTransplant.value
+  const outcome = transplantOutcome.value.trim()
+  if (!note || !outcome) return
+  transplanting.value = true
+  const ok = await store.acceptTransplant(props.embryoId, note.id, outcome)
+  transplanting.value = false
+  if (!ok) return
+  confirmingTransplant.value = false
+  transplantOutcome.value = ''
+}
+
 const unansweredQuestion = computed(() =>
   embryo.value?.agentNotes.find(n => n.type === 'PENDING_QUESTION') ?? null,
 )
@@ -81,7 +103,7 @@ const firstEngageFailed = computed(() =>
 )
 
 const canAsk = computed(() =>
-  !isFossil.value && !askingAgent.value && !unansweredQuestion.value && (!neverEngaged.value || firstEngageFailed.value),
+  !isClosed.value && !askingAgent.value && !unansweredQuestion.value && (!neverEngaged.value || firstEngageFailed.value),
 )
 
 /** Current unanswered question as the hero (streaming uses streamPreview in template). */
@@ -142,18 +164,18 @@ const contextItems = computed<AiContextItem[]>(() => {
 })
 
 const replySuggestions = computed<AiSuggestion[]>(() => {
-  if (!unansweredQuestion.value || isFossil.value) return []
+  if (!unansweredQuestion.value || isClosed.value) return []
   return [{ id: 'skip', label: 'skip', value: 'skip' }]
 })
 
 const speechLang = computed(() => (locale.value === 'es' ? 'es-ES' : 'en-US'))
 
 const emptyHint = computed(() => {
-  if (agentThinking.value || (neverEngaged.value && !firstEngageFailed.value && !isFossil.value)) {
+  if (agentThinking.value || (neverEngaged.value && !firstEngageFailed.value && !isClosed.value)) {
     return 'the agent is reading the seed...'
   }
-  if (!pendingConnections.value.length && !pendingPaths.value.length && !pendingFossil.value) {
-    return isFossil.value ? 'no exchange recorded' : 'waiting for the agent...'
+  if (!pendingConnections.value.length && !pendingPaths.value.length && !pendingFossil.value && !pendingTransplant.value) {
+    return isClosed.value ? 'no exchange recorded' : 'waiting for the agent...'
   }
   return ''
 })
@@ -240,7 +262,7 @@ async function askAgent() {
 async function maybeAutoEngage(embryoId: string) {
   if (autoEngagedFor.value === embryoId) return
   const e = store.current
-  if (!e || e.id !== embryoId || e.state === 'FOSSIL') return
+  if (!e || e.id !== embryoId || isClosedState(e.state)) return
   const pendingQuestion = e.agentNotes.some(n => n.type === 'PENDING_QUESTION')
   const everAsked = e.events.some(ev => ev.type === 'AGENT_QUESTION')
   if (pendingQuestion || everAsked) return
@@ -317,7 +339,20 @@ const fossilConfirmation = computed<AiConfirmationData | null>(() => {
   }
 })
 
+const transplantConfirmation = computed<AiConfirmationData | null>(() => {
+  if (!pendingTransplant.value) return null
+  return {
+    id: pendingTransplant.value.id,
+    title: 'transplant proposed',
+    description: `it works: ${pendingTransplant.value.content}`,
+    confirmLabel: 'transplant',
+    denyLabel: 'dismiss',
+  }
+})
+
 watch(() => props.embryoId, () => {
+  confirmingTransplant.value = false
+  transplantOutcome.value = ''
   autoEngagedFor.value = null
   germinatedNotice.value = false
   replyInput.value = ''
@@ -353,7 +388,7 @@ watch(
 
     <!-- Explicit germination moment (LATENT → GERMINATING) -->
     <div
-      v-if="germinatedNotice && !isFossil"
+      v-if="germinatedNotice && !isClosed"
       class="hypar-germinate-moment"
       role="status"
       aria-live="polite"
@@ -373,7 +408,7 @@ watch(
     </div>
 
     <AiErrorBoundary
-      v-if="agentError"
+      v-if="agentError && !isClosed"
       :error="agentError"
       :retryable="canAsk || firstEngageFailed"
       @retry="askAgent"
@@ -384,7 +419,7 @@ watch(
       <AiContext :items="contextItems" :collapsed="true" />
     </div>
 
-    <div v-if="pendingConnections.length && !isFossil" class="divide-y divide-[var(--term-accent-faint)]">
+    <div v-if="pendingConnections.length && !isClosed" class="divide-y divide-[var(--term-accent-faint)]">
       <AiConfirmation
         v-for="note in pendingConnections"
         :key="note.id"
@@ -394,7 +429,7 @@ watch(
       />
     </div>
 
-    <div v-if="pendingPaths.length && !isFossil" class="divide-y divide-[var(--term-accent-faint)] border-t border-[var(--term-accent-faint)]">
+    <div v-if="pendingPaths.length && !isClosed" class="divide-y divide-[var(--term-accent-faint)] border-t border-[var(--term-accent-faint)]">
       <AiConfirmation
         v-for="note in pendingPaths"
         :key="note.id"
@@ -405,11 +440,40 @@ watch(
     </div>
 
     <AiConfirmation
-      v-if="fossilConfirmation && pendingFossil && !isFossil"
+      v-if="fossilConfirmation && pendingFossil && !isClosed"
       :confirmation="fossilConfirmation"
       @confirm="store.acceptFossil(embryoId, pendingFossil.id)"
       @deny="store.dismissNote(embryoId, pendingFossil.id)"
     />
+
+    <template v-if="transplantConfirmation && pendingTransplant && !isClosed">
+      <AiConfirmation
+        v-if="!confirmingTransplant"
+        :confirmation="transplantConfirmation"
+        @confirm="confirmingTransplant = true"
+        @deny="store.dismissNote(embryoId, pendingTransplant.id)"
+      />
+      <div v-else class="p-4 border-t border-[var(--term-accent-faint)] flex flex-col gap-2">
+        <p class="text-[10px] wz-faint">What did it become? A link or a reference: component, doc, repo, skill.</p>
+        <input
+          v-model="transplantOutcome"
+          type="text"
+          class="wz-field-bare"
+          placeholder="https://… or where it lives"
+          @keydown.enter="submitTransplant"
+        >
+        <div class="flex gap-2 justify-end">
+          <button class="wz-btn-ghost text-xs" @click="confirmingTransplant = false">Cancel</button>
+          <button
+            class="wz-btn-primary text-xs disabled:opacity-40"
+            :disabled="!transplantOutcome.trim() || transplanting"
+            @click="submitTransplant"
+          >
+            {{ transplanting ? '…' : 'Confirm transplant' }}
+          </button>
+        </div>
+      </div>
+    </template>
 
     <!-- Focal challenge: current unanswered / streaming question -->
     <div
@@ -450,12 +514,12 @@ watch(
       v-else-if="emptyHint && !focalChallenge && !askingAgent"
       class="px-4 py-3 wz-faint text-[11px]"
     >
-      <AiShimmer v-if="agentThinking || (neverEngaged && !firstEngageFailed && !isFossil)" :active="true" :lines="2" />
+      <AiShimmer v-if="agentThinking || (neverEngaged && !firstEngageFailed && !isClosed)" :active="true" :lines="2" />
       <span v-else>{{ emptyHint }}</span>
     </div>
 
     <div
-      v-if="unansweredQuestion && !isFossil"
+      v-if="unansweredQuestion && !isClosed"
       class="p-4 border-t border-[var(--term-accent-faint)] flex flex-col gap-3"
     >
       <div class="flex items-start gap-2">

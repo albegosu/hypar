@@ -25,7 +25,7 @@ No success metric is set on purpose. Measuring the harness is not relevant yet. 
 ## The embryo
 
 - **Capture → seed.** Input can be anything: a sentence, an image with text, a link with "pull the root idea out of this article". *(direction, not runtime — today the seed is one typed sentence)*
-- **Lifecycle** — `LATENT → GERMINATING → GROWING → MATURING`, ending in **`FOSSIL`** (discarded, reason required) or **`TRANSPLANTED`** (it worked and lives outside the garden). *(direction: `MATURE` becomes `MATURING`, and `TRANSPLANTED` is new; today's runtime is `… → MATURE → FOSSIL`)*
+- **Lifecycle** — `LATENT → GERMINATING → GROWING → MATURING`, ending in **`FOSSIL`** (discarded, reason required) or **`TRANSPLANTED`** (it worked and lives outside the garden, reason and outcome required). See [ADR 0005](/decisions/0005-transplanted-and-maturing).
 - **No delete** — closed ideas persist, whether they died or were transplanted, with their reason.
 - **Validation plan** — the agent infers how *this* idea should be validated. The plan is both implicit in its questions and visible and editable by the user. *(direction, not runtime)*
 - **Tensions, paths, connections** — open questions, alternative directions, typed links.

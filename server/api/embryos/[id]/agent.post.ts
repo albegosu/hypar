@@ -35,6 +35,9 @@ export default defineEventHandler(async (event) => {
   if (embryo.state === 'FOSSIL') {
     throw createError({ statusCode: 409, statusMessage: 'Fossils cannot receive agent input' })
   }
+  if (embryo.state === 'TRANSPLANTED') {
+    throw createError({ statusCode: 409, statusMessage: 'Transplanted embryos cannot receive agent input' })
+  }
 
   let requestedModel: string | undefined
   try {
@@ -214,7 +217,9 @@ export default defineEventHandler(async (event) => {
             )
           }
 
-          const fossil = embryo.state === 'MATURE' ? parsed.fossil : null
+          const fossil = embryo.state === 'MATURING' ? parsed.fossil : null
+          // Never both: a fossil proposal wins over a transplant proposal.
+          const transplant = embryo.state === 'MATURING' && !fossil ? parsed.transplant : null
           if (fossil) {
             dbOps.push(
               prisma.agentNote.create({
@@ -237,6 +242,28 @@ export default defineEventHandler(async (event) => {
             )
           }
 
+          if (transplant) {
+            dbOps.push(
+              prisma.agentNote.create({
+                data: {
+                  embryoId: id,
+                  type: 'PENDING_TRANSPLANT',
+                  content: transplant.reason,
+                },
+              }),
+            )
+            dbOps.push(
+              prisma.embryoEvent.create({
+                data: {
+                  embryoId: id,
+                  type: 'TRANSPLANT_PROPOSED',
+                  initiatedBy: 'AGENT',
+                  payload: { reason: transplant.reason },
+                },
+              }),
+            )
+          }
+
           await prisma.$transaction(dbOps)
 
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
@@ -246,6 +273,7 @@ export default defineEventHandler(async (event) => {
             connections: validConnections,
             paths,
             fossil,
+            transplant,
             germinated,
           })}\n\n`))
           controller.close()
