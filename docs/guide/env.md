@@ -38,9 +38,19 @@ Startup fails if any of these are missing (`server/utils/env-validation.ts`).
 
 ---
 
-## Ollama (agent collaborator)
+## User providers
 
-The embryo agent talks to Ollama over the OpenAI-compatible `/v1/chat/completions` API. There is no embedding pipeline.
+Each user can connect their own provider in Settings: Anthropic, OpenAI or Ollama Cloud ([ADR 0008](/decisions/0008-bring-your-own-provider)). The key is checked with the provider, stored encrypted (AES-256-GCM) in `ProviderConnection`, and never returned to the browser. Users without a connection use the server Ollama below.
+
+| Variable | Description |
+|---|---|
+| `PROVIDER_KEYS_SECRET` | Optional. Encrypts saved provider keys. Falls back to `BETTER_AUTH_SECRET` / `AUTH_SECRET`. Changing whichever is in use makes saved keys unreadable, and users must connect again. |
+
+---
+
+## Ollama (server fallback)
+
+Users without their own provider use this server-wide Ollama, over the OpenAI-compatible `/v1/chat/completions` API. There is no embedding pipeline.
 
 | Variable | Description |
 |---|---|
@@ -50,7 +60,7 @@ The embryo agent talks to Ollama over the OpenAI-compatible `/v1/chat/completion
 | `LLM_PROVIDER` | Set `ollama-cloud` when using Ollama Cloud. |
 | `OLLAMA_CHAT_TIMEOUT_MS` | LLM response timeout in ms (default: `180000`). |
 
-Settings can override the model for the next agent turn (cookie `hypar-llm-model`, sent as `{ model }` on `POST /api/embryos/:id/agent`).
+On the fallback, Settings can override the model for the next agent turn (cookie `hypar-llm-model`, sent as `{ model }` on `POST /api/embryos/:id/agent`). A connected user's model is stored with their connection instead, and the cookie is ignored.
 
 ---
 

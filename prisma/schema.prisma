@@ -179,6 +179,30 @@ model ReferenceIndex {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// ── LLM provider (ADR 0008) ───────────────────────────────────
+
+enum LlmProvider {
+  ANTHROPIC
+  OPENAI
+  OLLAMA_CLOUD
+}
+
+// The user's own LLM provider. One per user. The API key is encrypted at rest
+// (AES-256-GCM, server/utils/secret-box.ts) and never returned to the client.
+// Without a row the server-wide fallback (env Ollama) is used.
+model ProviderConnection {
+  id                String      @id @default(cuid())
+  userId            String      @unique
+  provider          LlmProvider
+  apiKeyCiphertext  String
+  apiKeyHint        String
+  collaboratorModel String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 // ── better-auth tables ────────────────────────────────────────
 
 model User {
@@ -199,6 +223,7 @@ model User {
   embryos   Embryo[]
   integrationTokens IntegrationToken[]
   referenceIndex    ReferenceIndex?
+  providerConnection ProviderConnection?
 }
 
 model Session {

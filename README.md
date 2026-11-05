@@ -35,7 +35,7 @@ The agent is constrained: one challenging question per invocation. No summaries,
 | State | Pinia |
 | ORM | Prisma 7 |
 | Database | PostgreSQL 16 |
-| LLM | Ollama (local or cloud) via OpenAI-compatible API |
+| LLM | Bring your own: Anthropic, OpenAI or Ollama Cloud per user; server Ollama as fallback |
 | AI SDK | Vercel AI SDK (`ai`, `@ai-sdk/openai`) |
 | AI UI | [`ai-elements-nuxt`](https://github.com/albegosu/ai-elements-nuxt) (headless `Ai*` components) |
 | Auth | better-auth (email + password, sessions, optional GitHub/Google OAuth) |
@@ -71,7 +71,7 @@ hypar/
 ├── pages/
 │   ├── index.vue                     # embryo garden + pending queue
 │   ├── embryo/[id].vue               # detail + agent + tensions + graph
-│   ├── settings.vue                  # Ollama model selector
+│   ├── settings.vue                  # Provider, model, integrations
 │   ├── auth/                         # signin / signup
 │   └── admin/                        # stubs
 ├── components/embryo/                # AgentCollaborate, ConnectionGraph

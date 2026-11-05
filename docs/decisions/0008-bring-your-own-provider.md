@@ -5,7 +5,7 @@ date: 2026-11-05
 
 # ADR 0008: Bring your own provider
 
-- **Status:** accepted (direction). Implementation details are proposed.
+- **Status:** accepted. Implemented for the collaborator role (see Implementation).
 - **Date:** 2026-11-05
 
 ## Context
@@ -26,6 +26,13 @@ Proposed implementation:
 - Store API keys per user, **encrypted at rest**, never logged, and never returned to the client after saving (same spirit as `IntegrationToken`).
 - Model choice per role (collaborator, researcher, critic), with sensible defaults per provider ([ADR 0006](./0006-agent-roles-one-voice)).
 - A server-wide fallback provider for local development.
+
+## Implementation (2026-11)
+
+- `ProviderConnection` holds one provider per user: `ANTHROPIC`, `OPENAI` or `OLLAMA_CLOUD`. Local Ollama stays the server fallback only, so the server never fetches a URL a user typed.
+- The key is checked against the provider's model list before saving, sealed with AES-256-GCM (`server/utils/secret-box.ts`, `PROVIDER_KEYS_SECRET` or the auth secret), and only its last four characters are shown back.
+- `resolveChatModel(userId)` (`server/utils/llm-provider.ts`) picks the user's provider or the fallback. Only the collaborator role exists today, so the connection stores one `collaboratorModel`. Researcher and critic models come with those roles.
+- Settings → model provider: connect, change key, disconnect, choose the model from the provider's own list.
 
 ## Consequences
 

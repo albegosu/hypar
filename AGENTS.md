@@ -32,7 +32,7 @@ Prefer reading docs and code over inventing behaviour. When docs and code disagr
 
 ## Stack + key paths
 
-Nuxt 3 · Nuxt UI v3 · Tailwind v4 · Pinia · Prisma 7 · Postgres 16 · Ollama · Vercel AI SDK · ai-elements-nuxt · better-auth.
+Nuxt 3 · Nuxt UI v3 · Tailwind v4 · Pinia · Prisma 7 · Postgres 16 · Vercel AI SDK (Anthropic, OpenAI, Ollama) · ai-elements-nuxt · better-auth.
 
 | Path | What |
 |---|---|
