@@ -4,7 +4,7 @@ First-read for coding agents (Cursor, Claude, Grok Bot, etc.). Keep claims align
 
 ## What hypar is (now)
 
-**hypar** is an AI interaction **research lab** — a Nuxt 3 playground for how humans and agents collaborate on knowledge work. Patterns that survive are extracted into [`ai-elements-nuxt`](https://github.com/albegosu/ai-elements-nuxt).
+**hypar** is a **creative harness**: an ideas lab that guides any idea to be discarded or watered, with an agent that challenges, researches and validates it. It is a product for people with ideas; UI patterns that survive are also extracted into [`ai-elements-nuxt`](https://github.com/albegosu/ai-elements-nuxt). The 2026-11 redefinition is in [docs/direction.md](docs/direction.md). Much of it is direction, not runtime, so check the code before assuming a feature exists.
 
 Current focus: **Embryos** (seed → `LATENT → GERMINATING → GROWING → MATURE → FOSSIL`). This is **not** the archived RAG product.
 
