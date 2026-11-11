@@ -7,6 +7,8 @@ export interface ProviderSettingsView {
     provider: LlmProviderId
     keyHint: string
     collaboratorModel: string | null
+    researchModel: string | null
+    criticModel: string | null
     updatedAt: Date
   } | null
   fallback: { label: string; defaultModel: string }
@@ -16,7 +18,7 @@ export interface ProviderSettingsView {
 export async function providerSettingsView(userId: string): Promise<ProviderSettingsView> {
   const row = await prisma.providerConnection.findUnique({
     where: { userId },
-    select: { provider: true, apiKeyHint: true, collaboratorModel: true, updatedAt: true },
+    select: { provider: true, apiKeyHint: true, collaboratorModel: true, researchModel: true, criticModel: true, updatedAt: true },
   })
   const { isCloud, defaultModel } = getOllamaRuntime()
   return {
@@ -25,6 +27,8 @@ export async function providerSettingsView(userId: string): Promise<ProviderSett
           provider: row.provider as LlmProviderId,
           keyHint: row.apiKeyHint,
           collaboratorModel: row.collaboratorModel,
+          researchModel: row.researchModel,
+          criticModel: row.criticModel,
           updatedAt: row.updatedAt,
         }
       : null,

@@ -10,7 +10,7 @@ Stored as `User.role` (default `'user'`). Set on signup; there is no first-run p
 
 | Role | What it unlocks |
 | --- | --- |
-| `user` | Default for every signup. Own embryos, settings (model selector), garden. |
+| `user` | Default for every signup. Own embryos, settings (provider and model, web research, agent engage and peer limit), garden, observations. |
 | `admin` | Same, plus the `/admin/*` nav link. Those pages are stubs today. |
 
 There is no `requireAdmin` helper in the API, no `/api/admin/*`, and no `ADMIN_API_KEY`. Embryo APIs are owner-scoped for every signed-in user.

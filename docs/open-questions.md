@@ -97,6 +97,14 @@ Phase 3 shipped option A: pending paths the user accepts as tensions. Whether th
 
 ## Where the near-term work lives
 
+## Does a captured root idea become the seed only after confirmation?
+
+*Status: DRAFT proposal (issue #192).* Paste a link (or attach an image, with a vision-capable key) in **New seed** and the model proposes **one** candidate root idea. The candidate lands in the seed box; nothing is planted until the user edits or accepts it and presses Plant. The seed therefore stays the user's own sentence, and the link is stored beside it (`sourceUrl`, `sourceTitle`), never mixed into it. `POST /api/embryos/capture` creates nothing.
+
+Open: whether a confirmed-but-unedited candidate still counts as "the user's own idea", and whether it should be marked so in the `CREATED` event (today: `via: capture`).
+
+---
+
 Actionable follow-ups (shell and glass polish, settings, method depth) are tracked in the [Lab roadmap](https://github.com/users/albegosu/projects/5), not here. This page keeps the tensions that have no answer yet.
 
 ---

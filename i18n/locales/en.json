@@ -22,7 +22,24 @@
     "strata": "strata",
     "all": "all",
     "pendingChallenges": "Pending challenges",
-    "unanswered": "{n} unanswered"
+    "unanswered": "{n} unanswered",
+    "empty": {
+      "eyebrow": "Your garden is empty",
+      "title": "Bring an idea. It will be questioned, not praised.",
+      "lead": "hypar helps you find out whether an idea is worth keeping. Nothing is deleted: every idea ends somewhere you can come back to.",
+      "steps": {
+        "seed": { "tag": "seed", "body": "Write the idea in your own words, rough is fine." },
+        "challenge": { "tag": "challenge", "body": "An agent asks one hard question at a time. You answer, or change the idea." },
+        "outcome": { "tag": "outcome", "body": "When it holds up or falls apart, you close it and say why." }
+      },
+      "outcomesTitle": "Where an idea can end",
+      "outcomes": {
+        "alive": { "name": "Alive", "body": "still being questioned and reshaped." },
+        "fossil": { "name": "Fossil", "body": "set aside for good, with the reason you gave. It stays readable." },
+        "transplanted": { "name": "Transplanted", "body": "it worked: you moved it into the world and note what came of it." }
+      },
+      "cta": "Plant your first seed in the box above"
+    }
   },
   "challenge": {
     "current": "Current challenge",

@@ -14,7 +14,7 @@ latent → germinating → growing → maturing
 
 The embryo exists but the agent has not yet engaged with it. The seed has been captured. The tension is implicit — present but not yet surfaced.
 
-A latent embryo is waiting. Opening it auto-engages the agent; the first successful turn advances it to germinating.
+A latent embryo is waiting. Opening it auto-engages the agent; the first successful turn advances it to germinating. In **Settings → agent** you can turn *engage on first open* off: the seed then waits until you press Engage.
 
 ### Germinating
 
@@ -59,7 +59,7 @@ Only a `MATURING` embryo can be transplanted, so the idea passes through validat
 
 ### Who advances an embryo?
 
-- **First agent engage** on a `LATENT` embryo sets `GERMINATING` (logged as `STATE_CHANGED` initiated by `AGENT`). The collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — not a silent auto-advance. That is the germination trigger in the current lab.
+- **First agent engage** on a `LATENT` embryo sets `GERMINATING` (logged as `STATE_CHANGED` initiated by `AGENT`). The collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — not a silent auto-advance. That is the germination trigger in the current lab. Leaving that notice is logged (`GERMINATE_NOTICE`, with how long it was on screen) so [observations](/architecture/#observations) can show how many were left unread.
 - **You** can jump to any other living state from the detail page at any time (including backward). There is no adjacency graph.
 - The agent does **not** suggest other lifecycle transitions. Path, fossil and transplant proposals are separate HITL notes.
 

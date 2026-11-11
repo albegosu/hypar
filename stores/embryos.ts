@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 export type EmbryoState = 'LATENT' | 'GERMINATING' | 'GROWING' | 'MATURING' | 'FOSSIL' | 'TRANSPLANTED'
 export type EventInitiator = 'USER' | 'AGENT' | 'SYSTEM'
 export type ConnectionType = 'REINFORCES' | 'CONTRADICTS' | 'EXTENDS' | 'RESURRECTS'
-export type AgentNoteType = 'OBSERVATION' | 'PENDING_QUESTION' | 'PENDING_CONNECTION' | 'PENDING_FOSSIL' | 'PENDING_PATH' | 'PENDING_TRANSPLANT'
+export type AgentNoteType = 'OBSERVATION' | 'PENDING_QUESTION' | 'PENDING_CONNECTION' | 'PENDING_FOSSIL' | 'PENDING_PATH' | 'PENDING_TRANSPLANT' | 'PENDING_VALIDATION_PLAN'
 
 export interface Tension {
   id: string
@@ -44,6 +44,7 @@ export interface EmbryoSummary {
   sourceRef?: string | null
   sourceTitle?: string | null
   sourceContext?: string | null
+  validationPlan?: string | null
   tensions: Tension[]
   agentNotes: AgentNote[]
   _count: { events: number; connections: number; connectedTo: number }
@@ -138,11 +139,11 @@ export const useEmbryoStore = defineStore('embryos', () => {
     }
   }
 
-  async function create(seed: string): Promise<EmbryoSummary | null> {
+  async function create(seed: string, source?: { sourceUrl?: string | null; sourceTitle?: string | null }): Promise<EmbryoSummary | null> {
     try {
       const embryo = await $fetch<EmbryoSummary>('/api/embryos', {
         method: 'POST',
-        body: { seed },
+        body: { seed, ...(source?.sourceUrl ? { sourceUrl: source.sourceUrl, sourceTitle: source.sourceTitle ?? undefined } : {}) },
       })
       embryos.value.unshift(embryo)
       return embryo
@@ -413,6 +414,24 @@ export const useEmbryoStore = defineStore('embryos', () => {
     }
   }
 
+  /** ADR 0010 (proposed): accept the agent's plan (optionally edited) or set the user's own. */
+  async function saveValidationPlan(embryoId: string, plan: string, noteId?: string) {
+    try {
+      await $fetch(`/api/embryos/${embryoId}`, {
+        method: 'PATCH',
+        body: noteId
+          ? { action: 'accept_validation_plan', noteId, plan }
+          : { action: 'set_validation_plan', plan },
+      })
+      await fetchOne(embryoId, { silent: true })
+      return true
+    }
+    catch (e: any) {
+      error.value = e?.data?.statusMessage ?? 'Failed to save validation plan'
+      return false
+    }
+  }
+
   return {
     embryos,
     current,
@@ -438,6 +457,7 @@ export const useEmbryoStore = defineStore('embryos', () => {
     reply,
     acceptPath,
     acceptFossil,
+    saveValidationPlan,
     resurrect,
   }
 })

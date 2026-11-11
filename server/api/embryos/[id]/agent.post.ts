@@ -17,6 +17,7 @@ import {
 } from '~/server/utils/embryo-agent'
 import { formatFossilNote } from '~/utils/embryo-method'
 import { connectionsToPersist, selectAgentPeers, shouldAutoGerminate } from '~/utils/embryo-lab'
+import { planProposalToPersist } from '~/utils/validation-plan'
 import { shouldUseReferences } from '~/utils/reference-index'
 
 export default defineEventHandler(async (event) => {
@@ -84,6 +85,7 @@ export default defineEventHandler(async (event) => {
     dialogue,
     source: { title: embryo.sourceTitle, context: embryo.sourceContext },
     references: referenceIndex?.markdown,
+    validationPlan: embryo.validationPlan,
   }
   const sparked = hasSourceContext({ title: embryo.sourceTitle, context: embryo.sourceContext })
   const withReferences = !!referenceIndex?.markdown?.trim()
@@ -314,6 +316,27 @@ export default defineEventHandler(async (event) => {
             )
           }
 
+          // ADR 0010: an additive pending plan, never a second question. One pending at a time.
+          const hasPendingPlan = await prisma.agentNote.count({
+            where: { embryoId: id, type: 'PENDING_VALIDATION_PLAN', dismissed: false },
+          })
+          const validationPlan = hasPendingPlan ? null : planProposalToPersist(embryo.state, parsed.validationPlan, embryo.validationPlan)
+          if (validationPlan) {
+            dbOps.push(
+              prisma.agentNote.create({
+                data: { embryoId: id, type: 'PENDING_VALIDATION_PLAN', content: validationPlan },
+              }),
+              prisma.embryoEvent.create({
+                data: {
+                  embryoId: id,
+                  type: 'AGENT_SUGGESTION',
+                  initiatedBy: 'AGENT',
+                  payload: { kind: 'validation_plan', plan: validationPlan },
+                },
+              }),
+            )
+          }
+
           await prisma.$transaction(dbOps)
 
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({
@@ -324,6 +347,7 @@ export default defineEventHandler(async (event) => {
             paths,
             fossil,
             transplant,
+            validationPlan,
             germinated,
             researched,
           })}\n\n`))

@@ -73,8 +73,10 @@ Agent-detected links are stored as unconfirmed `Connection` rows (`detectedBy: A
 | `POST /api/embryos/:id/agent` | SSE collaborator turn (optional `{ model }`) |
 | `POST /api/embryos/:id/research` | Web research; findings become sourced tensions |
 | `POST /api/embryos/:id/fossilize` | Close with a required reason |
+| `POST /api/embryos/:id/germinate-notice` | Logs that the first-confrontation notice was left (`via`, `visibleMs`); measurement only |
+| `GET /api/observations` | Your own events aggregated into the lab's validation signals (see below) |
 | `GET /api/llm/models` | Models from the user's provider, or Ollama tags on the fallback |
-| `GET/PUT /api/settings` | Web research switches and whether research is available |
+| `GET/PUT /api/settings` | Web research switches, engage on first open, living-peer limit (0–15), and whether research is available |
 | `GET/PUT/DELETE /api/llm/provider` | The user's provider connection (key encrypted, never returned) |
 | `GET /api/health` | `{ status, checks.db, ts }` — unauthenticated, used by Compose |
 
@@ -101,6 +103,17 @@ All embryo and LLM routes call `requireSessionUserId`. Ownership is `userId` on 
 - **Production:** see [Production deployment](/guide/production)
 
 ---
+
+## Observations
+
+`/observations` reads your own events into the signals behind the lab's open questions, so they are answered from use and not from a survey:
+
+- **Move × state** — counts of `AGENT_QUESTION` by embryo state and move. If `GROWING` is still almost all `PROBE`, the stance text did not change the questions.
+- **Paths in GROWING** — share of `GROWING` turns that opened at least one path.
+- **Agent links accepted** — accepted over proposed inferred connections.
+- **First confrontation left unread** — share of germination notices left in under 1.5 s, over those left at all.
+
+Turns logged before the state was recorded are left out of the matrix. The aggregation is a pure function in `server/utils/observations.ts`, covered by `tests/observations.spec.ts`.
 
 ## Next
 
