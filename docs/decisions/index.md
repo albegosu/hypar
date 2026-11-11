@@ -48,6 +48,7 @@ Copy [`_template.md`](./_template.md) when proposing a new ADR.
 | [0006 — Agent roles, one voice](./0006-agent-roles-one-voice) | accepted | Collaborator, researcher, critic inside; one question outside |
 | [0007 — External knowledge](./0007-external-knowledge) | accepted | Web research to refute and extend; every claim sourced |
 | [0008 — Bring your own provider](./0008-bring-your-own-provider) | accepted | Per-user Anthropic, OpenAI, Ollama; encrypted keys |
+| [0011 — Critic role](./0011-critic-role) | proposed | Separate critic call: typed gate suggestions with confidence, as HITL proposals |
 | [monorepo-unification](./monorepo-unification) | historical | Pre-ADR plan to collapse multi-app RAG monorepo into one Nuxt app |
 
 ---
