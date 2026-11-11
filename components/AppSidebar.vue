@@ -9,6 +9,17 @@
     </NuxtLink>
 
     <NuxtLink
+      v-if="isAuthenticated"
+      to="/observations"
+      class="hypar-sidebar__item"
+      :class="{ 'is-active': isActive('/observations') }"
+      :aria-current="isActive('/observations') ? 'page' : undefined"
+      title="Observations"
+    >
+      <UIcon name="i-heroicons-chart-bar" class="w-[18px] h-[18px]" />
+    </NuxtLink>
+
+    <NuxtLink
       v-if="isAuthenticated && isAdmin"
       to="/admin"
       class="hypar-sidebar__item"

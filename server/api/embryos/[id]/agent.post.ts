@@ -156,6 +156,13 @@ export default defineEventHandler(async (event) => {
             return
           }
 
+          // Precompute so the AGENT_QUESTION event carries the signals the lab
+          // observes (move × state, paths in GROWING) without a schema join.
+          const validTargetIds = new Set(candidates.map(e => e.id))
+          const validConnections = connectionsToPersist(parsed.connections, validTargetIds)
+          const paths = embryo.state === 'GROWING' ? parsed.paths : []
+          const germinated = shouldAutoGerminate(embryo.state)
+
           const dbOps: Prisma.PrismaPromise<unknown>[] = [
             prisma.agentNote.create({
               data: {
@@ -169,7 +176,14 @@ export default defineEventHandler(async (event) => {
                 embryoId: id,
                 type: 'AGENT_QUESTION',
                 initiatedBy: 'AGENT',
-                payload: { question: parsed.question, move: parsed.move, references: withReferences },
+                payload: {
+                  question: parsed.question,
+                  move: parsed.move,
+                  references: withReferences,
+                  state: embryo.state,
+                  pathsCount: paths.length,
+                  connectionsCount: validConnections.length,
+                },
               },
             }),
           ]
@@ -191,10 +205,6 @@ export default defineEventHandler(async (event) => {
               }),
             )
           }
-
-          const validTargetIds = new Set(candidates.map(e => e.id))
-          const validConnections = connectionsToPersist(parsed.connections, validTargetIds)
-          const germinated = shouldAutoGerminate(embryo.state)
 
           for (const conn of validConnections) {
             dbOps.push(
@@ -232,7 +242,6 @@ export default defineEventHandler(async (event) => {
             )
           }
 
-          const paths = embryo.state === 'GROWING' ? parsed.paths : []
           for (const path of paths) {
             dbOps.push(
               prisma.agentNote.create({
