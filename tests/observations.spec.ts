@@ -59,4 +59,21 @@ describe('aggregateObservations', () => {
     expect(obs.totals.connectionsProposed).toBe(2)
     expect(obs.totals.connectionsAccepted).toBe(1)
   })
+
+  it('measures the first-confrontation notice: shown by the agent, left, and left too fast', () => {
+    const obs = aggregateObservations([
+      { type: 'STATE_CHANGED', initiatedBy: 'AGENT', payload: { from: 'LATENT', to: 'GERMINATING' } },
+      { type: 'STATE_CHANGED', initiatedBy: 'AGENT', payload: { from: 'LATENT', to: 'GERMINATING' } },
+      { type: 'STATE_CHANGED', initiatedBy: 'USER', payload: { from: 'LATENT', to: 'GERMINATING' } }, // by hand: not the notice
+      { type: 'STATE_CHANGED', initiatedBy: 'AGENT', payload: { from: 'GERMINATING', to: 'GROWING' } },
+      { type: 'GERMINATE_NOTICE', initiatedBy: 'USER', payload: { via: 'continue', visibleMs: 400 } },
+      { type: 'GERMINATE_NOTICE', initiatedBy: 'USER', payload: { via: 'reply', visibleMs: 9000 } },
+    ], { embryoCount: 2 })
+
+    expect(obs.germinateNotice).toEqual({ shown: 2, dismissed: 2, quick: 1, quickRate: 0.5 })
+  })
+
+  it('has a null quick rate when no notice was left', () => {
+    expect(aggregateObservations([], { embryoCount: 0 }).germinateNotice.quickRate).toBeNull()
+  })
 })

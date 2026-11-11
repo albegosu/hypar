@@ -4,8 +4,12 @@ import { LIVING_STATES } from '../../utils/embryo-lab'
 /** A trimmed embryo event: only the fields the aggregation reads. */
 export interface ObservationEvent {
   type: string
+  initiatedBy?: string
   payload?: unknown
 }
+
+/** A first-confrontation notice left faster than this was most likely not read. */
+export const QUICK_DISMISS_MS = 1500
 
 export interface Observations {
   totals: {
@@ -20,6 +24,8 @@ export interface Observations {
   growingPaths: { withPaths: number; total: number; rate: number | null }
   /** Accepted agent-proposed connections over the number proposed. */
   connectionAccept: { accepted: number; proposed: number; rate: number | null }
+  /** The agent-driven latent → germinating notice: shown, left, and left too fast to read. */
+  germinateNotice: { shown: number; dismissed: number; quick: number; quickRate: number | null }
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -49,6 +55,9 @@ export function aggregateObservations(
   let growingTotal = 0
   let connectionsProposed = 0
   let connectionsAccepted = 0
+  let noticesShown = 0
+  let noticesDismissed = 0
+  let noticesQuick = 0
 
   for (const ev of events) {
     const payload = asRecord(ev.payload)
@@ -71,6 +80,18 @@ export function aggregateObservations(
     else if (ev.type === 'CONNECTION_MADE' && payload?.fromProposal === true) {
       connectionsAccepted += 1
     }
+    else if (
+      ev.type === 'STATE_CHANGED'
+      && ev.initiatedBy === 'AGENT'
+      && payload?.from === 'LATENT'
+      && payload?.to === 'GERMINATING'
+    ) {
+      noticesShown += 1
+    }
+    else if (ev.type === 'GERMINATE_NOTICE') {
+      noticesDismissed += 1
+      if (typeof payload?.visibleMs === 'number' && payload.visibleMs < QUICK_DISMISS_MS) noticesQuick += 1
+    }
   }
 
   return {
@@ -90,6 +111,12 @@ export function aggregateObservations(
       accepted: connectionsAccepted,
       proposed: connectionsProposed,
       rate: connectionsProposed > 0 ? connectionsAccepted / connectionsProposed : null,
+    },
+    germinateNotice: {
+      shown: noticesShown,
+      dismissed: noticesDismissed,
+      quick: noticesQuick,
+      quickRate: noticesDismissed > 0 ? noticesQuick / noticesDismissed : null,
     },
   }
 }

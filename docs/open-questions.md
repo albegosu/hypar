@@ -29,6 +29,8 @@ An embryo starts as latent. What moves it to germinating?
 
 **Current runtime (option mixed):** opening a `LATENT` embryo auto-engages the agent. The first successful agent turn sets `GERMINATING` and the collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — dismissible, not silent. You can also jump state by hand. Settings → agent can turn **engage on first open** off: a latent seed then waits until you press Engage.
 
+Leaving the notice is logged (`GERMINATE_NOTICE`, with how long it was on screen), and `/observations` shows how many were left in under 1.5s — the signal for invite vs auto-engage.
+
 Still open: should the agent wait to be invited? Should forgotten latent embryos germinate without a visit?
 
 *Status: partially answered — first engage is the trigger; the advance is now an explicit UX moment (observation continues on invite-vs-auto).*

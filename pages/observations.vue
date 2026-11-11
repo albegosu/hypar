@@ -129,6 +129,18 @@ function stateTotal(state: string): number {
           </p>
         </div>
       </div>
+
+      <!-- first confrontation — invite vs auto-engage -->
+      <div class="wz-panel p-4 flex flex-col gap-1">
+        <p class="text-[10px] wz-faint uppercase tracking-wider">first confrontation left unread</p>
+        <p class="text-2xl wz-strong">{{ pct(data.germinateNotice.quickRate) }}</p>
+        <p class="text-[11px] wz-muted">
+          {{ data.germinateNotice.quick }} of {{ data.germinateNotice.dismissed }} notices were left in under 1.5s
+          ({{ data.germinateNotice.shown }} shown by the agent).
+          <span v-if="data.germinateNotice.dismissed === 0" class="wz-faint">No notices left yet.</span>
+          If most go unread, auto-engage is surprising you more than it helps.
+        </p>
+      </div>
     </template>
   </div>
 </template>

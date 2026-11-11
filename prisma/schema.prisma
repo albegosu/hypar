@@ -32,6 +32,7 @@ enum EventType {
   TRANSPLANTED
   USER_NOTE
   RESEARCHED
+  GERMINATE_NOTICE
 }
 
 // What a web finding does to the idea (ADR 0007)
