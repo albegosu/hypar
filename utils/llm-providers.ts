@@ -40,3 +40,8 @@ export function isOpenAiChatModel(id: string): boolean {
   if (!/^(gpt-|o\d|chatgpt-)/.test(id)) return false
   return !/(audio|realtime|tts|transcribe|image|search|embedding|moderation|instruct)/.test(id)
 }
+
+/** Providers whose chat models read images (capture from an image). Ollama Cloud models vary, so it is not offered. */
+export function providerSupportsVision(provider: LlmProviderId): boolean {
+  return provider === 'ANTHROPIC' || provider === 'OPENAI'
+}
