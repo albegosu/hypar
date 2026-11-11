@@ -48,6 +48,7 @@ Copy [`_template.md`](./_template.md) when proposing a new ADR.
 | [0006 — Agent roles, one voice](./0006-agent-roles-one-voice) | accepted | Collaborator, researcher, critic inside; one question outside |
 | [0007 — External knowledge](./0007-external-knowledge) | accepted | Web research to refute and extend; every claim sourced |
 | [0008 — Bring your own provider](./0008-bring-your-own-provider) | accepted | Per-user Anthropic, OpenAI, Ollama; encrypted keys |
+| [0010 — Validation plan](./0010-validation-plan) | proposed | The agent infers how this idea gets validated; additive HITL field, user-editable |
 | [0009 — Lifecycle semantics](./0009-lifecycle-semantics) | proposed | What separates GROWING from MATURING; what evidence a transplant needs |
 | [monorepo-unification](./monorepo-unification) | historical | Pre-ADR plan to collapse multi-app RAG monorepo into one Nuxt app |
 

@@ -201,6 +201,7 @@ const EVENT_LABELS: Record<string, string> = {
   FOSSIL_PROPOSED: 'fossil proposed',
   FOSSILIZED: 'fossilized',
   TRANSPLANT_PROPOSED: 'transplant proposed',
+  VALIDATION_PLAN_SET: 'validation plan saved',
   TRANSPLANTED: 'transplanted',
   USER_NOTE: 'note',
   RESEARCHED: 'researched the web',
@@ -351,6 +352,8 @@ function stepClass(state: EmbryoState) {
 
       <!-- 2. Agent challenge (focal) -->
       <EmbryoAgentCollaborate :embryo-id="id" />
+
+      <EmbryoValidationPlan :embryo-id="id" />
 
       <div v-if="showTransplantDialog && !isClosed" class="wz-panel">
         <div class="wz-panel-header">
