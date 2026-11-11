@@ -34,6 +34,9 @@ enum EventType {
   RESEARCHED
   GERMINATE_NOTICE
   VALIDATION_PLAN_SET
+  EXPERIMENT_ADDED
+  EXPERIMENT_UPDATED
+  EXPERIMENT_SUPERSEDED
 }
 
 // What a web finding does to the idea (ADR 0007)
@@ -95,6 +98,7 @@ model Embryo {
   connections  Connection[]  @relation("ConnectionSource")
   connectedTo  Connection[]  @relation("ConnectionTarget")
   agentNotes   AgentNote[]
+  experiments  Experiment[]
 
   @@index([userId, state])
   @@index([userId, createdAt])
@@ -162,6 +166,43 @@ model AgentNote {
   embryo    Embryo        @relation(fields: [embryoId], references: [id], onDelete: Cascade)
 
   @@index([embryoId, type])
+}
+
+// Experiment records (ADR 0012): what was run to validate the idea. Never deleted:
+// a wrong or obsolete one is superseded with a reason.
+enum ExperimentStatus {
+  PLANNED
+  RUNNING
+  CONCLUDED
+  SUPERSEDED
+}
+
+enum ExperimentVerdict {
+  SUPPORTS
+  REFUTES
+  INCONCLUSIVE
+}
+
+model Experiment {
+  id               String             @id @default(cuid())
+  embryoId         String
+  hypothesis       String
+  method           String
+  status           ExperimentStatus   @default(PLANNED)
+  result           String?
+  verdict          ExperimentVerdict?
+  evidence         Json?              // [{ note, url? }]
+  concludedAt      DateTime?
+  supersededAt     DateTime?
+  supersededReason String?
+  supersededById   String?            // Optional: the experiment that replaces this one
+  createdBy        EventInitiator     @default(USER)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  embryo           Embryo             @relation(fields: [embryoId], references: [id], onDelete: Cascade)
+
+  @@index([embryoId, createdAt])
 }
 
 // ── Integrations ──────────────────────────────────────────────
