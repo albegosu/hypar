@@ -7,6 +7,8 @@ interface ProviderView {
     provider: LlmProviderId
     keyHint: string
     collaboratorModel: string | null
+    researchModel: string | null
+    criticModel: string | null
     updatedAt: string
   } | null
   fallback: { label: string; defaultModel: string }
@@ -71,6 +73,26 @@ async function connect() {
   }
   finally {
     busy.value = false
+  }
+}
+
+const roleModels = [
+  { field: 'researchModel', label: 'researcher model' },
+  { field: 'criticModel', label: 'critic model' },
+] as const
+
+async function saveRoleModel(field: 'researchModel' | 'criticModel', model: string) {
+  if (!connection.value) return
+  failure.value = null
+  try {
+    view.value = await $fetch<ProviderView>('/api/llm/provider', {
+      method: 'PUT',
+      body: { provider: connection.value.provider, [field]: model || null },
+    })
+  }
+  catch (err) {
+    failure.value = errorText(err, 'could not save the model.')
+    await refreshView()
   }
 }
 
@@ -199,5 +221,23 @@ function openForm() {
       :models="models"
       :group-by-provider="true"
     />
+
+    <template v-if="connection && !modelsPending && !modelsError">
+      <div v-for="role in roleModels" :key="role.field" class="mt-3">
+        <label class="text-[10px] wz-faint uppercase tracking-wider mb-1 block" :for="`role-${role.field}`">{{ role.label }}</label>
+        <select
+          :id="`role-${role.field}`"
+          class="wz-input text-xs w-full wz-mono"
+          :value="connection[role.field] ?? ''"
+          @change="saveRoleModel(role.field, ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">same as collaborator</option>
+          <option v-for="m in models" :key="m.id" :value="m.id">{{ m.name }}</option>
+        </select>
+      </div>
+      <p class="wz-faint text-[10px] mt-1">
+        the critic can run on a different model than the one that generates, from the models your provider offers.
+      </p>
+    </template>
   </div>
 </template>

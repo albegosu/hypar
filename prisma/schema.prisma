@@ -210,6 +210,9 @@ model ProviderConnection {
   apiKeyCiphertext  String
   apiKeyHint        String
   collaboratorModel String?
+  // Optional per-role overrides (ADR 0008 amendment). Null falls back to collaboratorModel.
+  researchModel     String?
+  criticModel       String?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 

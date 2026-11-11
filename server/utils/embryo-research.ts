@@ -7,7 +7,7 @@ import { getOllamaRuntime } from '~/server/utils/ollama'
 import { openSecret } from '~/server/utils/secret-box'
 import { logger } from '~/server/utils/logger'
 import { LLM_PROVIDER_INFO, type LlmProviderId } from '~/utils/llm-providers'
-import { sanitizeModelId } from '~/utils/llm-model'
+import { roleModelId } from '~/server/utils/llm-provider'
 import {
   RESEARCH_SYSTEM_PROMPT,
   anthropicSearchVersion,
@@ -83,7 +83,7 @@ async function researchKit(userId: string): Promise<ResearchKit | { unavailable:
     catch {
       return { unavailable: `Your ${LLM_PROVIDER_INFO[provider].label} key can no longer be read. Connect it again in Settings.` }
     }
-    const modelId = sanitizeModelId(connection.collaboratorModel) || LLM_PROVIDER_INFO[provider].defaultModel
+    const modelId = roleModelId({ ...connection, provider }, 'researcher')
     return kitFor(provider, apiKey, modelId)
   }
   const { isCloud, apiKey, defaultModel } = getOllamaRuntime()
