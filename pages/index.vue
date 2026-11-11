@@ -18,6 +18,8 @@ const { t } = useI18n({ useScope: 'global' })
 
 const seedInput = ref('')
 const creating = ref(false)
+/** Set when the seed text came from a confirmed capture; planted beside the seed. */
+const captureSource = ref<{ sourceUrl: string | null; sourceTitle: string | null } | null>(null)
 /** Surface (living, tension-first) is the primary garden view — not a flat dump. */
 const activeFilter = ref<EmbryoState | 'ALL' | 'SURFACE' | 'STRATA'>('SURFACE')
 
@@ -77,14 +79,17 @@ const strataGroups = computed(() => {
     .map(s => ({ stratum: s, ...FOSSIL_STRATUM_COPY[s], items: groups[s] }))
 })
 
+watch(seedInput, (v) => { if (!v.trim()) captureSource.value = null })
+
 async function submitSeed() {
   const seed = seedInput.value.trim()
   if (!seed) return
   creating.value = true
-  const embryo = await store.create(seed)
+  const embryo = await store.create(seed, captureSource.value ?? undefined)
   creating.value = false
   if (embryo) {
     seedInput.value = ''
+    captureSource.value = null
     await navigateTo(`/embryo/${embryo.id}`)
   }
 }
@@ -159,6 +164,9 @@ onMounted(async () => {
           </button>
         </div>
       </div>
+      <GardenCaptureSeed
+        @extracted="(c) => { seedInput = c.idea; captureSource = { sourceUrl: c.sourceUrl, sourceTitle: c.sourceTitle } }"
+      />
     </div>
 
     <GardenPendingQueue />

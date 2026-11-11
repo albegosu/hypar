@@ -138,11 +138,11 @@ export const useEmbryoStore = defineStore('embryos', () => {
     }
   }
 
-  async function create(seed: string): Promise<EmbryoSummary | null> {
+  async function create(seed: string, source?: { sourceUrl?: string | null; sourceTitle?: string | null }): Promise<EmbryoSummary | null> {
     try {
       const embryo = await $fetch<EmbryoSummary>('/api/embryos', {
         method: 'POST',
-        body: { seed },
+        body: { seed, ...(source?.sourceUrl ? { sourceUrl: source.sourceUrl, sourceTitle: source.sourceTitle ?? undefined } : {}) },
       })
       embryos.value.unshift(embryo)
       return embryo
