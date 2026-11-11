@@ -34,6 +34,10 @@ Proposed implementation:
 - `resolveChatModel(userId)` (`server/utils/llm-provider.ts`) picks the user's provider or the fallback. Only the collaborator role exists today, so the connection stores one `collaboratorModel`. Researcher and critic models come with those roles.
 - Settings → model provider: connect, change key, disconnect, choose the model from the provider's own list.
 
+## Amended (proposed, 2026-11-12)
+
+Proposed, not yet accepted. `ProviderConnection` gains optional `researchModel` and `criticModel`. `resolveRoleModel(userId, role)` returns the role's own model when set and falls back to the collaborator's model, then to the provider default. The researcher already uses it; the critic role ([#193](https://github.com/albegosu/hypar/issues/193)) will call it. Settings only offers models the provider lists, and the server rejects any other id. Roles share the one connected provider, so a critic from another model family is possible only when the provider offers one (Ollama Cloud, OpenAI). A second connection for cross-vendor critics is left open.
+
 ## Consequences
 
 - Settings gain a provider section. Auth and data must stay strictly per user.
