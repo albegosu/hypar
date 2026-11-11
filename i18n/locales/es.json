@@ -22,7 +22,24 @@
     "strata": "estratos",
     "all": "todo",
     "pendingChallenges": "Retos pendientes",
-    "unanswered": "{n} sin respuesta"
+    "unanswered": "{n} sin respuesta",
+    "empty": {
+      "eyebrow": "Tu jardín está vacío",
+      "title": "Trae una idea. Se cuestiona, no se aplaude.",
+      "lead": "hypar te ayuda a saber si una idea merece la pena. Nada se borra: toda idea termina en un sitio al que puedes volver.",
+      "steps": {
+        "seed": { "tag": "semilla", "body": "Escribe la idea con tus palabras, aunque esté en bruto." },
+        "challenge": { "tag": "reto", "body": "Un agente te hace una pregunta difícil cada vez. Respondes o cambias la idea." },
+        "outcome": { "tag": "cierre", "body": "Cuando se sostiene o se cae, la cierras y dices por qué." }
+      },
+      "outcomesTitle": "Cómo puede acabar una idea",
+      "outcomes": {
+        "alive": { "name": "Viva", "body": "sigue cuestionándose y tomando forma." },
+        "fossil": { "name": "Fósil", "body": "aparcada para siempre, con el motivo que diste. Sigue siendo legible." },
+        "transplanted": { "name": "Trasplantada", "body": "funcionó: la llevaste al mundo y anotas qué resultó." }
+      },
+      "cta": "Planta tu primera semilla en el cuadro de arriba"
+    }
   },
   "challenge": {
     "current": "Reto actual",

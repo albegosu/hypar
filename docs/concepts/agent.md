@@ -83,7 +83,7 @@ A trace remains for accept and for agent proposals. Fossilization cannot happen 
 Per invocation the agent receives:
 
 - The current embryo: seed, state, unresolved tensions, last ~12 agent/user turns
-- Up to **15 other living embryos** and **5 fossils** owned by you
+- Up to **15 other living embryos** (you can lower it to 0–15 in **Settings → agent**) and **5 fossils** owned by you
 - Which of those are already outgoing connection targets (so it does not re-propose them)
 - What sparked the seed, when it was planted from a [second-brain](/guide/second-brain) capture: its title and essence, as context for the seed, never as the idea
 - While `GERMINATING` or `GROWING` only: the index of the user's second-brain wiki, if they connected one — topic and item names, as **contrast** and never as a recommendation ([experiment](/experiments/saved-references-as-contrast))

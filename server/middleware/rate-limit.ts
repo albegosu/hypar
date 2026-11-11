@@ -24,6 +24,13 @@ const RULES: Rule[] = [
     refillPerSec: 30 / 60,
   },
   {
+    // Each capture fetches a page and costs a model call.
+    label: 'capture',
+    test: (p, m) => m === 'POST' && p === '/api/embryos/capture',
+    capacity: 10,
+    refillPerSec: 10 / 60,
+  },
+  {
     label: 'embryo-write',
     test: (p, m) =>
       (m === 'POST' || m === 'PATCH')

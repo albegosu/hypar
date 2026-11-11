@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useEmbryoStore, type EmbryoState, type EmbryoSummary } from '~/stores/embryos'
 import { LIFECYCLE, appendTranscript } from '~/utils/embryo-display'
+import { shouldShowGardenEmpty } from '~/utils/garden-empty'
 import {
   FOSSIL_STRATUM_COPY,
   fossilStratum,
@@ -17,6 +18,8 @@ const { t } = useI18n({ useScope: 'global' })
 
 const seedInput = ref('')
 const creating = ref(false)
+/** Set when the seed text came from a confirmed capture; planted beside the seed. */
+const captureSource = ref<{ sourceUrl: string | null; sourceTitle: string | null } | null>(null)
 /** Surface (living, tension-first) is the primary garden view — not a flat dump. */
 const activeFilter = ref<EmbryoState | 'ALL' | 'SURFACE' | 'STRATA'>('SURFACE')
 
@@ -76,14 +79,17 @@ const strataGroups = computed(() => {
     .map(s => ({ stratum: s, ...FOSSIL_STRATUM_COPY[s], items: groups[s] }))
 })
 
+watch(seedInput, (v) => { if (!v.trim()) captureSource.value = null })
+
 async function submitSeed() {
   const seed = seedInput.value.trim()
   if (!seed) return
   creating.value = true
-  const embryo = await store.create(seed)
+  const embryo = await store.create(seed, captureSource.value ?? undefined)
   creating.value = false
   if (embryo) {
     seedInput.value = ''
+    captureSource.value = null
     await navigateTo(`/embryo/${embryo.id}`)
   }
 }
@@ -107,7 +113,18 @@ function filterCount(f: typeof activeFilter.value) {
   return store.byState[f].length
 }
 
-onMounted(() => store.fetchAll())
+const gardenLoaded = ref(false)
+const showEmpty = computed(() => shouldShowGardenEmpty({
+  loaded: gardenLoaded.value,
+  loading: store.loading,
+  error: store.error,
+  total: store.embryos.length,
+}))
+
+onMounted(async () => {
+  await store.fetchAll()
+  gardenLoaded.value = true
+})
 </script>
 
 <template>
@@ -147,6 +164,9 @@ onMounted(() => store.fetchAll())
           </button>
         </div>
       </div>
+      <GardenCaptureSeed
+        @extracted="(c) => { seedInput = c.idea; captureSource = { sourceUrl: c.sourceUrl, sourceTitle: c.sourceTitle } }"
+      />
     </div>
 
     <GardenPendingQueue />
@@ -176,8 +196,9 @@ onMounted(() => store.fetchAll())
     </div>
 
     <!-- empty -->
+    <GardenEmptyState v-else-if="showEmpty" />
     <div v-else-if="visible.length === 0" class="wz-faint text-xs text-center py-12">
-      {{ store.embryos.length === 0 ? 'no embryos yet — plant the first seed' : 'no embryos in this state' }}
+      no embryos in this state
     </div>
 
     <!-- strata (fossils) -->

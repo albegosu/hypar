@@ -5,7 +5,9 @@ import { prisma } from '~/server/utils/prisma'
 import { createOllamaChatModel, getOllamaRuntime } from '~/server/utils/ollama'
 import { openSecret } from '~/server/utils/secret-box'
 import { LLM_PROVIDER_INFO, isOpenAiChatModel, type LlmProviderId } from '~/utils/llm-providers'
-import { sanitizeModelId } from '~/utils/llm-model'
+import { roleModelId, type AgentRole } from '~/utils/llm-model'
+
+export { isListedModel, roleModelId, type AgentRole, type RoleModelFields } from '~/utils/llm-model'
 
 const OLLAMA_CLOUD_HOST = 'https://ollama.com'
 
@@ -47,7 +49,16 @@ export function providerChatModel(provider: LlmProviderId, apiKey: string, model
  * otherwise the server-wide Ollama fallback. `requestedModel` (the Settings cookie)
  * only applies to the fallback; a connected user's model is stored with the connection.
  */
-export async function resolveChatModel(userId: string, requestedModel?: string): Promise<ResolvedChatModel> {
+export function resolveChatModel(userId: string, requestedModel?: string): Promise<ResolvedChatModel> {
+  return resolveRoleModel(userId, 'collaborator', requestedModel)
+}
+
+/**
+ * The model for one agent role. Researcher and critic use their own override when the user set
+ * one and fall back to the collaborator's model. Without a connection every role uses the
+ * server fallback.
+ */
+export async function resolveRoleModel(userId: string, role: AgentRole, requestedModel?: string): Promise<ResolvedChatModel> {
   const connection = await prisma.providerConnection.findUnique({ where: { userId } })
   if (!connection) {
     const { model, modelId, timeoutMs } = createOllamaChatModel(requestedModel)
@@ -67,7 +78,7 @@ export async function resolveChatModel(userId: string, requestedModel?: string):
       statusMessage: `Your ${info.label} key can no longer be read. Connect it again in Settings.`,
     })
   }
-  const modelId = sanitizeModelId(connection.collaboratorModel) || info.defaultModel
+  const modelId = roleModelId({ ...connection, provider }, role)
   return {
     model: providerChatModel(provider, apiKey, modelId),
     modelId,
