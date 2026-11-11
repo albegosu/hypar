@@ -33,6 +33,7 @@ enum EventType {
   USER_NOTE
   RESEARCHED
   GERMINATE_NOTICE
+  VALIDATION_PLAN_SET
 }
 
 // What a web finding does to the idea (ADR 0007)
@@ -61,6 +62,7 @@ enum AgentNoteType {
   PENDING_FOSSIL
   PENDING_PATH
   PENDING_TRANSPLANT
+  PENDING_VALIDATION_PLAN
 }
 
 enum FossilTrigger {
@@ -85,6 +87,7 @@ model Embryo {
   sourceRef    String?     // Where the integration keeps its own copy (e.g. the wiki source note)
   sourceTitle  String?     // Title of what sparked the seed (e.g. the capture's title)
   sourceContext String?    // What sparked the seed, as Markdown: the capture's essence, never the seed itself
+  validationPlan String?   // ADR 0010 (proposed): how this idea gets validated; agent proposes, user accepts or edits
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   events       EmbryoEvent[]

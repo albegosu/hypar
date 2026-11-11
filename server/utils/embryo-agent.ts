@@ -7,6 +7,7 @@ import {
 } from '../../utils/embryo-method'
 import { AGENT_CONNECTION_TYPES } from '../../utils/embryo-lab'
 import { clipSourceContext } from '../../utils/source-context'
+import { normalizeValidationPlan, validationPlanForPrompt } from '../../utils/validation-plan'
 import { referencesForPrompt, shouldUseReferences } from '../../utils/reference-index'
 
 export { extractPartialQuestion } from '../../utils/embryo-stream'
@@ -23,6 +24,7 @@ Respond with a JSON object (no markdown fences, no preamble) with these fields:
 - "paths": an array of 0–3 short alternative directions (not complete solutions). Only when the state is GROWING. Empty array otherwise.
 - "fossil": null, or {"kind":"ILL_DEFINED"|"WRONG_PATH"|"SUPERSEDED","reason":"..."} only when the state is MATURING and the idea has clearly failed. Do not propose fossil in other states.
 - "transplant": null, or {"reason":"..."} only when the state is MATURING and the user says the idea already works and is in use. The reason says what made it work. Never propose fossil and transplant together.
+- "validationPlan": null, or a short plain-text plan (max ~80 words) of how THIS idea should be validated, given the idea, the proposed solution and the end user. Only when the state is GROWING or MATURING, and only when there is no plan yet or the exchange showed the current one is wrong. It is an additive proposal for the user to accept or edit, not a second question, and it is never spoken in "question".
 
 Rules:
 - Follow the stance for the current state. Prefer the preferred move named below.
@@ -81,6 +83,8 @@ export interface AgentResponse {
   paths: string[]
   fossil: AgentFossilProposal | null
   transplant: AgentTransplantProposal | null
+  /** ADR 0010 (proposed): additive proposal of how this idea gets validated. */
+  validationPlan: string | null
 }
 
 export interface AgentDialogueTurn {
@@ -98,6 +102,8 @@ export interface AgentPromptInput {
   source?: { title?: string | null; context?: string | null }
   /** The user's second-brain index. Used only while probing and opening paths. */
   references?: string | null
+  /** ADR 0010 (proposed): the user's accepted validation plan, so questions stay in line with it. */
+  validationPlan?: string | null
 }
 
 /** Whether the embryo carries anything the agent should read as its origin. */
@@ -150,10 +156,11 @@ export function parseAgentResponse(text: string): AgentResponse {
       paths: parsePaths(parsed.paths),
       fossil: parseFossil(parsed.fossil),
       transplant: parseTransplant(parsed.transplant),
+      validationPlan: normalizeValidationPlan(parsed.validationPlan) || null,
     }
   }
   catch {
-    return { question: text.trim(), connections: [], paths: [], fossil: null, transplant: null }
+    return { question: text.trim(), connections: [], paths: [], fossil: null, transplant: null, validationPlan: null }
   }
 }
 
@@ -189,6 +196,9 @@ export function buildAgentUserMessage(input: AgentPromptInput): string {
       .filter(Boolean)
     parts.push(`What sparked this seed (something the user saved; context, not the idea):\n${lines.join('\n\n')}`)
   }
+
+  const plan = validationPlanForPrompt(input.validationPlan)
+  if (plan) parts.push(plan)
 
   if (input.openTensions.length > 0) {
     parts.push(`Open tensions:\n${input.openTensions.map(t => `- ${t}`).join('\n')}`)

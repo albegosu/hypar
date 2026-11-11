@@ -3,6 +3,7 @@ import { prisma } from '~/server/utils/prisma'
 import { requireSessionUserId } from '~/server/utils/session'
 import { parseFossilNote } from '~/utils/embryo-method'
 import { parseConnectionNote } from '~/utils/embryo-display'
+import { normalizeValidationPlan, planEditGuard, VALIDATION_PLAN_MAX } from '~/utils/validation-plan'
 import { LIVING_STATES, transplantGuard } from '~/utils/embryo-lab'
 
 const CONNECTION_TYPES = ['REINFORCES', 'CONTRADICTS', 'EXTENDS', 'RESURRECTS'] as const
@@ -57,6 +58,16 @@ const bodySchema = z.discriminatedUnion('action', [
     outcome: z.string().trim().min(1).max(2000),
   }),
   z.object({
+    action: z.literal('accept_validation_plan'),
+    noteId: z.string(),
+    /** The user's edit of the proposal; omitted to accept it as proposed. */
+    plan: z.string().max(VALIDATION_PLAN_MAX).optional(),
+  }),
+  z.object({
+    action: z.literal('set_validation_plan'),
+    plan: z.string().max(VALIDATION_PLAN_MAX),
+  }),
+  z.object({
     action: z.literal('add_note'),
     note: z.string().trim().min(1).max(10000),
   }),
@@ -90,6 +101,51 @@ export default defineEventHandler(async (event) => {
         initiatedBy: 'USER',
         payload: { note: body.note },
       },
+    })
+  }
+
+  // ADR 0010 (proposed): the plan is the user's. FOSSIL is rejected above; the guard also covers TRANSPLANTED.
+  if (body.action === 'accept_validation_plan' || body.action === 'set_validation_plan') {
+    const blocked = planEditGuard(embryo.state)
+    if (blocked) {
+      throw createError({ statusCode: 409, statusMessage: blocked })
+    }
+    const note = body.action === 'accept_validation_plan'
+      ? await prisma.agentNote.findFirst({
+          where: { id: body.noteId, embryoId: id, type: 'PENDING_VALIDATION_PLAN', dismissed: false },
+        })
+      : null
+    if (body.action === 'accept_validation_plan' && !note) {
+      throw createError({ statusCode: 404, statusMessage: 'Pending validation plan not found' })
+    }
+    const plan = normalizeValidationPlan(body.plan ?? note?.content)
+    if (!plan) {
+      throw createError({ statusCode: 400, statusMessage: 'Validation plan is empty' })
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const updated = await tx.embryo.update({
+        where: { id },
+        data: {
+          validationPlan: plan,
+          events: {
+            create: {
+              type: 'VALIDATION_PLAN_SET',
+              initiatedBy: 'USER',
+              payload: {
+                plan,
+                previous: embryo.validationPlan,
+                fromProposal: !!note,
+                edited: !!note && plan !== note.content.trim(),
+              },
+            },
+          },
+        },
+      })
+      if (note) {
+        await tx.agentNote.update({ where: { id: note.id }, data: { dismissed: true } })
+      }
+      return updated
     })
   }
 
