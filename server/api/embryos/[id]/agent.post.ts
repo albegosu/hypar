@@ -51,12 +51,13 @@ export default defineEventHandler(async (event) => {
     requestedModel = undefined
   }
 
+  const { peerLimit } = await getUserSettings(userId)
   const [living, fossils] = await Promise.all([
     prisma.embryo.findMany({
       where: { userId, id: { not: id }, state: { not: 'FOSSIL' } },
       select: { id: true, seed: true, state: true },
       orderBy: { updatedAt: 'desc' },
-      take: 15,
+      take: peerLimit,
     }),
     prisma.embryo.findMany({
       where: { userId, id: { not: id }, state: 'FOSSIL' },

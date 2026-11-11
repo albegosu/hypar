@@ -223,6 +223,10 @@ model UserSettings {
   webResearch  Boolean  @default(true)
   // Research before the agent's question when an embryo enters GERMINATING or MATURING.
   autoResearch Boolean  @default(false)
+  // Open question "what triggers germination": the agent engages on first open, or waits to be invited.
+  autoEngage   Boolean  @default(true)
+  // Open question "what does the agent know": how many living peers it sees (fossils stay at 5).
+  peerLimit    Int      @default(15)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -21,6 +21,9 @@ const { selectedModel } = useLlmModel()
 const { locale } = useTerminalPrefs()
 const { t } = useI18n({ useScope: 'global' })
 
+// Open question "what triggers germination": the user decides whether the agent engages on first open.
+const settingsFetch = useFetch<{ autoEngage: boolean }>('/api/settings', { key: 'user-settings', lazy: true })
+const autoEngage = computed(() => settingsFetch.data.value?.autoEngage ?? true)
 const askingAgent = ref(false)
 const agentError = ref<string | null>(null)
 const agentThinking = ref(false)
@@ -104,8 +107,13 @@ const firstEngageFailed = computed(() =>
   && !!agentError.value,
 )
 
+const awaitingInvite = computed(() =>
+  !autoEngage.value && neverEngaged.value && !askingAgent.value && !isClosed.value && !agentError.value,
+)
+
 const canAsk = computed(() =>
-  !isClosed.value && !askingAgent.value && !unansweredQuestion.value && (!neverEngaged.value || firstEngageFailed.value),
+  !isClosed.value && !askingAgent.value && !unansweredQuestion.value
+  && (!neverEngaged.value || firstEngageFailed.value || awaitingInvite.value),
 )
 
 /** Current unanswered question as the hero (streaming uses streamPreview in template). */
@@ -174,6 +182,7 @@ const speechLang = computed(() => (locale.value === 'es' ? 'es-ES' : 'en-US'))
 
 const emptyHint = computed(() => {
   if (researching.value) return 'the agent is searching the web before asking...'
+  if (awaitingInvite.value) return 'the seed is waiting. Engage when you want the first question.'
   if (agentThinking.value || (neverEngaged.value && !firstEngageFailed.value && !isClosed.value)) {
     return 'the agent is reading the seed...'
   }
@@ -272,6 +281,8 @@ async function askAgent() {
 
 async function maybeAutoEngage(embryoId: string) {
   if (autoEngagedFor.value === embryoId) return
+  await settingsFetch
+  if (!autoEngage.value) return
   const e = store.current
   if (!e || e.id !== embryoId || isClosedState(e.state)) return
   const pendingQuestion = e.agentNotes.some(n => n.type === 'PENDING_QUESTION')
@@ -525,7 +536,7 @@ watch(
       v-else-if="emptyHint && !focalChallenge && !askingAgent"
       class="px-4 py-3 wz-faint text-[11px]"
     >
-      <AiShimmer v-if="agentThinking || (neverEngaged && !firstEngageFailed && !isClosed)" :active="true" :lines="2" />
+      <AiShimmer v-if="agentThinking || (neverEngaged && !firstEngageFailed && !isClosed && !awaitingInvite)" :active="true" :lines="2" />
       <span v-else>{{ emptyHint }}</span>
     </div>
 

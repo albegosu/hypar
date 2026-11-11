@@ -6,6 +6,7 @@
       </div>
       <div class="p-4 flex flex-col gap-4">
         <SettingsLlmProvider />
+        <SettingsAgent />
         <SettingsWebResearch />
         <SettingsIntegrationTokens />
         <SettingsReferenceIndex />
