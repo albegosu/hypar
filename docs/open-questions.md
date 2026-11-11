@@ -27,7 +27,7 @@ The [ai-elements surfaces](/experiments/ai-elements-surfaces) experiment draws t
 
 An embryo starts as latent. What moves it to germinating?
 
-**Current runtime (option mixed):** opening a `LATENT` embryo auto-engages the agent. The first successful agent turn sets `GERMINATING` and the collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — dismissible, not silent. You can also jump state by hand.
+**Current runtime (option mixed):** opening a `LATENT` embryo auto-engages the agent. The first successful agent turn sets `GERMINATING` and the collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — dismissible, not silent. You can also jump state by hand. Settings → agent can turn **engage on first open** off: a latent seed then waits until you press Engage.
 
 Still open: should the agent wait to be invited? Should forgotten latent embryos germinate without a visit?
 
@@ -39,7 +39,7 @@ Still open: should the agent wait to be invited? Should forgotten latent embryos
 
 Does the agent have access to all embryos in all states simultaneously, or does it operate with a narrower context?
 
-**Current runtime:** current embryo + up to 15 living peers and 5 fossils. No external knowledge.
+**Current runtime:** current embryo + up to 15 living peers (Settings → agent lowers it, 0–15) and 5 fossils. Web research only when you ask for it.
 
 Full access would let the agent surface resurrection and old contradictions — and may overwhelm. Local context is better for questions and worse for memory.
 
