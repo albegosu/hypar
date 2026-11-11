@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useEmbryoStore, type EmbryoState, type EmbryoSummary } from '~/stores/embryos'
 import { LIFECYCLE, appendTranscript } from '~/utils/embryo-display'
+import { shouldShowGardenEmpty } from '~/utils/garden-empty'
 import {
   FOSSIL_STRATUM_COPY,
   fossilStratum,
@@ -107,7 +108,18 @@ function filterCount(f: typeof activeFilter.value) {
   return store.byState[f].length
 }
 
-onMounted(() => store.fetchAll())
+const gardenLoaded = ref(false)
+const showEmpty = computed(() => shouldShowGardenEmpty({
+  loaded: gardenLoaded.value,
+  loading: store.loading,
+  error: store.error,
+  total: store.embryos.length,
+}))
+
+onMounted(async () => {
+  await store.fetchAll()
+  gardenLoaded.value = true
+})
 </script>
 
 <template>
@@ -176,8 +188,9 @@ onMounted(() => store.fetchAll())
     </div>
 
     <!-- empty -->
+    <GardenEmptyState v-else-if="showEmpty" />
     <div v-else-if="visible.length === 0" class="wz-faint text-xs text-center py-12">
-      {{ store.embryos.length === 0 ? 'no embryos yet — plant the first seed' : 'no embryos in this state' }}
+      no embryos in this state
     </div>
 
     <!-- strata (fossils) -->
