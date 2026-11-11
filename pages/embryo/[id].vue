@@ -205,6 +205,9 @@ const EVENT_LABELS: Record<string, string> = {
   TRANSPLANTED: 'transplanted',
   USER_NOTE: 'note',
   RESEARCHED: 'researched the web',
+  EXPERIMENT_ADDED: 'experiment added',
+  EXPERIMENT_UPDATED: 'experiment updated',
+  EXPERIMENT_SUPERSEDED: 'experiment superseded',
 }
 
 function stepClass(state: EmbryoState) {
@@ -659,6 +662,8 @@ function stepClass(state: EmbryoState) {
           </div>
         </template>
       </div>
+
+      <EmbryoExperimentRecords :embryo-id="id" :closed="isClosed" />
 
       <!-- History (collapsed by default) -->
       <div class="wz-panel" :class="{ 'fossil-panel': isFossil }">

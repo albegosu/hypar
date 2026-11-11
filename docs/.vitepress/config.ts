@@ -90,6 +90,7 @@ export default defineConfig({
           { text: '0006 Agent roles, one voice', link: '/decisions/0006-agent-roles-one-voice' },
           { text: '0007 External knowledge', link: '/decisions/0007-external-knowledge' },
           { text: '0008 Bring your own provider', link: '/decisions/0008-bring-your-own-provider' },
+          { text: '0012 Experiment records', link: '/decisions/0012-experiment-records' },
           { text: 'Monorepo unification (historical)', link: '/decisions/monorepo-unification' },
         ],
       },
