@@ -14,9 +14,9 @@ export default defineEventHandler(async (event) => {
     prisma.embryoEvent.findMany({
       where: {
         embryo: { userId },
-        type: { in: ['AGENT_QUESTION', 'AGENT_SUGGESTION', 'CONNECTION_MADE'] },
+        type: { in: ['AGENT_QUESTION', 'AGENT_SUGGESTION', 'CONNECTION_MADE', 'STATE_CHANGED', 'GERMINATE_NOTICE'] },
       },
-      select: { type: true, payload: true },
+      select: { type: true, initiatedBy: true, payload: true },
     }),
     prisma.embryo.count({ where: { userId } }),
   ])

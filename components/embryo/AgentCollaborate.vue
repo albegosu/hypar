@@ -35,6 +35,7 @@ const replyInput = ref('')
 const replying = ref(false)
 const autoEngagedFor = ref<string | null>(null)
 const germinatedNotice = ref(false)
+let germinateShownAt = 0
 
 const embryo = computed(() => store.current)
 const isFossil = computed(() => embryo.value?.state === 'FOSSIL')
@@ -192,8 +193,12 @@ const emptyHint = computed(() => {
   return ''
 })
 
-function dismissGerminate() {
+function dismissGerminate(via: 'continue' | 'reply' | 'skip' = 'continue') {
+  if (!germinatedNotice.value) return
   germinatedNotice.value = false
+  // Measurement only (#154): how long the notice was up before the user left it.
+  const visibleMs = Math.max(0, Math.round(Date.now() - germinateShownAt))
+  $fetch(`/api/embryos/${props.embryoId}/germinate-notice`, { method: 'POST', body: { via, visibleMs } }).catch(() => {})
 }
 
 async function askAgent() {
@@ -259,6 +264,7 @@ async function askAgent() {
               streamPreview.value = ''
               if (isAgentMove(data.move)) streamedMove.value = data.move
               germinatedNotice.value = Boolean(data.germinated)
+              if (germinatedNotice.value) germinateShownAt = Date.now()
             }
             await store.fetchOne(embryoId, { silent: true })
           }
@@ -296,7 +302,7 @@ async function submitReply() {
   const text = replyInput.value.trim()
   const note = unansweredQuestion.value
   if (!text || !note) return
-  dismissGerminate()
+  dismissGerminate('reply')
   replying.value = true
   agentError.value = null
   const ok = await store.reply(props.embryoId, note.id, text)
@@ -314,7 +320,7 @@ function onReplySpeech(transcript: string, isFinal: boolean) {
 
 function onSuggestion(suggestion: AiSuggestion) {
   if (suggestion.value === 'skip' && unansweredQuestion.value) {
-    dismissGerminate()
+    dismissGerminate('skip')
     store.dismissNote(props.embryoId, unansweredQuestion.value.id)
   }
 }
@@ -423,7 +429,7 @@ watch(
       <button
         type="button"
         class="hypar-germinate-moment__dismiss"
-        @click="dismissGerminate"
+        @click="dismissGerminate('continue')"
       >
         {{ t('challenge.germinateContinue') }}
       </button>
