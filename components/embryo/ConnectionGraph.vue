@@ -108,7 +108,7 @@ const focused = computed(() =>
 const directionLabels = computed(() =>
   CONNECTION_TYPES.map((ct) => {
     const rad = (COMPASS_DIRECTIONS[ct.value] * Math.PI) / 180
-    const dist = COMPASS_OUTER_RING + 26
+    const dist = COMPASS_OUTER_RING + (Math.abs(Math.cos(rad)) > 0.5 ? 10 : 24)
     const x = Math.cos(rad) * dist
     const y = Math.sin(rad) * dist
     return {
@@ -148,7 +148,10 @@ function nodeTransform(p: CompassPlacement) {
 
 onMounted(() => {
   // Let the first frame paint at the centre so neighbours spring out to their place.
-  requestAnimationFrame(() => requestAnimationFrame(() => { settled.value = true }))
+  // The timer covers background tabs, where animation frames never fire.
+  const settle = () => { settled.value = true }
+  requestAnimationFrame(() => requestAnimationFrame(settle))
+  setTimeout(settle, 120)
 })
 </script>
 
