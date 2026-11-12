@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { parseConnectionNote } from '~/utils/embryo-display'
 
 export type EmbryoState = 'LATENT' | 'GERMINATING' | 'GROWING' | 'MATURING' | 'FOSSIL' | 'TRANSPLANTED'
 export type EventInitiator = 'USER' | 'AGENT' | 'SYSTEM'
@@ -333,7 +334,15 @@ export const useEmbryoStore = defineStore('embryos', () => {
         body: { action: 'dismiss_note', noteId },
       })
       if (current.value?.id === embryoId) {
+        const note = current.value.agentNotes.find(n => n.id === noteId)
         current.value.agentNotes = current.value.agentNotes.filter(n => n.id !== noteId)
+        // The server deletes the unconfirmed row behind a dismissed proposal; mirror it.
+        const proposal = note?.type === 'PENDING_CONNECTION' ? parseConnectionNote(note.content) : null
+        if (proposal) {
+          current.value.connections = current.value.connections.filter(
+            c => !(c.targetId === proposal.targetId && !c.confirmedByUser),
+          )
+        }
       }
       const idx = embryos.value.findIndex(e => e.id === embryoId)
       if (idx !== -1) {

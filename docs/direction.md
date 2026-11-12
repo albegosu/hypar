@@ -62,7 +62,8 @@ Dropped in the 2026-11 redefinition: *"the agent has no external knowledge"* (it
 
 ## Still to define
 
-- **Lifecycle semantics.** What separates `GROWING` from `MATURING`, and what evidence a transplant requires.
+*Lifecycle semantics were settled in [ADR 0009](/decisions/0009-lifecycle-semantics): the line between `GROWING` and `MATURING` is choosing a path, and a transplant needs evidence. Not built yet.*
+
 - **Capture → seed.** Whether the root idea extracted from a capture becomes the immutable seed after the user confirms it.
 
 ## Experiments ↔ product ↔ extraction
