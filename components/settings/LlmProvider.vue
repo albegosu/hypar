@@ -49,6 +49,14 @@ const provider = ref<LlmProviderId>('ANTHROPIC')
 const apiKey = ref('')
 const busy = ref(false)
 const failure = ref<string | null>(null)
+const savedAt = ref(0)
+let savedTimer: ReturnType<typeof setTimeout> | undefined
+
+function flashSaved() {
+  savedAt.value = Date.now()
+  clearTimeout(savedTimer)
+  savedTimer = setTimeout(() => { savedAt.value = 0 }, 2000)
+}
 
 function errorText(err: unknown, fallback: string): string {
   const e = err as { data?: { statusMessage?: string; message?: string }; statusMessage?: string }
@@ -89,6 +97,7 @@ async function saveRoleModel(field: 'researchModel' | 'criticModel', model: stri
       method: 'PUT',
       body: { provider: connection.value.provider, [field]: model || null },
     })
+    flashSaved()
   }
   catch (err) {
     failure.value = errorText(err, 'could not save the model.')
@@ -104,6 +113,7 @@ async function saveModel(model: string) {
       method: 'PUT',
       body: { provider: connection.value.provider, collaboratorModel: model },
     })
+    flashSaved()
   }
   catch (err) {
     failure.value = errorText(err, 'could not save the model.')
@@ -155,7 +165,7 @@ function openForm() {
         class="wz-btn-outline text-[11px] py-0.5"
         @click="openForm"
       >
-        {{ connection ? 'change' : 'connect' }}
+        {{ connection ? 'change provider or key' : 'connect' }}
       </button>
       <button
         v-if="connection && !formOpen"
@@ -200,6 +210,9 @@ function openForm() {
           cancel
         </button>
       </div>
+      <p v-if="connection && provider !== connection.provider" class="text-[10px] text-[var(--term-warn)]">
+        switching from {{ connectedInfo?.label }} resets the collaborator, researcher and critic models: each provider has its own list.
+      </p>
       <p class="wz-faint text-[10px]">
         get a key at
         <a class="underline" :href="LLM_PROVIDER_INFO[provider].keysUrl" target="_blank" rel="noopener">{{ LLM_PROVIDER_INFO[provider].keysUrl.replace('https://', '') }}</a>.
@@ -236,7 +249,7 @@ function openForm() {
         </select>
       </div>
       <p class="wz-faint text-[10px] mt-1">
-        the critic can run on a different model than the one that generates, from the models your provider offers.
+        <span v-if="savedAt" class="wz-accent" role="status">saved · </span>the critic can run on a different model than the one that generates, from the models your provider offers.
       </p>
     </template>
   </div>

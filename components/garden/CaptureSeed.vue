@@ -66,7 +66,8 @@ async function extract() {
       method: 'POST',
       body: { url: url.value.trim() || undefined, image: image.value ?? undefined },
     })
-    emit('extracted', res)
+    // An image has no page title: its file name is what identifies it in the garden.
+    emit('extracted', { ...res, sourceTitle: res.sourceTitle ?? (image.value ? imageName.value || null : null) })
     url.value = ''
     clearImage()
     open.value = false

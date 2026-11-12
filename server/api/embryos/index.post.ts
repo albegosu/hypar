@@ -6,7 +6,7 @@ import { safeHttpUrl } from '~/utils/safe-url'
 
 const bodySchema = z.object({
   seed: z.string().min(1).max(10000),
-  /** Set when the seed was confirmed from a capture (link); stored beside the seed, never in it. */
+  /** Set when the seed was confirmed from a capture (link or image); stored beside the seed, never in it. */
   sourceUrl: z.string().max(2000).optional(),
   sourceTitle: z.string().trim().max(300).optional(),
 })
@@ -21,12 +21,12 @@ export default defineEventHandler(async (event) => {
       userId,
       seed,
       sourceUrl,
-      sourceTitle: sourceUrl ? sourceTitle || null : null,
+      sourceTitle: sourceTitle || null,
       events: {
         create: {
           type: 'CREATED',
           initiatedBy: 'USER',
-          ...(sourceUrl ? { payload: { via: 'capture', sourceUrl } } : {}),
+          ...(sourceUrl || sourceTitle ? { payload: { via: 'capture', ...(sourceUrl ? { sourceUrl } : {}) } } : {}),
         },
       },
     },
