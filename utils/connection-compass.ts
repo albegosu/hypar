@@ -21,8 +21,8 @@ export const COMPASS_OUTER_RING = 152
 
 /** Half-width (degrees) of the sector each relation type may use. */
 const SECTOR_HALF = 36
-/** Preferred angular gap between neighbours on the same ring and sector. */
-const PREFERRED_STEP = 18
+/** Preferred angular gap between neighbours in the same sector. */
+const PREFERRED_STEP = 20
 
 const STATE_RADIUS: Record<EmbryoState, number> = {
   LATENT: 9,
@@ -71,24 +71,26 @@ export function spreadAngles(center: number, count: number): number[] {
 }
 
 export function layoutCompass(neighbors: CompassNeighbor[]): CompassPlacement[] {
-  const groups = new Map<string, CompassNeighbor[]>()
+  const groups = new Map<ConnectionType, CompassNeighbor[]>()
   for (const nb of neighbors) {
-    const key = `${nb.type}:${nb.inferred ? 'outer' : 'inner'}`
-    const list = groups.get(key) ?? []
+    const list = groups.get(nb.type) ?? []
     list.push(nb)
-    groups.set(key, list)
+    groups.set(nb.type, list)
   }
 
   const placed: CompassPlacement[] = []
-  for (const list of groups.values()) {
-    const first = list[0]!
-    const ring = first.inferred ? COMPASS_OUTER_RING : COMPASS_INNER_RING
+  for (const [type, list] of groups) {
+    // One spread per type across both rings, so an outer hypothesis never sits
+    // straight behind an inner link (its edge would run through that node).
     // Stable order so a refetch does not shuffle the map.
-    const sorted = [...list].sort((a, b) => a.id.localeCompare(b.id))
-    const angles = spreadAngles(COMPASS_DIRECTIONS[first.type], sorted.length)
+    const sorted = [...list].sort((a, b) =>
+      Number(a.inferred) - Number(b.inferred) || a.id.localeCompare(b.id),
+    )
+    const angles = spreadAngles(COMPASS_DIRECTIONS[type], sorted.length)
     sorted.forEach((nb, i) => {
       const angle = angles[i]!
       const rad = (angle * Math.PI) / 180
+      const ring = nb.inferred ? COMPASS_OUTER_RING : COMPASS_INNER_RING
       placed.push({
         ...nb,
         angle,

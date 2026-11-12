@@ -17,7 +17,7 @@ The question is whether these should be visually distinct, and if so, how. An ex
 
 The [ai-elements surfaces](/experiments/ai-elements-surfaces) experiment draws this on a canvas: **solid** edges for explicit or confirmed links, **dashed / animated** edges for agent-inferred unconfirmed links.
 
-**Current runtime:** the agent writes unconfirmed `Connection` rows (`detectedBy: AGENT`) plus a HITL note. Accept confirms the row; dismiss deletes it. The graph draws **dashed** edges for unconfirmed agent links.
+**Current runtime:** the agent writes unconfirmed `Connection` rows (`detectedBy: AGENT`) plus a HITL note. Accept confirms the row; dismiss deletes it. The connection compass puts confirmed links on an inner ring and unconfirmed agent links on a dashed outer ring, with the relation type as direction ([details](/experiments/ai-elements-surfaces#connection-compass)).
 
 *Status: in experiment — data path and graph surface mounted; whether the visual language is enough is still an observation.*
 

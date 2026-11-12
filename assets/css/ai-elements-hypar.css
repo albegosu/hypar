@@ -415,18 +415,215 @@
   outline: 1px solid var(--term-accent);
 }
 
-.terminal-theme .hypar-graph-node-hit {
+/* ── Connection compass (components/embryo/ConnectionGraph.vue) ──
+   Direction = relation type, ring = confirmed vs agent hypothesis, size = growth. */
+
+.terminal-theme .hypar-compass {
+  container-type: inline-size;
+  background: var(--term-bg-soft);
+  border-top: 1px solid var(--term-accent-faint);
+}
+
+.terminal-theme .hypar-compass-lenses {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  width: 100%;
-  text-align: left;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.6rem 0.9rem 0;
+}
+
+.terminal-theme .hypar-compass-lens {
+  font-size: 10px;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid var(--term-accent-faint);
+  border-radius: var(--term-radius-pill);
+  color: var(--term-text-dim);
   background: transparent;
-  border: 0;
-  color: inherit;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+
+.terminal-theme .hypar-compass-lens:hover {
+  color: var(--term-text);
+}
+
+.terminal-theme .hypar-compass-lens[aria-pressed="true"] {
+  color: var(--term-accent);
+  border-color: var(--term-accent);
+  background: var(--term-accent-soft);
+}
+
+.terminal-theme .hypar-compass-svg {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+  font-family: var(--term-font-sans);
+}
+
+.terminal-theme .hypar-compass-ring {
+  fill: none;
+  stroke: var(--term-accent-line);
+  stroke-width: 1;
+}
+
+.terminal-theme .hypar-compass-ring--outer {
+  stroke: var(--term-accent-faint);
+  stroke-dasharray: 2 5;
+}
+
+.terminal-theme .hypar-compass-axis {
+  stroke: var(--term-accent-faint);
+  stroke-width: 1;
+}
+
+.terminal-theme .hypar-compass-direction {
+  font-size: 11px;
+  fill: var(--term-text-dim);
+  letter-spacing: 0.02em;
+  transition: opacity 0.25s;
+}
+
+.terminal-theme .hypar-compass-direction.is-empty {
+  fill: var(--term-text-faint);
+}
+
+.terminal-theme .hypar-compass-direction.is-dim {
+  opacity: 0.25;
+}
+
+.terminal-theme .hypar-compass-edges {
+  opacity: 0;
+  transition: opacity 0.5s ease 0.25s;
+}
+
+.terminal-theme .hypar-compass-edges.is-settled {
+  opacity: 1;
+}
+
+.terminal-theme .hypar-compass-edge {
+  stroke: var(--term-accent);
+  stroke-width: 1.25;
+  stroke-opacity: 0.55;
+  stroke-linecap: round;
+  transition: stroke-opacity 0.25s, opacity 0.25s;
+}
+
+.terminal-theme .hypar-compass-edge.is-inferred {
+  stroke: var(--term-warn);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.terminal-theme .hypar-compass-edge.is-focused {
+  stroke-opacity: 1;
+}
+
+.terminal-theme .hypar-compass-edge.is-dim {
+  opacity: 0.12;
+}
+
+.terminal-theme .hypar-compass-node {
   cursor: pointer;
-  padding: 0;
-  font-family: inherit;
+  outline: none;
+  transform-box: view-box;
+  transition:
+    transform 0.7s cubic-bezier(0.34, 1.4, 0.64, 1),
+    opacity 0.25s;
+}
+
+.terminal-theme .hypar-compass-node.is-dim {
+  opacity: 0.15;
+}
+
+.terminal-theme .hypar-compass-dot {
+  fill: var(--term-bg);
+  stroke: var(--term-accent);
+  stroke-width: 1.25;
+}
+
+/* Hypotheses read as not-yet-real: hollow and faint. The dashes live on the edge. */
+.terminal-theme .hypar-compass-node.is-inferred .hypar-compass-dot {
+  fill: var(--term-bg-soft);
+  stroke: var(--term-warn);
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+
+.terminal-theme .hypar-compass-node.is-inferred .hypar-compass-glyph {
+  fill: var(--term-text-muted);
+}
+
+.terminal-theme .hypar-compass-node.is-fossil .hypar-compass-dot {
+  stroke: var(--term-text-dim);
+}
+
+.terminal-theme .hypar-compass-halo {
+  fill: var(--term-accent-soft);
+  stroke: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.terminal-theme .hypar-compass-node.is-focused .hypar-compass-halo,
+.terminal-theme .hypar-compass-node:focus-visible .hypar-compass-halo {
+  opacity: 1;
+}
+
+.terminal-theme .hypar-compass-node:focus-visible .hypar-compass-dot {
+  stroke-width: 2;
+}
+
+.terminal-theme .hypar-compass-glyph {
+  font-family: var(--term-font-mono);
+  font-size: 10px;
+  fill: var(--term-text-strong);
+  pointer-events: none;
+}
+
+.terminal-theme .hypar-compass-glyph--center {
+  font-size: 14px;
+}
+
+.terminal-theme .hypar-compass-center circle {
+  fill: var(--term-accent-soft);
+  stroke: var(--term-accent);
+  stroke-width: 1.5;
+}
+
+.terminal-theme .hypar-compass-center.is-closed circle {
+  stroke-dasharray: 2 3;
+}
+
+.terminal-theme .hypar-compass-detail {
+  min-height: 3.25rem;
+  padding: 0.6rem 0.9rem 0.75rem;
+  border-top: 1px solid var(--term-accent-faint);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .terminal-theme .hypar-compass-edge.is-inferred {
+    animation: hypar-compass-drift 1.6s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-theme .hypar-compass-node,
+  .terminal-theme .hypar-compass-edges {
+    transition: opacity 0.2s;
+  }
+}
+
+@keyframes hypar-compass-drift {
+  to { stroke-dashoffset: -16; }
+}
+
+/* The SVG scales down with the panel; keep its text legible on phones.
+   Declared after the base rules so it wins at equal specificity. */
+@container (max-width: 440px) {
+  .terminal-theme .hypar-compass-direction { font-size: 15px; }
+  .terminal-theme .hypar-compass-glyph { font-size: 14px; }
+  .terminal-theme .hypar-compass-glyph--center { font-size: 18px; }
 }
 
 .terminal-theme [data-ai-edge] {
