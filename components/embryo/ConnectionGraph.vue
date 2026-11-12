@@ -1,55 +1,56 @@
 <script setup lang="ts">
-import type { EmbryoDetail } from '~/stores/embryos'
-import type { AiWorkflowNode } from 'ai-elements-nuxt/types'
-import { LIFECYCLE, truncateSeed } from '~/utils/embryo-display'
-import { isClosedState } from '~/utils/embryo-lab'
+import type { ConnectionType, EmbryoDetail } from '~/stores/embryos'
+import { CONNECTION_TYPES, LIFECYCLE, truncateSeed } from '~/utils/embryo-display'
+import {
+  COMPASS_DIRECTIONS,
+  COMPASS_INNER_RING,
+  COMPASS_OUTER_RING,
+  compassEdge,
+  layoutCompass,
+  type CompassNeighbor,
+  type CompassPlacement,
+} from '~/utils/connection-compass'
 
 const props = defineProps<{
   embryo: EmbryoDetail
+  /** Closed embryos show the map but offer no confirm / dismiss. */
+  readonly?: boolean
+  /** Connection ids whose agent proposal is still pending, so Dismiss can withdraw it. */
+  dismissable?: string[]
 }>()
 
-const NODE_W = 156
-const NODE_H = 52
-const CX = 180
-const CY = 150
-const RADIUS = 150
+const emit = defineEmits<{
+  confirm: [connectionId: string]
+  dismiss: [connectionId: string]
+}>()
 
-const { nodes, edges, moveNode, fromJSON, selectedNodes, selectNode } = useAiWorkflow()
-const canvasRef = ref<{ zoomIn: () => void; zoomOut: () => void; resetView: () => void; fitView: (pts: Array<{ x: number; y: number }>) => void } | null>(null)
-const zoom = ref(1)
+// SVG frame: centre at (0,0), room for direction labels outside the outer ring.
+const HALF_W = 250
+const HALF_H = 196
+const CENTER_R = 24
+const viewBox = `${-HALF_W} ${-HALF_H} ${HALF_W * 2} ${HALF_H * 2}`
 
-const layoutKey = computed(() => {
-  const e = props.embryo
-  const ids = [
-    ...e.connections.map(c => c.id),
-    ...e.connectedTo.map(c => c.id),
-  ].sort().join(',')
-  return `${e.id}:${ids}`
-})
+type Lens = 'all' | 'inferred' | ConnectionType
 
-const neighborEntries = computed(() => {
+const lens = ref<Lens>('all')
+const focusedId = ref<string | null>(null)
+const settled = ref(false)
+
+const neighbors = computed<CompassNeighbor[]>(() => {
   const seen = new Set<string>()
-  const list: Array<{
-    id: string
-    seed: string
-    state: EmbryoDetail['state']
-    edgeId: string
-    type: string
-    inferred: boolean
-    inbound: boolean
-  }> = []
-
+  const list: CompassNeighbor[] = []
   for (const c of props.embryo.connections) {
     if (seen.has(c.targetId)) continue
     seen.add(c.targetId)
     list.push({
       id: c.target.id,
+      edgeId: c.id,
       seed: c.target.seed,
       state: c.target.state,
-      edgeId: c.id,
       type: c.type,
       inferred: c.detectedBy === 'AGENT' && !c.confirmedByUser,
       inbound: false,
+      note: c.note,
     })
   }
   for (const c of props.embryo.connectedTo) {
@@ -57,169 +58,235 @@ const neighborEntries = computed(() => {
     seen.add(c.sourceId)
     list.push({
       id: c.source.id,
+      edgeId: c.id,
       seed: c.source.seed,
       state: c.source.state,
-      edgeId: c.id,
       type: c.type,
       inferred: c.detectedBy === 'AGENT' && !c.confirmedByUser,
       inbound: true,
+      note: null,
     })
   }
   return list
 })
 
-function layout() {
-  const neighbors = neighborEntries.value
-  const nextNodes: AiWorkflowNode[] = [
-    {
-      id: props.embryo.id,
-      type: 'current',
-      label: truncateSeed(props.embryo.seed, 36),
-      position: { x: CX, y: CY },
-      status: isClosedState(props.embryo.state) ? 'completed' as const : 'running' as const,
-      data: { state: props.embryo.state, current: true },
-    },
+const placements = computed(() => layoutCompass(neighbors.value))
+
+const lensOptions = computed(() => {
+  const counts = new Map<Lens, number>()
+  for (const nb of neighbors.value) {
+    counts.set(nb.type, (counts.get(nb.type) ?? 0) + 1)
+    if (nb.inferred) counts.set('inferred', (counts.get('inferred') ?? 0) + 1)
+  }
+  const opts: Array<{ value: Lens; label: string; count: number }> = [
+    { value: 'all', label: 'All', count: neighbors.value.length },
   ]
+  for (const ct of CONNECTION_TYPES) {
+    const count = counts.get(ct.value) ?? 0
+    if (count) opts.push({ value: ct.value, label: ct.label, count })
+  }
+  const inferred = counts.get('inferred') ?? 0
+  if (inferred) opts.push({ value: 'inferred', label: 'agent hypotheses', count: inferred })
+  return opts
+})
 
-  const n = neighbors.length
-  neighbors.forEach((nb, i) => {
-    const angle = n === 1 ? -Math.PI / 2 : (2 * Math.PI * i) / n - Math.PI / 2
-    nextNodes.push({
-      id: nb.id,
-      type: nb.state === 'FOSSIL' ? 'fossil' : 'embryo',
-      label: truncateSeed(nb.seed, 32),
-      position: {
-        x: CX + Math.cos(angle) * RADIUS,
-        y: CY + Math.sin(angle) * RADIUS,
-      },
-      status: isClosedState(nb.state) ? 'completed' as const : 'idle' as const,
-      data: { state: nb.state, current: false },
-    })
-  })
+// Drop a lens whose last neighbour disappeared (confirmed / dismissed).
+watch(lensOptions, (opts) => {
+  if (!opts.some(o => o.value === lens.value)) lens.value = 'all'
+})
 
-  const nextEdges = neighbors.map((nb) => ({
-    id: nb.edgeId,
-    source: nb.inbound ? nb.id : props.embryo.id,
-    target: nb.inbound ? props.embryo.id : nb.id,
-    label: nb.type.toLowerCase(),
-    animated: nb.inferred,
-  }))
-
-  fromJSON({ nodes: nextNodes, edges: nextEdges })
+function inLens(p: CompassPlacement) {
+  if (lens.value === 'all') return true
+  if (lens.value === 'inferred') return p.inferred
+  return p.type === lens.value
 }
 
-const edgeViews = computed(() =>
-  edges.value.flatMap((edge) => {
-    const source = nodes.value.find(n => n.id === edge.source)
-    const target = nodes.value.find(n => n.id === edge.target)
-    if (!source || !target) return []
-    return [{
-      ...edge,
-      sourceX: source.position.x + NODE_W / 2,
-      sourceY: source.position.y + NODE_H / 2,
-      targetX: target.position.x + NODE_W / 2,
-      targetY: target.position.y + NODE_H / 2,
-    }]
+const focused = computed(() =>
+  placements.value.find(p => p.id === focusedId.value) ?? null,
+)
+
+const directionLabels = computed(() =>
+  CONNECTION_TYPES.map((ct) => {
+    const rad = (COMPASS_DIRECTIONS[ct.value] * Math.PI) / 180
+    const dist = COMPASS_OUTER_RING + 26
+    const x = Math.cos(rad) * dist
+    const y = Math.sin(rad) * dist
+    return {
+      type: ct.value,
+      label: ct.value === 'RESURRECTS' ? 'resurrects · from fossils' : ct.label,
+      x,
+      // Vertical labels sit just outside the ring; horizontal ones centre on it.
+      y: Math.abs(y) > 1 ? y + Math.sign(y) * 4 : y,
+      anchor: Math.abs(x) < 1 ? 'middle' : x > 0 ? 'start' : 'end',
+      active: lens.value === 'all' || lens.value === ct.value,
+      present: neighbors.value.some(n => n.type === ct.value),
+    }
   }),
 )
 
-watch(layoutKey, layout, { immediate: true })
-
-function onMove(id: string, x: number, y: number) {
-  moveNode(id, { x, y })
+function glyphFor(state: string) {
+  return LIFECYCLE.find(l => l.state === state)?.glyph ?? '◌'
 }
 
-function onSelect(id: string) {
-  selectNode(id, false)
+function typeLabel(type: ConnectionType) {
+  return CONNECTION_TYPES.find(ct => ct.value === type)?.label ?? type.toLowerCase()
+}
+
+function relationText(p: CompassPlacement) {
+  return p.inbound
+    ? `${typeLabel(p.type)} this idea`
+    : `this idea ${typeLabel(p.type)} it`
 }
 
 function openNode(id: string) {
-  if (id === props.embryo.id) return
   navigateTo(`/embryo/${id}`)
 }
 
-function fit() {
-  canvasRef.value?.fitView(nodes.value.map(n => n.position))
+function nodeTransform(p: CompassPlacement) {
+  return settled.value ? `translate(${p.x}px, ${p.y}px)` : 'translate(0px, 0px)'
 }
 
-function glyphFor(state: unknown) {
-  const s = String(state)
-  return LIFECYCLE.find(l => l.state === s)?.glyph ?? '◌'
-}
+onMounted(() => {
+  // Let the first frame paint at the centre so neighbours spring out to their place.
+  requestAnimationFrame(() => requestAnimationFrame(() => { settled.value = true }))
+})
 </script>
 
 <template>
-  <div class="hypar-connection-graph relative">
-    <AiCanvas
-      ref="canvasRef"
-      height="320px"
-      :show-grid="true"
-      :min-zoom="0.4"
-      :max-zoom="2"
-      @zoom="z => zoom = z"
+  <div class="hypar-compass">
+    <div v-if="lensOptions.length > 2" class="hypar-compass-lenses" role="toolbar" aria-label="Filter connections">
+      <button
+        v-for="opt in lensOptions"
+        :key="opt.value"
+        type="button"
+        class="hypar-compass-lens"
+        :aria-pressed="lens === opt.value"
+        @click="lens = opt.value"
+      >
+        {{ opt.label }} <span class="wz-faint">{{ opt.count }}</span>
+      </button>
+    </div>
+
+    <svg
+      class="hypar-compass-svg"
+      :viewBox="viewBox"
+      role="group"
+      :aria-label="`Connection compass for ${truncateSeed(embryo.seed, 60)}`"
+      @mouseleave="focusedId = null"
     >
-      <template #default="{ zoom: z, panX: px, panY: py }">
-        <svg
-          data-ai-edges
-          class="overflow-visible pointer-events-none absolute inset-0 w-px h-px"
+      <defs>
+        <marker
+          id="hypar-compass-head"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto-start-reverse"
         >
-          <AiEdge
-            v-for="edge in edgeViews"
-            :key="edge.id"
-            :id="edge.id"
-            :source-x="edge.sourceX"
-            :source-y="edge.sourceY"
-            :target-x="edge.targetX"
-            :target-y="edge.targetY"
-            :label="edge.label"
-            :animated="edge.animated"
-            :selected="selectedNodes.includes(edge.source) || selectedNodes.includes(edge.target)"
-            type="bezier"
-          />
-        </svg>
-        <AiNode
-          v-for="node in nodes"
-          :id="node.id"
-          :key="node.id"
-          :label="node.label"
-          :x="node.position.x"
-          :y="node.position.y"
-          :type="node.type"
-          :status="node.status"
-          :selected="selectedNodes.includes(node.id)"
-          :zoom="z"
-          :pan-x="px"
-          :pan-y="py"
-          :draggable="true"
-          @move="onMove"
-          @select="onSelect"
-        >
-          <template #header>
-            <button
-              type="button"
-              class="hypar-graph-node-hit"
-              @dblclick.stop="openNode(node.id)"
-            >
-              <span class="text-[10px] font-mono">{{ glyphFor(node.data?.state) }}</span>
-              <span class="text-[11px] leading-tight truncate">{{ node.label }}</span>
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </marker>
+      </defs>
+
+      <circle class="hypar-compass-ring" :r="COMPASS_INNER_RING" />
+      <circle class="hypar-compass-ring hypar-compass-ring--outer" :r="COMPASS_OUTER_RING" />
+      <line class="hypar-compass-axis" :x1="-COMPASS_OUTER_RING" y1="0" :x2="COMPASS_OUTER_RING" y2="0" />
+      <line class="hypar-compass-axis" x1="0" :y1="-COMPASS_OUTER_RING" x2="0" :y2="COMPASS_OUTER_RING" />
+
+      <text
+        v-for="d in directionLabels"
+        :key="d.type"
+        class="hypar-compass-direction"
+        :class="{ 'is-dim': !d.active, 'is-empty': !d.present }"
+        :x="d.x"
+        :y="d.y"
+        :text-anchor="d.anchor"
+        dominant-baseline="central"
+      >
+        {{ d.label }}
+      </text>
+
+      <g class="hypar-compass-edges" :class="{ 'is-settled': settled }">
+        <line
+          v-for="p in placements"
+          :key="p.edgeId"
+          v-bind="compassEdge(p, CENTER_R)"
+          class="hypar-compass-edge"
+          :class="{
+            'is-inferred': p.inferred,
+            'is-dim': !inLens(p),
+            'is-focused': focusedId === p.id,
+          }"
+          :marker-start="p.inbound ? 'url(#hypar-compass-head)' : undefined"
+          :marker-end="p.inbound ? undefined : 'url(#hypar-compass-head)'"
+        />
+      </g>
+
+      <g
+        v-for="(p, i) in placements"
+        :key="p.id"
+        class="hypar-compass-node"
+        :class="{
+          'is-inferred': p.inferred,
+          'is-fossil': p.state === 'FOSSIL',
+          'is-dim': !inLens(p),
+          'is-focused': focusedId === p.id,
+        }"
+        :style="{ transform: nodeTransform(p), transitionDelay: `${i * 35}ms` }"
+        role="link"
+        tabindex="0"
+        :aria-label="`${truncateSeed(p.seed, 80)} — ${relationText(p)}${p.inferred ? ', agent hypothesis' : ''}`"
+        @mouseenter="focusedId = p.id"
+        @focus="focusedId = p.id"
+        @click="openNode(p.id)"
+        @keydown.enter.prevent="openNode(p.id)"
+      >
+        <circle class="hypar-compass-halo" :r="p.r + 7" />
+        <circle class="hypar-compass-dot" :r="p.r" />
+        <text class="hypar-compass-glyph" text-anchor="middle" dominant-baseline="central">{{ glyphFor(p.state) }}</text>
+      </g>
+
+      <g class="hypar-compass-center" :class="{ 'is-closed': readonly }">
+        <circle :r="CENTER_R" />
+        <text class="hypar-compass-glyph hypar-compass-glyph--center" text-anchor="middle" dominant-baseline="central">
+          {{ glyphFor(embryo.state) }}
+        </text>
+      </g>
+    </svg>
+
+    <div class="hypar-compass-detail" aria-live="polite">
+      <template v-if="focused">
+        <div class="flex items-start gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-xs wz-strong leading-snug line-clamp-2">{{ focused.seed }}</p>
+            <p class="mt-1 text-[10px] wz-faint">
+              {{ glyphFor(focused.state) }} {{ focused.state.toLowerCase() }}
+              · {{ relationText(focused) }}
+              · {{ focused.inferred ? 'agent hypothesis' : 'confirmed' }}
+            </p>
+            <p v-if="focused.note" class="mt-1 text-[11px] wz-muted line-clamp-2">{{ focused.note }}</p>
+          </div>
+          <div v-if="focused.inferred && !focused.inbound && !readonly" class="flex shrink-0 gap-1.5">
+            <button type="button" class="wz-btn-outline text-[11px] py-0.5" @click="emit('confirm', focused.edgeId)">
+              Confirm
             </button>
-          </template>
-        </AiNode>
+            <button
+              v-if="dismissable?.includes(focused.edgeId)"
+              type="button"
+              class="wz-btn-ghost text-[11px] py-0.5"
+              @click="emit('dismiss', focused.edgeId)"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
       </template>
-    </AiCanvas>
-    <AiControls
-      class="absolute bottom-2 right-2"
-      position="bottom-right"
-      :zoom="zoom"
-      @zoom-in="canvasRef?.zoomIn()"
-      @zoom-out="canvasRef?.zoomOut()"
-      @reset="canvasRef?.resetView()"
-      @fit-view="fit"
-    />
-    <p class="px-3 py-2 text-[10px] wz-faint">
-      {{ neighborEntries.length
-        ? 'Dashed = inferred (unconfirmed) · solid = explicit · double-click a node to open'
-        : 'Empty graph shell — connect another embryo to grow the map' }}
-    </p>
+      <p v-else-if="placements.length" class="text-[10px] wz-faint">
+        Direction is the kind of link · inner ring = confirmed, dashed outer ring = agent hypothesis · size = how far it has grown. Hover a seed to read it, click to open.
+      </p>
+      <p v-else class="text-[10px] wz-faint">
+        No connections yet. Links you draw land on the inner ring; the agent's hypotheses wait on the outer one.
+      </p>
+    </div>
   </div>
 </template>

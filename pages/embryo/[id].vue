@@ -11,6 +11,7 @@ import {
   LIFECYCLE,
   lifecycleStepIndex,
   nextLifecycleState,
+  parseConnectionNote,
   stateColor,
 } from '~/utils/embryo-display'
 import { safeHttpUrl } from '~/utils/safe-url'
@@ -172,6 +173,33 @@ function applyFossilKind(kind: FossilKind) {
     fossilReason.value = starter
   }
 }
+
+/** Agent proposal note behind an unconfirmed outgoing connection, if it is still pending. */
+function proposalNoteFor(connectionId: string) {
+  const c = embryo.value?.connections.find(c => c.id === connectionId)
+  if (!c) return null
+  return embryo.value?.agentNotes.find(n =>
+    n.type === 'PENDING_CONNECTION' && parseConnectionNote(n.content)?.targetId === c.targetId,
+  ) ?? null
+}
+
+async function confirmGraphConnection(connectionId: string) {
+  // Accepting the proposal also clears it from the pending queue.
+  const note = proposalNoteFor(connectionId)
+  if (note) await store.acceptConnection(id.value, note.id)
+  else await store.confirmConnection(id.value, connectionId)
+}
+
+async function dismissGraphConnection(connectionId: string) {
+  const note = proposalNoteFor(connectionId)
+  if (note) await store.dismissNote(id.value, note.id)
+}
+
+const dismissableConnectionIds = computed(() =>
+  (embryo.value?.connections ?? [])
+    .filter(c => !c.confirmedByUser && proposalNoteFor(c.id))
+    .map(c => c.id),
+)
 
 async function submitConnection(targetId: string) {
   connecting.value = true
@@ -538,6 +566,10 @@ function stepClass(state: EmbryoState) {
         <EmbryoConnectionGraph
           v-if="connectionView === 'graph'"
           :embryo="embryo"
+          :readonly="isClosed"
+          :dismissable="dismissableConnectionIds"
+          @confirm="confirmGraphConnection"
+          @dismiss="dismissGraphConnection"
         />
 
         <div v-if="connectionView === 'list' && hasLinks" class="divide-y divide-[var(--term-accent-faint)]">

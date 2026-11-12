@@ -1,16 +1,16 @@
 ---
-status: proposed
+status: accepted
 date: 2026-11-11
 ---
 
 # ADR 0009: Lifecycle semantics — GROWING vs MATURING, and what a transplant needs
 
-- **Status:** proposed (draft for the maintainer; not binding)
+- **Status:** accepted (2026-11-12). Decision only: nothing below is runtime yet, see Consequences.
 - **Date:** 2026-11-11
 - **Extends:** [ADR 0005 — TRANSPLANTED and MATURING](./0005-transplanted-and-maturing)
 - **Resolves:** the first item of [Direction](/direction) "Still to define" (issue #190)
 
-> Everything below is a **proposal**. Product decisions belong to the maintainer. Nothing here is runtime today; [the lifecycle concept page](/concepts/lifecycle) still describes current behaviour.
+> The maintainer accepted this ADR with the answers recorded under [Decisions taken](#decisions-taken). Nothing here is runtime today; [the lifecycle concept page](/concepts/lifecycle) still describes current behaviour and marks what is pending.
 
 ## Context
 
@@ -21,21 +21,20 @@ Today the two boundaries are undefined in practice:
 
 Constraints that any answer must respect: the human decides every transition ([Direction](/direction)); one question per turn ([ADR 0002](./0002-agent-one-question)); no delete ([ADR 0003](./0003-no-delete-fossils)); validation depends on context (idea, solution, end user) and the validation plan is still direction, not runtime. Issues #191 (validation plan), #193 (critic) and #195 (experiments) build on this ADR.
 
-## Decision (proposed)
+## Decision
 
 ### 1. GROWING vs MATURING
 
 **`GROWING` means "the problem is named and the paths are open". `MATURING` means "one path is chosen and the work is testing it".** The boundary is the **choice of a path**, which is exactly where the stance flips from variety to validation.
 
-**Readiness signals for `GROWING → MATURING`.** Defined so that each is observable from data the app already stores or the validation plan (#191) will store. All are **signals, not gates**.
+**Readiness signals for `GROWING → MATURING`.** R2 ("the problem is stated") is dropped for now: no observable exists until validation-plan items have a state (see [Decisions taken](#decisions-taken)). Defined so that each is observable from data the app already stores or the validation plan (#191) will store. All are **signals, not gates**.
 
 | Id | Signal | Observable as |
 |---|---|---|
 | R1 | A direction is chosen | The user has kept one path (or written one direction) and no `PENDING_PATH` note is open |
-| R2 | The problem is stated | The embryo has gone through `GERMINATING` and its root problem is resolved: no unresolved tension labelled as the problem/assumption it rests on |
 | R3 | A falsifiable test exists | At least one validation-plan item (#191) states what would prove or kill the idea. Until #191 ships, a user note of that kind counts |
 
-Rule of thumb for #193: the critic may emit a `ready-to-mature` suggestion with confidence when R1 and R3 hold, and must say which signals are missing otherwise.
+Rule of thumb for #193: the critic may emit a `ready-to-mature` suggestion with confidence when R1 and R3 hold, and must say which signals are missing otherwise. Moving back to `GROWING` clears an open `ready-to-mature` proposal.
 
 **Who advances.** The **user**, always. The agent or critic may **propose** the move as an additive HITL note (like path, fossil and transplant proposals), never as a second question and never by changing state. The missing signals are shown next to the proposal. A user can still jump with signals missing, and can move back from `MATURING` to `GROWING` freely (unchanged). No signal blocks the PATCH.
 
@@ -75,19 +74,23 @@ Builds on ADR 0005 (`MATURING` only, user confirms, agent may propose). Three **
 - The proposal changes the line "the agent does not suggest other lifecycle transitions" on the lifecycle page: a `GROWING → MATURING` proposal would be allowed, additive and HITL.
 - Existing transplanted embryos (if any) have no `evidence`; the field must be nullable and only required for new transplants.
 - #191: validation-plan items need a state (open, proven, killed) to make R3 and the evidence source referenceable.
-- #193: critic output type `ready-to-mature` with `missing: R1|R2|R3[]` and a confidence.
+- #193: critic output type `ready-to-mature` with `missing: R1|R3[]` and a confidence.
 - #195: experiments recorded in hypar are valid evidence sources, referenced by id.
 
-## Open questions for the maintainer
+## Decisions taken
 
-1. Is **choosing a path** the right line between `GROWING` and `MATURING`, or should the line be "problem confirmed with evidence" (earlier) or "test running" (later)?
-2. Should the agent be allowed a `GROWING → MATURING` proposal at all (this relaxes the current "agent suggests no transitions" rule), or should the readiness list be passive UI only?
-3. R2 has no clean observable today (tensions are not typed as "the problem"). Drop R2 until #191 exists, or add a typed marker?
-4. Should `evidence` be **required** (proposed) or optional with a warning? Required is stricter for ideas whose proof lives only in the user's head.
-5. Outcome format: free URL or reference, or the structured `kind: ref` proposed here? Is a short list of kinds (component, doc, repo, skill, other) enough?
-6. Is the soft entry condition ("a validation result recorded while `MATURING`") right, or should it be a hard rule for transplant?
-7. Backward moves: should going `MATURING → GROWING` after a proposal clear that proposal, or leave it until the user dismisses it?
-8. Should the garden show missing readiness signals on cards, or only inside the embryo detail (the "no methods UI" non-goal argues for the latter)?
+Accepted 2026-11-12. The eight open questions of the draft were answered as follows.
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Is choosing a path the line between `GROWING` and `MATURING`? | Yes. It is where the stance flips from variety to validation, and it is observable. |
+| 2 | May the agent propose `GROWING → MATURING`? | Yes, as an additive HITL note. It never changes state and is never a second question. |
+| 3 | R2 has no observable | Dropped until validation-plan items have a state (open, proven, killed). |
+| 4 | Is `evidence` required? | Required for new transplants. A short text is enough when the proof lives only with the user. |
+| 5 | Outcome format | Structured: a URL, or `kind: ref` with kind one of component, doc, repo, skill, other. |
+| 6 | Entry condition for a transplant | Soft. The confirm dialog says "no validation recorded" and still allows it, because validation can happen outside hypar. |
+| 7 | Moving back from `MATURING` after a proposal | Clears the proposal. A proposal built on stale signals misleads. |
+| 8 | Missing signals on garden cards | No. Only in the embryo detail ("no methods UI" non-goal). |
 
 ## Sources
 

@@ -57,6 +57,8 @@ Only a `MATURING` embryo can be transplanted, so the idea passes through validat
 
 ## Transitions
 
+> **Decided, not built.** [ADR 0009](/decisions/0009-lifecycle-semantics) defines `GROWING → MATURING` as choosing a path, lets the agent *propose* that move as a HITL note, and requires `evidence` plus a structured `outcome` for a transplant. None of it is runtime yet; this page describes current behaviour.
+
 ### Who advances an embryo?
 
 - **First agent engage** on a `LATENT` embryo sets `GERMINATING` (logged as `STATE_CHANGED` initiated by `AGENT`). The collaborator shows an explicit **first confrontation** moment (`latent → germinating`) — not a silent auto-advance. That is the germination trigger in the current lab. Leaving that notice is logged (`GERMINATE_NOTICE`, with how long it was on screen) so [observations](/architecture/#observations) can show how many were left unread.
