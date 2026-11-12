@@ -2,6 +2,7 @@
 import type { EmbryoSummary } from '~/stores/embryos'
 import { isClosedState, type FossilStratum } from '~/utils/embryo-lab'
 import { LIFECYCLE, stateColor } from '~/utils/embryo-display'
+import { safeHttpUrl } from '~/utils/safe-url'
 
 const props = defineProps<{
   embryo: EmbryoSummary
@@ -15,6 +16,23 @@ const isClosed = computed(() => isClosedState(props.embryo.state))
 const glyph = computed(() => LIFECYCLE.find(l => l.state === props.embryo.state)!.glyph)
 const openTensions = computed(() => props.embryo.tensions.filter(t => !t.resolved).length)
 const links = computed(() => props.embryo._count.connections + props.embryo._count.connectedTo)
+
+function hostOf(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, '')
+}
+/** A seed that is only a link: it reads as a link, not as a sentence. */
+const seedLink = computed(() => {
+  const seed = props.embryo.seed.trim()
+  return /^https?:\/\/\S+$/.test(seed) ? safeHttpUrl(seed) : null
+})
+/** What sparked the seed (a capture's link), so a card says what is behind it. */
+const source = computed(() => {
+  const url = safeHttpUrl(props.embryo.sourceUrl)
+  const title = props.embryo.sourceTitle || null
+  if (url) return { glyph: '↗', host: hostOf(url), title }
+  // No link: an image capture, identified by its file name.
+  return title ? { glyph: '▣', host: null, title } : null
+})
 const date = computed(() => {
   const iso = isFossil.value
     ? (props.embryo.fossilizedAt ?? props.embryo.createdAt)
@@ -51,9 +69,17 @@ const date = computed(() => {
     <div class="p-3 sm:p-4">
       <p
         class="text-sm leading-relaxed line-clamp-3"
-        :class="isFossil ? 'text-[var(--term-text-dim)]' : 'wz-strong'"
+        :class="[isFossil ? 'text-[var(--term-text-dim)]' : 'wz-strong', seedLink ? 'break-all' : '']"
       >
-        {{ embryo.seed }}
+        <span v-if="seedLink" class="wz-accent opacity-70" aria-label="link">↗ </span>{{ embryo.seed }}
+      </p>
+      <p
+        v-if="source"
+        class="text-[11px] wz-muted mt-2 line-clamp-1"
+        :title="embryo.sourceUrl ?? undefined"
+      >
+        <span class="wz-accent opacity-70" aria-hidden="true">{{ source.glyph }}</span>
+        <span v-if="source.host" class="wz-mono">{{ source.host }}</span><template v-if="source.host && source.title"> · </template><template v-if="source.title">{{ source.title }}</template>
       </p>
       <p
         v-if="isFossil && embryo.fossilReason"
